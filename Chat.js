@@ -12,112 +12,40 @@ const Chat = () => {
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
-  const [isNearBottom, setIsNearBottom] = useState(true);
-  const lastMessageCountRef = useRef(messages.length);
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
-  // Check if user is near bottom of chat
-  const checkIfNearBottom = () => {
-    if (!chatContainerRef.current) return true;
-    const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
-    const threshold = 150; // pixels from bottom
-    return scrollHeight - scrollTop - clientHeight < threshold;
-  };
-
-  // Handle scroll event to determine if auto-scroll should be enabled
-  const handleScroll = () => {
-    setIsNearBottom(checkIfNearBottom());
-  };
-
-  // Scroll to bottom function
+  // Scroll to bottom when messages change or keyboard appears
   const scrollToBottom = () => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Auto-scroll only when new messages arrive AND user is near bottom
   useEffect(() => {
-    // Only auto-scroll if messages increased (new message sent)
-    if (messages.length > lastMessageCountRef.current && isNearBottom) {
-      // Use timeout to ensure DOM has updated
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
-    }
-    lastMessageCountRef.current = messages.length;
-  }, [messages, isNearBottom]);
+    scrollToBottom();
+  }, [messages]);
 
-  // Handle keyboard appearing and calculate its height
+  // Handle viewport resize (keyboard opening/closing)
   useEffect(() => {
     const handleResize = () => {
-      if (window.visualViewport) {
-        const viewportHeight = window.visualViewport.height;
-        const windowHeight = window.innerHeight;
-        const calculatedKeyboardHeight = windowHeight - viewportHeight;
-        
-        setKeyboardHeight(calculatedKeyboardHeight);
-        
-        // Only auto-scroll on resize if user is near bottom
-        if (isNearBottom) {
-          setTimeout(() => {
-            scrollToBottom();
-          }, 100);
-        }
-      }
+      scrollToBottom();
     };
 
-    // Visual viewport is better for mobile keyboards
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-      
-      // Initial check
-      handleResize();
-      
-      return () => {
-        window.visualViewport.removeEventListener('resize', handleResize);
-      };
-    }
-  }, [isNearBottom]);
-
-  // Prevent clicks on body/messages from closing keyboard
-  const handleBodyClick = (e) => {
-    // If input is focused and user clicks anywhere else, refocus the input
-    if (isInputFocused && inputRef.current && e.target !== inputRef.current) {
-      e.preventDefault();
-      inputRef.current.focus();
-    }
-  };
+    window.addEventListener('resize', handleResize);
+    window.visualViewport?.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const handleInput = (e) => setInputText(e.target.textContent);
   
-  const handleInputFocus = () => {
-    setIsInputFocused(true);
-  };
-
-  const handleInputBlur = () => {
-    // Delay to allow other click handlers to execute first
-    setTimeout(() => {
-      setIsInputFocused(false);
-    }, 100);
-  };
-
-  const handleSend = (e) => {
-    // Prevent default behavior and stop propagation
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
+  const handleSend = () => {
     const trimmedText = inputText.trim();
     if (trimmedText) {
       const now = new Date();
       const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
       const isMultiLine = trimmedText.includes('\n') || trimmedText.length > 30;
 
-      // Always scroll to bottom when sending a message
-      setIsNearBottom(true);
       setMessages([...messages, {
         id: messages.length + 1,
         text: trimmedText,
@@ -131,101 +59,81 @@ const Chat = () => {
         setInputText('');
       }
     }
-
-    // Keep focus on input to prevent keyboard from closing
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  };
-
-  // Handle microphone button click (when no text)
-  const handleMicClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Keep focus on input to prevent keyboard from closing
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-    
-    // Add your microphone recording logic here
-    console.log('Microphone clicked');
   };
 
   return (
-    <div 
-      onClick={handleBodyClick}
-      style={{
-        minHeight: '100vh',
-        maxHeight: '100vh',
-        overflow: 'hidden',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        fontFamily: 'system-ui, sans-serif',
-        backgroundImage: 'url("https://i.ibb.co/HfvQJj50/Screenshot-20250730-222749.jpg")',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center top',
-        backgroundSize: 'cover',
-        backgroundAttachment: 'fixed'
-      }}>
+    <div style={{
+      minHeight: '100vh',
+      height: '100vh',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      fontFamily: 'system-ui, sans-serif',
+      backgroundImage: 'url("https://i.ibb.co/HfvQJj50/Screenshot-20250730-222749.jpg")',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: 'center top',
+      backgroundSize: 'cover',
+      backgroundColor: 'transparent',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden'
+    }}>
       <Header />
 
       {/* Date Badge */}
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        padding: '16px 0',
+        position: 'absolute',
+        top: '62px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 9
+      }}>
         <div style={{
           background: 'rgba(255,255,255,0.9)',
           padding: '6px 16px',
           borderRadius: '9999px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          backdropFilter: 'blur(10px)',
-          position: 'fixed',
-          top: '62px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 9
+          backdropFilter: 'blur(10px)'
         }}>
           <span style={{ color: '#000', fontWeight: '500', fontSize: '14px' }}>September 24</span>
         </div>
       </div>
 
-      {/* Chat Messages */}
+      {/* Chat Messages - Scrollable Area */}
       <div 
         ref={chatContainerRef}
-        onScroll={handleScroll}
         style={{ 
-          padding: '8px 16px', 
-          maxWidth: '600px', 
-          margin: '0 auto', 
-          paddingTop: '80px', 
-          paddingBottom: '90px',
-          height: `calc(100vh - ${keyboardHeight}px)`,
+          flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
-          position: 'relative',
-          WebkitOverflowScrolling: 'touch',
-          transition: 'height 0.2s ease-out'
+          padding: '8px 16px',
+          paddingTop: '90px',
+          paddingBottom: '20px',
+          display: 'flex',
+          flexDirection: 'column'
         }}
       >
-        {messages.map((msg) => (
-          msg.incoming ? <InboxMe key={msg.id} msg={msg} /> : <Inbox key={msg.id} msg={msg} />
-        ))}
-        {/* Invisible element to scroll to */}
-        <div ref={messagesEndRef} style={{ height: '1px' }} />
+        <div style={{ maxWidth: '600px', margin: '0 auto', width: '100%' }}>
+          {messages.map((msg) => (
+            msg.incoming ? <InboxMe key={msg.id} msg={msg} /> : <Inbox key={msg.id} msg={msg} />
+          ))}
+          {/* Invisible element to scroll to */}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Input Wrapper */}
+      {/* Input Wrapper - Fixed at bottom */}
       <div style={{
         padding: '10px 85px 10px 20px',
         background: '#f0f0f0',
-        position: 'fixed',
-        bottom: `${keyboardHeight}px`,
-        left: 0,
-        right: 0,
-        zIndex: 10,
-        transition: 'bottom 0.2s ease-out'
+        flexShrink: 0,
+        position: 'relative',
+        zIndex: 10
       }}>
         <div style={{
           background: 'white',
@@ -257,8 +165,7 @@ const Chat = () => {
             contentEditable
             suppressContentEditableWarning
             onInput={handleInput}
-            onFocus={handleInputFocus}
-            onBlur={handleInputBlur}
+            onFocus={scrollToBottom}
             style={{
               flex: 1,
               border: 'none',
@@ -279,13 +186,10 @@ const Chat = () => {
 
       {/* Mic/Send Button */}
       <div 
-        onMouseDown={(e) => e.preventDefault()} // Prevent focus loss
-        onTouchStart={(e) => e.preventDefault()} // Prevent focus loss on mobile
-        onClick={inputText.trim() ? handleSend : handleMicClick}
         style={{
-          position: 'fixed',
+          position: 'absolute',
           right: '16px',
-          bottom: `${keyboardHeight + 5}px`,
+          bottom: '5px',
           width: '54px',
           height: '54px',
           background: '#749cbf',
@@ -295,18 +199,16 @@ const Chat = () => {
           justifyContent: 'center',
           boxShadow: '0 3px 8px rgba(0,0,0,0.25)',
           cursor: 'pointer',
-          zIndex: 10,
-          userSelect: 'none',
-          WebkitTapHighlightColor: 'transparent',
-          transition: 'bottom 0.2s ease-out'
+          zIndex: 11
         }}
+        onClick={handleSend}
       >
         {inputText.trim() ? (
-          <svg viewBox="0 -0.5 21 21" style={{ width: '24px', height: '24px', pointerEvents: 'none' }}>
+          <svg viewBox="0 -0.5 21 21" style={{ width: '24px', height: '24px' }}>
             <path fillRule="evenodd" clipRule="evenodd" d="M2.61258 9L0.05132 1.31623C-0.22718 0.48074 0.63218 -0.28074 1.42809 0.09626L20.4281 9.0963C21.1906 9.4575 21.1906 10.5425 20.4281 10.9037L1.42809 19.9037C0.63218 20.2807 -0.22718 19.5193 0.05132 18.6838L2.61258 11H8.9873C9.5396 11 9.9873 10.5523 9.9873 10C9.9873 9.4477 9.5396 9 8.9873 9H2.61258z" fill="#fff"/>
           </svg>
         ) : (
-          <svg viewBox="0 0 24 24" style={{ width: '24px', height: '24px', fill: '#fff', pointerEvents: 'none' }}>
+          <svg viewBox="0 0 24 24" style={{ width: '24px', height: '24px', fill: '#fff' }}>
             <path d="M7.25 7C7.25 4.37665 9.37665 2.25 12 2.25C14.6234 2.25 16.75 4.37665 16.75 7V11C16.75 13.6234 14.6234 15.75 12 15.75C9.37665 15.75 7.25 13.6234 7.25 11V7Z" fill="#fff"/>
             <path d="M5.75 10C5.75 9.58579 5.41421 9.25 5 9.25C4.58579 9.25 4.25 9.58579 4.25 10V11C4.25 15.0272 7.3217 18.3369 11.25 18.7142V21C11.25 21.4142 11.5858 21.75 12 21.75C12.4142 21.75 12.75 21.4142 12.75 21V18.7142C16.6783 18.3369 19.75 15.0272 19.75 11V10C19.75 9.58579 19.4142 9.25 19 9.25C18.58579 9.25 18.25 9.58579 18.25 10V11C18.25 14.4518 15.4518 17.25 12 17.25C8.54822 17.25 5.75 14.4518 5.75 11V10Z" fill="#fff"/>
           </svg>
