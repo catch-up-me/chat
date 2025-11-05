@@ -14,6 +14,7 @@ const Chat = () => {
   const chatContainerRef = useRef(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const lastMessageCountRef = useRef(messages.length);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   // Check if user is near bottom of chat
   const checkIfNearBottom = () => {
@@ -28,19 +29,28 @@ const Chat = () => {
     setIsNearBottom(checkIfNearBottom());
   };
 
-  // Scroll to bottom function
+  // Scroll to bottom function with proper visibility
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end',
+        inline: 'nearest'
+      });
+    }
   };
 
   // Auto-scroll only when new messages arrive AND user is near bottom
   useEffect(() => {
     // Only auto-scroll if messages increased (new message sent)
     if (messages.length > lastMessageCountRef.current && isNearBottom) {
-      scrollToBottom();
+      // Use timeout to ensure DOM has updated
+      setTimeout(() => {
+        scrollToBottom();
+      }, 50);
     }
     lastMessageCountRef.current = messages.length;
-  }, [messages]);
+  }, [messages, isNearBottom]);
 
   // Handle keyboard appearing - only scroll if user is already near bottom
   useEffect(() => {
@@ -49,7 +59,7 @@ const Chat = () => {
       if (isNearBottom) {
         setTimeout(() => {
           scrollToBottom();
-        }, 100);
+        }, 150);
       }
     };
 
@@ -62,9 +72,35 @@ const Chat = () => {
     }
   }, [isNearBottom]);
 
+  // Prevent clicks on body/messages from closing keyboard
+  const handleBodyClick = (e) => {
+    // If input is focused and user clicks anywhere else, refocus the input
+    if (isInputFocused && inputRef.current && e.target !== inputRef.current) {
+      e.preventDefault();
+      inputRef.current.focus();
+    }
+  };
+
   const handleInput = (e) => setInputText(e.target.textContent);
   
-  const handleSend = () => {
+  const handleInputFocus = () => {
+    setIsInputFocused(true);
+  };
+
+  const handleInputBlur = () => {
+    // Delay to allow other click handlers to execute first
+    setTimeout(() => {
+      setIsInputFocused(false);
+    }, 100);
+  };
+
+  const handleSend = (e) => {
+    // Prevent default behavior and stop propagation
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     const trimmedText = inputText.trim();
     if (trimmedText) {
       const now = new Date();
@@ -86,25 +122,46 @@ const Chat = () => {
         setInputText('');
       }
     }
+
+    // Keep focus on input to prevent keyboard from closing
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  // Handle microphone button click (when no text)
+  const handleMicClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Keep focus on input to prevent keyboard from closing
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+    
+    // Add your microphone recording logic here
+    console.log('Microphone clicked');
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      maxHeight: '100vh',
-      overflow: 'hidden',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      fontFamily: 'system-ui, sans-serif',
-      backgroundImage: 'url("https://i.ibb.co/HfvQJj50/Screenshot-20250730-222749.jpg")',
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: 'center top',
-      backgroundSize: 'cover',
-      backgroundAttachment: 'fixed'
-    }}>
+    <div 
+      onClick={handleBodyClick}
+      style={{
+        minHeight: '100vh',
+        maxHeight: '100vh',
+        overflow: 'hidden',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        fontFamily: 'system-ui, sans-serif',
+        backgroundImage: 'url("https://i.ibb.co/HfvQJj50/Screenshot-20250730-222749.jpg")',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center top',
+        backgroundSize: 'cover',
+        backgroundAttachment: 'fixed'
+      }}>
       <Header />
 
       {/* Date Badge */}
@@ -134,7 +191,7 @@ const Chat = () => {
           maxWidth: '600px', 
           margin: '0 auto', 
           paddingTop: '80px', 
-          paddingBottom: '90px',
+          paddingBottom: '100px',
           height: 'calc(100vh - 0px)',
           overflowY: 'auto',
           overflowX: 'hidden',
@@ -145,6 +202,8 @@ const Chat = () => {
         {messages.map((msg) => (
           msg.incoming ? <InboxMe key={msg.id} msg={msg} /> : <Inbox key={msg.id} msg={msg} />
         ))}
+        {/* Spacer for proper visibility of last message */}
+        <div style={{ height: '20px' }} />
         {/* Invisible element to scroll to */}
         <div ref={messagesEndRef} style={{ height: '1px' }} />
       </div>
@@ -189,6 +248,8 @@ const Chat = () => {
             contentEditable
             suppressContentEditableWarning
             onInput={handleInput}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
             style={{
               flex: 1,
               border: 'none',
@@ -209,6 +270,9 @@ const Chat = () => {
 
       {/* Mic/Send Button */}
       <div 
+        onMouseDown={(e) => e.preventDefault()} // Prevent focus loss
+        onTouchStart={(e) => e.preventDefault()} // Prevent focus loss on mobile
+        onClick={inputText.trim() ? handleSend : handleMicClick}
         style={{
           position: 'fixed',
           right: '16px',
@@ -222,16 +286,17 @@ const Chat = () => {
           justifyContent: 'center',
           boxShadow: '0 3px 8px rgba(0,0,0,0.25)',
           cursor: 'pointer',
-          zIndex: 10
+          zIndex: 10,
+          userSelect: 'none',
+          WebkitTapHighlightColor: 'transparent'
         }}
-        onClick={handleSend}
       >
         {inputText.trim() ? (
-          <svg viewBox="0 -0.5 21 21" style={{ width: '24px', height: '24px' }}>
+          <svg viewBox="0 -0.5 21 21" style={{ width: '24px', height: '24px', pointerEvents: 'none' }}>
             <path fillRule="evenodd" clipRule="evenodd" d="M2.61258 9L0.05132 1.31623C-0.22718 0.48074 0.63218 -0.28074 1.42809 0.09626L20.4281 9.0963C21.1906 9.4575 21.1906 10.5425 20.4281 10.9037L1.42809 19.9037C0.63218 20.2807 -0.22718 19.5193 0.05132 18.6838L2.61258 11H8.9873C9.5396 11 9.9873 10.5523 9.9873 10C9.9873 9.4477 9.5396 9 8.9873 9H2.61258z" fill="#fff"/>
           </svg>
         ) : (
-          <svg viewBox="0 0 24 24" style={{ width: '24px', height: '24px', fill: '#fff' }}>
+          <svg viewBox="0 0 24 24" style={{ width: '24px', height: '24px', fill: '#fff', pointerEvents: 'none' }}>
             <path d="M7.25 7C7.25 4.37665 9.37665 2.25 12 2.25C14.6234 2.25 16.75 4.37665 16.75 7V11C16.75 13.6234 14.6234 15.75 12 15.75C9.37665 15.75 7.25 13.6234 7.25 11V7Z" fill="#fff"/>
             <path d="M5.75 10C5.75 9.58579 5.41421 9.25 5 9.25C4.58579 9.25 4.25 9.58579 4.25 10V11C4.25 15.0272 7.3217 18.3369 11.25 18.7142V21C11.25 21.4142 11.5858 21.75 12 21.75C12.4142 21.75 12.75 21.4142 12.75 21V18.7142C16.6783 18.3369 19.75 15.0272 19.75 11V10C19.75 9.58579 19.4142 9.25 19 9.25C18.58579 9.25 18.25 9.58579 18.25 10V11C18.25 14.4518 15.4518 17.25 12 17.25C8.54822 17.25 5.75 14.4518 5.75 11V10Z" fill="#fff"/>
           </svg>
