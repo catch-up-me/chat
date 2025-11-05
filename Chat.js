@@ -15,6 +15,7 @@ const Chat = () => {
   const [isNearBottom, setIsNearBottom] = useState(true);
   const lastMessageCountRef = useRef(messages.length);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   // Check if user is near bottom of chat
   const checkIfNearBottom = () => {
@@ -29,7 +30,7 @@ const Chat = () => {
     setIsNearBottom(checkIfNearBottom());
   };
 
-  // Scroll to bottom function with proper visibility
+  // Scroll to bottom function
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -43,25 +44,37 @@ const Chat = () => {
       // Use timeout to ensure DOM has updated
       setTimeout(() => {
         scrollToBottom();
-      }, 150);
+      }, 100);
     }
     lastMessageCountRef.current = messages.length;
   }, [messages, isNearBottom]);
 
-  // Handle keyboard appearing - only scroll if user is already near bottom
+  // Handle keyboard appearing and calculate its height
   useEffect(() => {
     const handleResize = () => {
-      // Only auto-scroll on resize if user is near bottom
-      if (isNearBottom) {
-        setTimeout(() => {
-          scrollToBottom();
-        }, 300);
+      if (window.visualViewport) {
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+        const calculatedKeyboardHeight = windowHeight - viewportHeight;
+        
+        setKeyboardHeight(calculatedKeyboardHeight);
+        
+        // Only auto-scroll on resize if user is near bottom
+        if (isNearBottom) {
+          setTimeout(() => {
+            scrollToBottom();
+          }, 100);
+        }
       }
     };
 
     // Visual viewport is better for mobile keyboards
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleResize);
+      
+      // Initial check
+      handleResize();
+      
       return () => {
         window.visualViewport.removeEventListener('resize', handleResize);
       };
@@ -144,25 +157,20 @@ const Chat = () => {
       onClick={handleBodyClick}
       style={{
         minHeight: '100vh',
-        height: '100vh',
+        maxHeight: '100vh',
         overflow: 'hidden',
-        position: 'relative',
-        fontFamily: 'system-ui, sans-serif'
-      }}>
-      {/* Background layer - separate from content */}
-      <div style={{
-        position: 'absolute',
+        position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
+        fontFamily: 'system-ui, sans-serif',
         backgroundImage: 'url("https://i.ibb.co/HfvQJj50/Screenshot-20250730-222749.jpg")',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center top',
         backgroundSize: 'cover',
-        zIndex: -1
-      }} />
-
+        backgroundAttachment: 'fixed'
+      }}>
       <Header />
 
       {/* Date Badge */}
@@ -192,12 +200,13 @@ const Chat = () => {
           maxWidth: '600px', 
           margin: '0 auto', 
           paddingTop: '80px', 
-          paddingBottom: '200px',
-          height: '100vh',
+          paddingBottom: '90px',
+          height: `calc(100vh - ${keyboardHeight}px)`,
           overflowY: 'auto',
           overflowX: 'hidden',
           position: 'relative',
-          WebkitOverflowScrolling: 'touch'
+          WebkitOverflowScrolling: 'touch',
+          transition: 'height 0.2s ease-out'
         }}
       >
         {messages.map((msg) => (
@@ -212,10 +221,11 @@ const Chat = () => {
         padding: '10px 85px 10px 20px',
         background: '#f0f0f0',
         position: 'fixed',
-        bottom: 0,
+        bottom: `${keyboardHeight}px`,
         left: 0,
         right: 0,
-        zIndex: 10
+        zIndex: 10,
+        transition: 'bottom 0.2s ease-out'
       }}>
         <div style={{
           background: 'white',
@@ -275,7 +285,7 @@ const Chat = () => {
         style={{
           position: 'fixed',
           right: '16px',
-          bottom: '5px',
+          bottom: `${keyboardHeight + 5}px`,
           width: '54px',
           height: '54px',
           background: '#749cbf',
@@ -287,7 +297,8 @@ const Chat = () => {
           cursor: 'pointer',
           zIndex: 10,
           userSelect: 'none',
-          WebkitTapHighlightColor: 'transparent'
+          WebkitTapHighlightColor: 'transparent',
+          transition: 'bottom 0.2s ease-out'
         }}
       >
         {inputText.trim() ? (
