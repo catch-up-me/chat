@@ -12,10 +12,11 @@ const Chat = () => {
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const lastMessageCountRef = useRef(messages.length);
 
   // Check if user is near bottom of chat
-  const isNearBottom = () => {
+  const checkIfNearBottom = () => {
     if (!chatContainerRef.current) return true;
     const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
     const threshold = 150; // pixels from bottom
@@ -24,7 +25,7 @@ const Chat = () => {
 
   // Handle scroll event to determine if auto-scroll should be enabled
   const handleScroll = () => {
-    setShouldAutoScroll(isNearBottom());
+    setIsNearBottom(checkIfNearBottom());
   };
 
   // Scroll to bottom function
@@ -32,45 +33,34 @@ const Chat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Auto-scroll when new messages arrive (only if user is near bottom)
+  // Auto-scroll only when new messages arrive AND user is near bottom
   useEffect(() => {
-    if (shouldAutoScroll) {
+    // Only auto-scroll if messages increased (new message sent)
+    if (messages.length > lastMessageCountRef.current && isNearBottom) {
       scrollToBottom();
     }
-  }, [messages, shouldAutoScroll]);
+    lastMessageCountRef.current = messages.length;
+  }, [messages]);
 
-  // Handle keyboard appearing (viewport resize)
+  // Handle keyboard appearing - only scroll if user is already near bottom
   useEffect(() => {
     const handleResize = () => {
-      if (shouldAutoScroll) {
-        // Small delay to ensure layout has updated
+      // Only auto-scroll on resize if user is near bottom
+      if (isNearBottom) {
         setTimeout(() => {
           scrollToBottom();
         }, 100);
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    // Also listen for visual viewport changes (better for mobile keyboards)
+    // Visual viewport is better for mobile keyboards
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleResize);
-    }
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (window.visualViewport) {
+      return () => {
         window.visualViewport.removeEventListener('resize', handleResize);
-      }
-    };
-  }, [shouldAutoScroll]);
-
-  // Scroll to bottom when input is focused
-  const handleInputFocus = () => {
-    setShouldAutoScroll(true);
-    setTimeout(() => {
-      scrollToBottom();
-    }, 300); // Delay for keyboard animation
-  };
+      };
+    }
+  }, [isNearBottom]);
 
   const handleInput = (e) => setInputText(e.target.textContent);
   
@@ -81,7 +71,8 @@ const Chat = () => {
       const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
       const isMultiLine = trimmedText.includes('\n') || trimmedText.length > 30;
 
-      setShouldAutoScroll(true); // Enable auto-scroll when sending message
+      // Always scroll to bottom when sending a message
+      setIsNearBottom(true);
       setMessages([...messages, {
         id: messages.length + 1,
         text: trimmedText,
@@ -100,13 +91,19 @@ const Chat = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      position: 'relative',
+      maxHeight: '100vh',
+      overflow: 'hidden',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       fontFamily: 'system-ui, sans-serif',
       backgroundImage: 'url("https://i.ibb.co/HfvQJj50/Screenshot-20250730-222749.jpg")',
       backgroundRepeat: 'no-repeat',
       backgroundPosition: 'center top',
       backgroundSize: 'cover',
-      backgroundColor: 'transparent'
+      backgroundAttachment: 'fixed'
     }}>
       <Header />
 
@@ -136,18 +133,20 @@ const Chat = () => {
           padding: '8px 16px', 
           maxWidth: '600px', 
           margin: '0 auto', 
-          paddingTop: '24px', 
-          paddingBottom: '80px',
-          height: '100vh',
+          paddingTop: '80px', 
+          paddingBottom: '90px',
+          height: 'calc(100vh - 0px)',
           overflowY: 'auto',
-          position: 'relative'
+          overflowX: 'hidden',
+          position: 'relative',
+          WebkitOverflowScrolling: 'touch'
         }}
       >
         {messages.map((msg) => (
           msg.incoming ? <InboxMe key={msg.id} msg={msg} /> : <Inbox key={msg.id} msg={msg} />
         ))}
         {/* Invisible element to scroll to */}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} style={{ height: '1px' }} />
       </div>
 
       {/* Input Wrapper */}
@@ -190,7 +189,6 @@ const Chat = () => {
             contentEditable
             suppressContentEditableWarning
             onInput={handleInput}
-            onFocus={handleInputFocus}
             style={{
               flex: 1,
               border: 'none',
