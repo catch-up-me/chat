@@ -15,6 +15,7 @@ const Chat = () => {
   const [isNearBottom, setIsNearBottom] = useState(true);
   const lastMessageCountRef = useRef(messages.length);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   // Check if user is near bottom of chat
   const checkIfNearBottom = () => {
@@ -43,7 +44,7 @@ const Chat = () => {
       // Use timeout to ensure DOM has updated
       setTimeout(() => {
         scrollToBottom();
-      }, 100);
+      }, 150);
     }
     lastMessageCountRef.current = messages.length;
   }, [messages, isNearBottom]);
@@ -51,11 +52,19 @@ const Chat = () => {
   // Handle keyboard appearing - only scroll if user is already near bottom
   useEffect(() => {
     const handleResize = () => {
+      // Calculate keyboard height
+      if (window.visualViewport) {
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+        const kbHeight = windowHeight - viewportHeight;
+        setKeyboardHeight(kbHeight);
+      }
+
       // Only auto-scroll on resize if user is near bottom
       if (isNearBottom) {
         setTimeout(() => {
           scrollToBottom();
-        }, 200);
+        }, 300);
       }
     };
 
@@ -139,6 +148,9 @@ const Chat = () => {
     console.log('Microphone clicked');
   };
 
+  // Calculate dynamic padding based on keyboard height
+  const dynamicPaddingBottom = keyboardHeight > 0 ? keyboardHeight + 80 : 150;
+
   return (
     <div 
       onClick={handleBodyClick}
@@ -187,12 +199,13 @@ const Chat = () => {
           maxWidth: '600px', 
           margin: '0 auto', 
           paddingTop: '80px', 
-          paddingBottom: '150px',
+          paddingBottom: `${dynamicPaddingBottom}px`,
           height: 'calc(100vh - 0px)',
           overflowY: 'auto',
           overflowX: 'hidden',
           position: 'relative',
-          WebkitOverflowScrolling: 'touch'
+          WebkitOverflowScrolling: 'touch',
+          transition: 'padding-bottom 0.3s ease'
         }}
       >
         {messages.map((msg) => (
