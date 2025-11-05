@@ -31,12 +31,8 @@ const Chat = () => {
 
   // Scroll to bottom function with proper visibility
   const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'end',
-        inline: 'nearest'
-      });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   };
 
@@ -47,7 +43,7 @@ const Chat = () => {
       // Use timeout to ensure DOM has updated
       setTimeout(() => {
         scrollToBottom();
-      }, 50);
+      }, 100);
     }
     lastMessageCountRef.current = messages.length;
   }, [messages, isNearBottom]);
@@ -59,7 +55,7 @@ const Chat = () => {
       if (isNearBottom) {
         setTimeout(() => {
           scrollToBottom();
-        }, 150);
+        }, 200);
       }
     };
 
@@ -191,7 +187,7 @@ const Chat = () => {
           maxWidth: '600px', 
           margin: '0 auto', 
           paddingTop: '80px', 
-          paddingBottom: '100px',
+          paddingBottom: '150px',
           height: 'calc(100vh - 0px)',
           overflowY: 'auto',
           overflowX: 'hidden',
@@ -202,8 +198,6 @@ const Chat = () => {
         {messages.map((msg) => (
           msg.incoming ? <InboxMe key={msg.id} msg={msg} /> : <Inbox key={msg.id} msg={msg} />
         ))}
-        {/* Spacer for proper visibility of last message */}
-        <div style={{ height: '20px' }} />
         {/* Invisible element to scroll to */}
         <div ref={messagesEndRef} style={{ height: '1px' }} />
       </div>
