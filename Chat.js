@@ -13,24 +13,16 @@ const Chat = () => {
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
 
-  // Scroll to bottom when messages change or keyboard appears
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  useEffect(() => scrollToBottom(), [messages]);
 
-  // Handle viewport resize (keyboard opening/closing)
   useEffect(() => {
-    const handleResize = () => {
-      scrollToBottom();
-    };
-
+    const handleResize = () => scrollToBottom();
     window.addEventListener('resize', handleResize);
     window.visualViewport?.addEventListener('resize', handleResize);
-    
     return () => {
       window.removeEventListener('resize', handleResize);
       window.visualViewport?.removeEventListener('resize', handleResize);
@@ -63,19 +55,12 @@ const Chat = () => {
 
   return (
     <div style={{
-      minHeight: '100vh',
-      height: '100vh',
+      minHeight: '100dvh',          // uses dynamic viewport height (better on mobile)
+      height: '100dvh',
       position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
+      inset: 0,                     // shorthand for top/left/right/bottom:0
       fontFamily: 'system-ui, sans-serif',
-      backgroundImage: 'url("https://i.ibb.co/HfvQJj50/Screenshot-20250730-222749.jpg")',
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: 'center top',
-      backgroundSize: 'cover',
-      backgroundColor: 'transparent',
+      background: `url("https://i.ibb.co/HfvQJj50/Screenshot-20250730-222749.jpg") center top / cover no-repeat fixed`,
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden'
@@ -104,7 +89,7 @@ const Chat = () => {
         </div>
       </div>
 
-      {/* Chat Messages - Scrollable Area */}
+      {/* Chat Messages – Scrollable */}
       <div 
         ref={chatContainerRef}
         style={{ 
@@ -113,7 +98,7 @@ const Chat = () => {
           overflowX: 'hidden',
           padding: '8px 16px',
           paddingTop: '90px',
-          paddingBottom: '20px',
+          paddingBottom: '12px',      // reduced bottom padding
           display: 'flex',
           flexDirection: 'column'
         }}
@@ -122,29 +107,28 @@ const Chat = () => {
           {messages.map((msg) => (
             msg.incoming ? <InboxMe key={msg.id} msg={msg} /> : <Inbox key={msg.id} msg={msg} />
           ))}
-          {/* Invisible element to scroll to */}
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input Wrapper - Fixed at bottom */}
+      {/* Input Wrapper – lifted higher */}
       <div style={{
-        padding: '10px 85px 10px 20px',
-        background: '#f0f0f0',
+        padding: '8px 85px 8px 16px',   // reduced vertical padding
+        background: 'rgba(240,240,240,0.96)',
+        backdropFilter: 'blur(8px)',
         flexShrink: 0,
         position: 'relative',
         zIndex: 10
       }}>
         <div style={{
           background: 'white',
-          borderRadius: '10px',
-          padding: '8px 14px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          borderRadius: '14px',
+          padding: '10px 14px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
           display: 'flex',
           alignItems: 'flex-end',
           gap: '10px',
-          position: 'relative',
-          overflow: 'visible'
+          position: 'relative'
         }}>
           <svg style={{
             position: 'absolute',
@@ -184,12 +168,12 @@ const Chat = () => {
         </div>
       </div>
 
-      {/* Mic/Send Button */}
+      {/* Mic / Send Button – moved up */}
       <div 
         style={{
           position: 'absolute',
           right: '16px',
-          bottom: '5px',
+          bottom: '14px',               // lifted 9px higher
           width: '54px',
           height: '54px',
           background: '#749cbf',
@@ -197,7 +181,7 @@ const Chat = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 3px 8px rgba(0,0,0,0.25)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
           cursor: 'pointer',
           zIndex: 11
         }}
@@ -209,8 +193,8 @@ const Chat = () => {
           </svg>
         ) : (
           <svg viewBox="0 0 24 24" style={{ width: '24px', height: '24px', fill: '#fff' }}>
-            <path d="M7.25 7C7.25 4.37665 9.37665 2.25 12 2.25C14.6234 2.25 16.75 4.37665 16.75 7V11C16.75 13.6234 14.6234 15.75 12 15.75C9.37665 15.75 7.25 13.6234 7.25 11V7Z" fill="#fff"/>
-            <path d="M5.75 10C5.75 9.58579 5.41421 9.25 5 9.25C4.58579 9.25 4.25 9.58579 4.25 10V11C4.25 15.0272 7.3217 18.3369 11.25 18.7142V21C11.25 21.4142 11.5858 21.75 12 21.75C12.4142 21.75 12.75 21.4142 12.75 21V18.7142C16.6783 18.3369 19.75 15.0272 19.75 11V10C19.75 9.58579 19.4142 9.25 19 9.25C18.58579 9.25 18.25 9.58579 18.25 10V11C18.25 14.4518 15.4518 17.25 12 17.25C8.54822 17.25 5.75 14.4518 5.75 11V10Z" fill="#fff"/>
+            <path d="M7.25 7C7.25 4.37665 9.37665 2.25 12 2.25C14.6234 2.25 16.75 4.37665 16.75 7V11C16.75 13.6234 14.6234 15.75 12 15.75C9.37665 15.75 7.25 13.6234 7.25 11V7Z"/>
+            <path d="M5.75 10C5.75 9.58579 5.41421 9.25 5 9.25C4.58579 9.25 4.25 9.58579 4.25 10V11C4.25 15.0272 7.3217 18.3369 11.25 18.7142V21C11.25 21.4142 11.5858 21.75 12 21.75C12.4142 21.75 12.75 21.4142 12.75 21V18.7142C16.6783 18.3369 19.75 15.0272 19.75 11V10C19.75 9.58579 19.4142 9.25 19 9.25C18.58579 9.25 18.25 9.58579 18.25 10V11C18.25 14.4518 15.4518 17.25 12 17.25C8.54822 17.25 5.75 14.4518 5.75 11V10Z"/>
           </svg>
         )}
       </div>
