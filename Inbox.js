@@ -53,4 +53,4 @@ const Inbox = ({ msg }) => {
   );
 };
 
-export default Inbox;
+
