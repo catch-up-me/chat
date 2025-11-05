@@ -15,7 +15,6 @@ const Chat = () => {
   const [isNearBottom, setIsNearBottom] = useState(true);
   const lastMessageCountRef = useRef(messages.length);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   // Check if user is near bottom of chat
   const checkIfNearBottom = () => {
@@ -52,14 +51,6 @@ const Chat = () => {
   // Handle keyboard appearing - only scroll if user is already near bottom
   useEffect(() => {
     const handleResize = () => {
-      // Calculate keyboard height
-      if (window.visualViewport) {
-        const viewportHeight = window.visualViewport.height;
-        const windowHeight = window.innerHeight;
-        const kbHeight = windowHeight - viewportHeight;
-        setKeyboardHeight(kbHeight);
-      }
-
       // Only auto-scroll on resize if user is near bottom
       if (isNearBottom) {
         setTimeout(() => {
@@ -148,28 +139,30 @@ const Chat = () => {
     console.log('Microphone clicked');
   };
 
-  // Calculate dynamic padding based on keyboard height
-  const dynamicPaddingBottom = keyboardHeight > 0 ? keyboardHeight + 80 : 150;
-
   return (
     <div 
       onClick={handleBodyClick}
       style={{
         minHeight: '100vh',
-        maxHeight: '100vh',
+        height: '100vh',
         overflow: 'hidden',
-        position: 'fixed',
+        position: 'relative',
+        fontFamily: 'system-ui, sans-serif'
+      }}>
+      {/* Background layer - separate from content */}
+      <div style={{
+        position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        fontFamily: 'system-ui, sans-serif',
         backgroundImage: 'url("https://i.ibb.co/HfvQJj50/Screenshot-20250730-222749.jpg")',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center top',
         backgroundSize: 'cover',
-        backgroundAttachment: 'fixed'
-      }}>
+        zIndex: -1
+      }} />
+
       <Header />
 
       {/* Date Badge */}
@@ -199,13 +192,12 @@ const Chat = () => {
           maxWidth: '600px', 
           margin: '0 auto', 
           paddingTop: '80px', 
-          paddingBottom: `${dynamicPaddingBottom}px`,
-          height: 'calc(100vh - 0px)',
+          paddingBottom: '200px',
+          height: '100vh',
           overflowY: 'auto',
           overflowX: 'hidden',
           position: 'relative',
-          WebkitOverflowScrolling: 'touch',
-          transition: 'padding-bottom 0.3s ease'
+          WebkitOverflowScrolling: 'touch'
         }}
       >
         {messages.map((msg) => (
