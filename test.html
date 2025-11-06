@@ -8,25 +8,264 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body, html {
+    * {
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
       height: 100%;
       overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
     }
-    [contenteditable]:empty:before {
-      content: attr(data-placeholder);
-      color: #9CA3AF;
+
+    .container {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: url("https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
     }
-    /* Hide scrollbar */
-    .hide-scrollbar::-webkit-scrollbar {
+
+    /* Header Styles */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px;
+      background-color: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .header-btn {
+      padding: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-btn:hover {
+      background-color: #f3f4f6;
+    }
+
+    .header-btn svg {
+      width: 20px;
+      height: 20px;
+      color: #4b5563;
+    }
+
+    .header-center {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      margin: 0 8px;
+      min-width: 0;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #fb923c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .avatar span {
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .header-info {
+      margin-left: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .header-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-status {
+      font-size: 12px;
+      color: #6b7280;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Chat Messages Styles */
+    .chat-messages {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .date-divider {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      padding: 12px 0;
+      background-image: url("https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg");
+      background-size: cover;
+      background-position: center;
+    }
+
+    .chat-scroll-area {
+      flex: 1;
+      padding: 0 12px 80px 12px;
+      overflow-y: auto;
+    }
+
+    .chat-scroll-area::-webkit-scrollbar {
       display: none;
     }
-    .hide-scrollbar {
+
+    .chat-scroll-area {
       -ms-overflow-style: none;
       scrollbar-width: none;
+    }
+
+    .date-badge {
+      background-color: white;
+      padding: 2px 12px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+    }
+
+    .date-badge span {
+      font-size: 12px;
+      color: #374151;
+    }
+
+    .message-left {
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .message-right {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 8px;
+    }
+
+    .message-bubble {
+      border-radius: 16px;
+      padding: 6px 12px;
+      max-width: 75%;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .message-bubble-left {
+      background-color: white;
+    }
+
+    .message-bubble-right {
+      background-color: #dcfce7;
+    }
+
+    .message-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .message-text {
+      font-size: 14px;
+      color: #111827;
+    }
+
+    .message-time {
+      font-size: 12px;
+      color: #6b7280;
+      white-space: nowrap;
+    }
+
+    .checkmark {
+      width: 14px;
+      height: 14px;
+      color: #3b82f6;
+      flex-shrink: 0;
+    }
+
+    /* Input Bar Styles */
+    .input-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 8px;
+      background-image: url("https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg");
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    .input-wrapper {
+      background-color: white;
+      border-radius: 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      padding: 6px 12px;
+      margin: 0 8px;
+    }
+
+    .input-btn {
+      color: #6b7280;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .input-btn:hover {
+      color: #374151;
+    }
+
+    .input-btn i {
+      font-size: 20px;
+    }
+
+    .input-field {
+      flex: 1;
+      padding: 4px 12px;
+      font-size: 14px;
+      outline: none;
+      background: transparent;
+      border: none;
+      min-height: 24px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    [contenteditable]:empty:before {
+      content: attr(data-placeholder);
+      color: #9ca3af;
     }
   </style>
 </head>
@@ -36,7 +275,6 @@
   <script type="text/babel">
     const { useState } = React;
 
-    // Lucide Icons as React components
     const ArrowLeft = () => (
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="m12 19-7-7 7-7"/>
@@ -54,107 +292,88 @@
 
     function TelegramHeader() {
       return (
-        <div className="h-screen flex flex-col" style={{
-          backgroundImage: 'url("https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}>
+        <div className="container">
           {/* Header */}
-          <div className="flex items-center justify-between px-2 py-2 bg-white shadow-sm">
-            <button className="p-1 hover:bg-gray-100 rounded-full">
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+          <div className="header">
+            <button className="header-btn">
+              <ArrowLeft />
             </button>
 
-            <div className="flex items-center flex-1 mx-2">
-              <div className="w-10 h-10 rounded-full bg-orange-400 flex items-center justify-center">
-                <span className="text-white font-semibold text-sm">DS</span>
+            <div className="header-center">
+              <div className="avatar">
+                <span>DS</span>
               </div>
 
-              <div className="ml-2 flex-1 min-w-0">
-                <h2 className="text-sm font-semibold text-gray-900 truncate">
-                  Daddy Steve
-                </h2>
-                <p className="text-xs text-gray-500 truncate">
-                  last seen recently
-                </p>
+              <div className="header-info">
+                <h2 className="header-title">Daddy Steve</h2>
+                <p className="header-status">last seen recently</p>
               </div>
             </div>
 
-            <button className="p-1 hover:bg-gray-100 rounded-full">
-              <MoreVertical className="w-5 h-5 text-gray-600" />
+            <button className="header-btn">
+              <MoreVertical />
             </button>
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 p-3 pb-20 overflow-y-auto hide-scrollbar">
-            {/* Date Divider */}
-            <div className="flex justify-center mb-3">
-              <div className="bg-white px-3 py-0.5 rounded-full flex items-center">
-                <span className="text-xs text-gray-700">September 18</span>
+          <div className="chat-messages">
+            {/* Date Divider - Fixed */}
+            <div className="date-divider">
+              <div className="date-badge">
+                <span>September 18</span>
               </div>
             </div>
 
-            {/* Left Message - Only one kept */}
-            <div className="flex justify-start mb-2">
-              <div className="bg-white rounded-2xl px-3 py-1.5 max-w-xs shadow-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-900">How are you doing?</span>
-                  <span className="text-xs text-gray-500">2:05 PM</span>
+            {/* Scrollable Chat Area */}
+            <div className="chat-scroll-area">
+              {/* Left Message */}
+              <div className="message-left">
+                <div className="message-bubble message-bubble-left">
+                  <div className="message-content">
+                    <span className="message-text">How are you doing?</span>
+                    <span className="message-time">2:05 PM</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Right Message - Only one kept */}
-            <div className="flex justify-end mb-2">
-              <div className="bg-green-100 rounded-2xl px-3 py-1.5 max-w-xs shadow-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-900">I'm good! What about you?</span>
-                  <span className="text-xs text-gray-500">2:07 PM</span>
-                  <svg className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <g clipPath="url(#clip0_949_23339)">
-                      <path d="M17.5821 6.95711C17.9726 6.56658 17.9726 5.93342 17.5821 5.54289C17.1916 5.15237 16.5584 5.15237 16.1679 5.54289L5.54545 16.1653L1.70711 12.327C1.31658 11.9365 0.683417 11.9365 0.292893 12.327C-0.0976311 12.7175 -0.097631 13.3507 0.292893 13.7412L4.83835 18.2866C5.22887 18.6772 5.86204 18.6772 6.25256 18.2866L17.5821 6.95711Z" fill="currentColor" />
-                      <path d="M23.5821 6.95711C23.9726 6.56658 23.9726 5.93342 23.5821 5.54289C23.1915 5.15237 22.5584 5.15237 22.1678 5.54289L10.8383 16.8724C10.4478 17.263 10.4478 17.8961 10.8383 18.2866C11.2288 18.6772 11.862 18.6772 12.2525 18.2866L23.5821 6.95711Z" fill="currentColor" />
-                    </g>
-                    <defs>
-                      <clipPath id="clip0_949_23339">
-                        <rect width="24" height="24" fill="white" />
-                      </clipPath>
-                    </defs>
-                  </svg>
+              {/* Right Message */}
+              <div className="message-right">
+                <div className="message-bubble message-bubble-right">
+                  <div className="message-content">
+                    <span className="message-text">I'm good! What about you?</span>
+                    <span className="message-time">2:07 PM</span>
+                    <svg className="checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <g clipPath="url(#clip0_949_23339)">
+                        <path d="M17.5821 6.95711C17.9726 6.56658 17.9726 5.93342 17.5821 5.54289C17.1916 5.15237 16.5584 5.15237 16.1679 5.54289L5.54545 16.1653L1.70711 12.327C1.31658 11.9365 0.683417 11.9365 0.292893 12.327C-0.0976311 12.7175 -0.097631 13.3507 0.292893 13.7412L4.83835 18.2866C5.22887 18.6772 5.86204 18.6772 6.25256 18.2866L17.5821 6.95711Z" fill="currentColor" />
+                        <path d="M23.5821 6.95711C23.9726 6.56658 23.9726 5.93342 23.5821 5.54289C23.1915 5.15237 22.5584 5.15237 22.1678 5.54289L10.8383 16.8724C10.4478 17.263 10.4478 17.8961 10.8383 18.2866C11.2288 18.6772 11.862 18.6772 12.2525 18.2866L23.5821 6.95711Z" fill="currentColor" />
+                      </g>
+                      <defs>
+                        <clipPath id="clip0_949_23339">
+                          <rect width="24" height="24" fill="white" />
+                        </clipPath>
+                      </defs>
+                    </svg>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Floating Input Bar */}
-          <div className="fixed bottom-0 left-0 right-0 p-2" style={{
-            backgroundImage: 'url("https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundAttachment: 'fixed'
-          }}>
-            <div className="bg-white rounded-3xl shadow-lg flex items-center px-3 py-1.5 mx-2">
-              {/* Smile Icon */}
-              <button className="text-gray-500 hover:text-gray-700 p-1">
-                <i className="fa-regular fa-face-smile text-xl"></i>
+          <div className="input-container">
+            <div className="input-wrapper">
+              <button className="input-btn">
+                <i className="fa-regular fa-face-smile"></i>
               </button>
 
-              {/* Content div */}
               <div
                 contentEditable="true"
-                className="flex-1 px-3 py-1 text-sm outline-none bg-transparent"
+                className="input-field"
                 data-placeholder="Type a message..."
-                style={{
-                  minHeight: '24px',
-                  maxHeight: '120px',
-                  overflowY: 'auto'
-                }}
               ></div>
 
-              {/* Attachment Icon */}
-              <button className="text-gray-500 hover:text-gray-700 p-1">
-                <i className="fa-solid fa-paperclip text-xl"></i>
+              <button className="input-btn">
+                <i className="fa-solid fa-paperclip"></i>
               </button>
             </div>
           </div>
