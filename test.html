@@ -33,12 +33,13 @@
 
     function TelegramHeader() {
       return (
-        <div className="min-h-screen" style={{
+        <div className="min-h-screen flex flex-col" style={{
           backgroundImage: 'url("https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
         }}>
+          {/* Header */}
           <div className="flex items-center justify-between px-2 py-2 bg-white shadow-sm">
             <button className="p-1 hover:bg-gray-100 rounded-full">
               <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -50,7 +51,7 @@
               </div>
 
               <div className="ml-2 flex-1 min-w-0">
-                <h2 className="text-base font-semibold text-gray-900 truncate">
+                <h2 className="text-sm font-semibold text-gray-900 truncate">
                   Daddy Steve
                 </h2>
                 <p className="text-xs text-gray-500 truncate">
@@ -62,6 +63,78 @@
             <button className="p-1 hover:bg-gray-100 rounded-full">
               <MoreVertical className="w-5 h-5 text-gray-600" />
             </button>
+          </div>
+
+          {/* Chat Messages */}
+          <div className="flex-1 p-3 pb-20 overflow-y-auto">
+            {/* Date Divider */}
+            <div className="flex justify-center mb-3">
+              <div className="bg-white/70 backdrop-blur-sm px-3 py-1 rounded-full">
+                <span className="text-xs text-gray-700">September 18</span>
+              </div>
+            </div>
+
+            {/* Left Message - Only one kept */}
+            <div className="flex justify-start mb-2">
+              <div className="bg-white rounded-2xl px-3 py-1.5 max-w-xs shadow-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-900">How are you doing?</span>
+                  <span className="text-xs text-gray-500">2:05 PM</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Message - Only one kept */}
+            <div className="flex justify-end mb-2">
+              <div className="bg-green-100 rounded-2xl px-3 py-1.5 max-w-xs shadow-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-900">I'm good! What about you?</span>
+                  <span className="text-xs text-gray-500">2:07 PM</span>
+                  <svg className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g clipPath="url(#clip0_949_23339)">
+                      <path d="M17.5821 6.95711C17.9726 6.56658 17.9726 5.93342 17.5821 5.54289C17.1916 5.15237 16.5584 5.15237 16.1679 5.54289L5.54545 16.1653L1.70711 12.327C1.31658 11.9365 0.683417 11.9365 0.292893 12.327C-0.0976311 12.7175 -0.097631 13.3507 0.292893 13.7412L4.83835 18.2866C5.22887 18.6772 5.86204 18.6772 6.25256 18.2866L17.5821 6.95711Z" fill="currentColor" />
+                      <path d="M23.5821 6.95711C23.9726 6.56658 23.9726 5.93342 23.5821 5.54289C23.1915 5.15237 22.5584 5.15237 22.1678 5.54289L10.8383 16.8724C10.4478 17.263 10.4478 17.8961 10.8383 18.2866C11.2288 18.6772 11.862 18.6772 12.2525 18.2866L23.5821 6.95711Z" fill="currentColor" />
+                    </g>
+                    <defs>
+                      <clipPath id="clip0_949_23339">
+                        <rect width="24" height="24" fill="white" />
+                      </clipPath>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Floating Input Bar */}
+          <div className="fixed bottom-0 left-0 right-0 p-2" style={{
+            backgroundImage: 'url("https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed'
+          }}>
+            <div className="bg-white rounded-full shadow-lg flex items-center px-3 py-2 mx-2">
+              {/* Smile Icon */}
+              <button className="text-gray-500 hover:text-gray-700 p-1">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm-3.5-9c.828 0 1.5-.672 1.5-1.5S9.328 8 8.5 8 7 8.672 7 9.5 7.672 11 8.5 11zm7 0c.828 0 1.5-.672 1.5-1.5S16.328 8 15.5 8 14 8.672 14 9.5s.672 1.5 1.5 1.5zm-7.5 3c0 2.485 2.015 4.5 4.5 4.5s4.5-2.015 4.5-4.5H8z"/>
+                </svg>
+              </button>
+
+              {/* Input */}
+              <input
+                type="text"
+                placeholder="Type a message..."
+                className="flex-1 px-3 py-1 text-sm outline-none bg-transparent"
+              />
+
+              {/* Attachment Icon */}
+              <button className="text-gray-500 hover:text-gray-700 p-1">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M21.586 10.461l-10.05 10.075c-1.95 1.949-5.122 1.949-7.071 0s-1.95-5.122 0-7.072l10.628-10.585c1.17-1.17 3.073-1.17 4.243 0 1.169 1.17 1.17 3.072 0 4.242l-8.507 8.464c-.39.39-1.024.39-1.414 0s-.39-1.024 0-1.414l7.093-7.05-1.415-1.414-7.093 7.049c-1.172 1.172-1.172 3.071 0 4.242s3.071 1.171 4.242 0l8.507-8.464c.977-.977 1.464-2.256 1.464-3.536 0-2.769-2.246-4.999-5-4.999-1.28 0-2.559.488-3.536 1.465l-10.627 10.583c-1.366 1.368-2.05 3.159-2.05 4.951 0 3.863 3.13 7 7 7 1.792 0 3.583-.684 4.95-2.05l10.05-10.075-1.414-1.414z"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       );
