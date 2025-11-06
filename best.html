@@ -22,40 +22,6 @@
         html,body{height:100dvh;margin:0;padding:0;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
         #root{height:100dvh}
         [contentEditable=true]:empty:before{content:attr(placeholder);color:#9ca3af;pointer-events:none;opacity:.7}
-        
-        /* Prevent text selection, copy, right-click, and drag */
-        * {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-        [contentEditable=true] {
-            -webkit-user-select: text;
-            user-select: text;
-        }
-        img, video, a {
-            pointer-events: none;
-        }
-        /* Disable context menu */
-        body {
-            -webkit-context-menu: none;
-            context-menu: none;
-        }
-        /* Prevent image drag */
-        img {
-            -webkit-user-drag: none;
-            -khtml-user-drag: none;
-            -moz-user-drag: none;
-            -o-user-drag: none;
-            user-drag: none;
-        }
-        /* Disable long-press on mobile */
-        * {
-            -webkit-touch-callout: none;
-        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -104,13 +70,12 @@
                         <button className="p-2 hover:bg-gray-100 rounded-full transition-colors"><MoreVertical/></button>
                     </div>
 
-                    {/* Sticky Header Date - 26px height */}
+                    {/* Sticky Header Date - Hidden by default, appears on scroll */}
                     <div className={`absolute left-1/2 transform -translate-x-1/2 transition-opacity duration-200 pointer-events-none ${stickyDate ? 'opacity-100' : 'opacity-0'}`}
-                         style={{ bottom: '-32px' }}>
-                        <div className="px-4 rounded-full flex items-center shadow-sm" style={{ 
+                         style={{ bottom: '-34px' }}>
+                        <div className="px-4 py-2 rounded-full flex items-center shadow-sm" style={{ 
                             backgroundColor: '#749cbf',
-                            minHeight: '26px',
-                            height: '26px'
+                            minHeight: '30px'
                         }}>
                             <span className="text-white text-xs font-medium" style={{ lineHeight: '1' }}>{stickyDate || 'June 6'}</span>
                         </div>
@@ -158,7 +123,7 @@
                 if (!chat) return;
 
                 const dateBadges = chat.querySelectorAll('.chat-date');
-                const headerHeight = 80;
+                const headerHeight = 80; // Approximate header height
                 let currentStickyDate = null;
 
                 const checkStickyDate = () => {
@@ -182,7 +147,7 @@
                     scrollTimeout.current = setTimeout(() => {
                         setIsScrolling(false);
                         setStickyDate(null);
-                    }, 800);
+                    }, 800); // Hide after 800ms of no scroll
                 };
 
                 const handleScroll = () => {
