@@ -1,261 +1,93 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Telegram Header</title>
+  <title>Telegram Header with Sticky Date</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin:0; padding:0; box-sizing:border-box; }
 
-    body, html {
-      height: 100%;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-    }
+    body, html { height:100%; overflow:hidden;
+      font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
 
-    .container {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background-image: url("https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg");
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-    }
+    .container { height:100vh; display:flex; flex-direction:column;
+      background-image:url("https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg");
+      background-size:cover; background-position:center; background-repeat:no-repeat; }
 
-    /* Header Styles */
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px;
-      background-color: white;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
+    /* ---------- Header ---------- */
+    .header { display:flex; align-items:center; justify-content:space-between;
+      padding:8px; background:white; box-shadow:0 1px 3px rgba(0,0,0,.1);
+      z-index:20; position:relative; }
 
-    .header-btn {
-      padding: 4px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .header-btn { padding:4px; background:none; border:none; cursor:pointer;
+      border-radius:50%; display:flex; align-items:center; justify-content:center; }
+    .header-btn:hover { background:#f3f4f6; }
+    .header-btn svg { width:20px; height:20px; color:#4b5563; }
 
-    .header-btn:hover {
-      background-color: #f3f4f6;
-    }
+    .header-center { display:flex; align-items:center; flex:1; margin:0 8px; min-width:0; }
+    .avatar { width:40px; height:40px; border-radius:50%; background:#fb923c;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .avatar span { color:white; font-weight:600; font-size:14px; }
 
-    .header-btn svg {
-      width: 20px;
-      height: 20px;
-      color: #4b5563;
-    }
+    .header-info { margin-left:8px; flex:1; min-width:0; }
+    .header-title { font-size:14px; font-weight:600; color:#111827;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .header-status { font-size:12px; color:#6b7280;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    .header-center {
-      display: flex;
-      align-items: center;
-      flex: 1;
-      margin: 0 8px;
-      min-width: 0;
-    }
+    /* ---------- Chat ---------- */
+    .chat-messages { flex:1; padding:12px; padding-bottom:80px;
+      overflow-y:auto; position:relative;
+      background-image:inherit; background-size:inherit;
+      background-position:inherit; background-attachment:inherit; }
+    .chat-messages::-webkit-scrollbar { display:none; }
+    .chat-messages { -ms-overflow-style:none; scrollbar-width:none; }
 
-    .avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background-color: #fb923c;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
+    /* Sticky Date */
+    .date-divider { position:sticky; top:0; z-index:10;
+      display:flex; justify-content:center; margin:12px 0 8px; padding-top:4px;
+      background-image:inherit; background-size:cover; background-position:center; }
+    .date-badge { background:rgba(255,255,255,.95);
+      backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+      padding:4px 14px; border-radius:9999px; box-shadow:0 1px 3px rgba(0,0,0,.1);
+      border:1px solid rgba(0,0,0,.05); font-weight:500; }
+    .date-badge span { font-size:12px; color:#374151; }
 
-    .avatar span {
-      color: white;
-      font-weight: 600;
-      font-size: 14px;
-    }
+    /* Messages */
+    .message-left  { display:flex; justify-content:flex-start; margin-bottom:8px; }
+    .message-right { display:flex; justify-content:flex-end;   margin-bottom:8px; }
 
-    .header-info {
-      margin-left: 8px;
-      flex: 1;
-      min-width: 0;
-    }
+    .message-bubble { border-radius:16px; padding:6px 12px; max-width:75%;
+      box-shadow:0 1px 2px rgba(0,0,0,.05); word-break:break-word; }
+    .message-bubble-left  { background:white; }
+    .message-bubble-right { background:#dcfce7; }
 
-    .header-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #111827;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .message-content { display:flex; align-items:flex-end; gap:6px; }
+    .message-text { font-size:14px; color:#111827; }
+    .message-time { font-size:12px; color:#6b7280; white-space:nowrap; }
 
-    .header-status {
-      font-size: 12px;
-      color: #6b7280;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .checkmark { width:14px; height:14px; color:#3b82f6; flex-shrink:0; }
 
-    /* Chat Messages Styles */
-    .chat-messages {
-      flex: 1;
-      padding: 12px;
-      padding-bottom: 80px;
-      overflow-y: auto;
-    }
-
-    .chat-messages::-webkit-scrollbar {
-      display: none;
-    }
-
-    .chat-messages {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-
-    .date-divider {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 12px;
-    }
-
-    .date-badge {
-      background-color: white;
-      padding: 2px 12px;
-      border-radius: 9999px;
-      display: flex;
-      align-items: center;
-    }
-
-    .date-badge span {
-      font-size: 12px;
-      color: #374151;
-    }
-
-    .message-left {
-      display: flex;
-      justify-content: flex-start;
-      margin-bottom: 8px;
-    }
-
-    .message-right {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 8px;
-    }
-
-    .message-bubble {
-      border-radius: 16px;
-      padding: 6px 12px;
-      max-width: 75%;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-
-    .message-bubble-left {
-      background-color: white;
-    }
-
-    .message-bubble-right {
-      background-color: #dcfce7;
-    }
-
-    .message-content {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .message-text {
-      font-size: 14px;
-      color: #111827;
-    }
-
-    .message-time {
-      font-size: 12px;
-      color: #6b7280;
-      white-space: nowrap;
-    }
-
-    .checkmark {
-      width: 14px;
-      height: 14px;
-      color: #3b82f6;
-      flex-shrink: 0;
-    }
-
-    /* Input Bar Styles */
-    .input-container {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 8px;
-      background-image: url("https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg");
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-    }
-
-    .input-wrapper {
-      background-color: white;
-      border-radius: 24px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      display: flex;
-      align-items: center;
-      padding: 6px 12px;
-      margin: 0 8px;
-    }
-
-    .input-btn {
-      color: #6b7280;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .input-btn:hover {
-      color: #374151;
-    }
-
-    .input-btn i {
-      font-size: 20px;
-    }
-
-    .input-field {
-      flex: 1;
-      padding: 4px 12px;
-      font-size: 14px;
-      outline: none;
-      background: transparent;
-      border: none;
-      min-height: 24px;
-      max-height: 120px;
-      overflow-y: auto;
-    }
-
-    [contenteditable]:empty:before {
-      content: attr(data-placeholder);
-      color: #9ca3af;
-    }
+    /* ---------- Input ---------- */
+    .input-container { position:fixed; bottom:0; left:0; right:0;
+      padding:8px; background-image:url("https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg");
+      background-size:cover; background-position:center; background-attachment:fixed;
+      z-index:30; }
+    .input-wrapper { background:white; border-radius:24px;
+      box-shadow:0 4px 6px rgba(0,0,0,.1); display:flex; align-items:center;
+      padding:6px 12px; margin:0 8px; }
+    .input-btn { color:#6b7280; background:none; border:none; cursor:pointer;
+      padding:4px; display:flex; align-items:center; justify-content:center; }
+    .input-btn:hover { color:#374151; }
+    .input-btn i { font-size:20px; }
+    .input-field { flex:1; padding:4px 12px; font-size:14px; outline:none;
+      background:transparent; border:none; min-height:24px; max-height:120px;
+      overflow-y:auto; }
+    [contenteditable]:empty:before { content:attr(data-placeholder); color:#9ca3af; }
   </style>
 </head>
 <body>
@@ -265,17 +97,16 @@
     const { useState } = React;
 
     const ArrowLeft = () => (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m12 19-7-7 7-7"/>
-        <path d="M19 12H5"/>
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
       </svg>
     );
 
     const MoreVertical = () => (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="1"/>
-        <circle cx="12" cy="5" r="1"/>
-        <circle cx="12" cy="19" r="1"/>
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
       </svg>
     );
 
@@ -284,36 +115,25 @@
         <div className="container">
           {/* Header */}
           <div className="header">
-            <button className="header-btn">
-              <ArrowLeft />
-            </button>
-
+            <button className="header-btn"><ArrowLeft/></button>
             <div className="header-center">
-              <div className="avatar">
-                <span>DS</span>
-              </div>
-
+              <div className="avatar"><span>DS</span></div>
               <div className="header-info">
                 <h2 className="header-title">Daddy Steve</h2>
                 <p className="header-status">last seen recently</p>
               </div>
             </div>
-
-            <button className="header-btn">
-              <MoreVertical />
-            </button>
+            <button className="header-btn"><MoreVertical/></button>
           </div>
 
           {/* Chat Messages */}
           <div className="chat-messages">
-            {/* Date Divider */}
+            {/* Sticky Date */}
             <div className="date-divider">
-              <div className="date-badge">
-                <span>September 18</span>
-              </div>
+              <div className="date-badge"><span>September 18</span></div>
             </div>
 
-            {/* Left Message */}
+            {/* Sample messages */}
             <div className="message-left">
               <div className="message-bubble message-bubble-left">
                 <div className="message-content">
@@ -323,44 +143,48 @@
               </div>
             </div>
 
-            {/* Right Message */}
             <div className="message-right">
               <div className="message-bubble message-bubble-right">
                 <div className="message-content">
                   <span className="message-text">I'm good! What about you?</span>
                   <span className="message-time">2:07 PM</span>
                   <svg className="checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <g clipPath="url(#clip0_949_23339)">
-                      <path d="M17.5821 6.95711C17.9726 6.56658 17.9726 5.93342 17.5821 5.54289C17.1916 5.15237 16.5584 5.15237 16.1679 5.54289L5.54545 16.1653L1.70711 12.327C1.31658 11.9365 0.683417 11.9365 0.292893 12.327C-0.0976311 12.7175 -0.097631 13.3507 0.292893 13.7412L4.83835 18.2866C5.22887 18.6772 5.86204 18.6772 6.25256 18.2866L17.5821 6.95711Z" fill="currentColor" />
-                      <path d="M23.5821 6.95711C23.9726 6.56658 23.9726 5.93342 23.5821 5.54289C23.1915 5.15237 22.5584 5.15237 22.1678 5.54289L10.8383 16.8724C10.4478 17.263 10.4478 17.8961 10.8383 18.2866C11.2288 18.6772 11.862 18.6772 12.2525 18.2866L23.5821 6.95711Z" fill="currentColor" />
+                    <g clipPath="url(#clip0)">
+                      <path d="M17.5821 6.95711C17.9726 6.56658 17.9726 5.93342 17.5821 5.54289C17.1916 5.15237 16.5584 5.15237 16.1679 5.54289L5.54545 16.1653L1.70711 12.327C1.31658 11.9365 0.683417 11.9365 0.292893 12.327C-0.0976311 12.7175 -0.097631 13.3507 0.292893 13.7412L4.83835 18.2866C5.22887 18.6772 5.86204 18.6772 6.25256 18.2866L17.5821 6.95711Z" fill="currentColor"/>
+                      <path d="M23.5821 6.95711C23.9726 6.56658 23.9726 5.93342 23.5821 5.54289C23.1915 5.15237 22.5584 5.15237 22.1678 5.54289L10.8383 16.8724C10.4478 17.263 10.4478 17.8961 10.8383 18.2866C11.2288 18.6772 11.862 18.6772 12.2525 18.2866L23.5821 6.95711Z" fill="currentColor"/>
                     </g>
-                    <defs>
-                      <clipPath id="clip0_949_23339">
-                        <rect width="24" height="24" fill="white" />
-                      </clipPath>
-                    </defs>
+                    <defs><clipPath id="clip0"><rect width="24" height="24" fill="white"/></clipPath></defs>
                   </svg>
                 </div>
               </div>
             </div>
+
+            {/* Lots of messages to test sticky date */}
+            {Array.from({length:30}, (_,i)=>
+              <div key={i} className={i%2===0?"message-left":"message-right"}>
+                <div className={`message-bubble ${i%2===0?"message-bubble-left":"message-bubble-right"}`}>
+                  <div className="message-content">
+                    <span className="message-text">Message {i+1}</span>
+                    <span className="message-time">{2+(i%60)}:{(i%60).toString().padStart(2,'0')} PM</span>
+                    {i%2===1 && (
+                      <svg className="checkmark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g clipPath="url(#clip0)"><path d="M17.5821 6.95711C17.9726 6.56658 17.9726 5.93342 17.5821 5.54289C17.1916 5.15237 16.5584 5.15237 16.1679 5.54289L5.54545 16.1653L1.70711 12.327C1.31658 11.9365 0.683417 11.9365 0.292893 12.327C-0.0976311 12.7175 -0.097631 13.3507 0.292893 13.7412L4.83835 18.2866C5.22887 18.6772 5.86204 18.6772 6.25256 18.2866L17.5821 6.95711Z" fill="currentColor"/>
+                        <path d="M23.5821 6.95711C23.9726 6.56658 23.9726 5.93342 23.5821 5.54289C23.1915 5.15237 22.5584 5.15237 22.1678 5.54289L10.8383 16.8724C10.4478 17.263 10.4478 17.8961 10.8383 18.2866C11.2288 18.6772 11.862 18.6772 12.2525 18.2866L23.5821 6.95711Z" fill="currentColor"/></g>
+                        <defs><clipPath id="clip0"><rect width="24" height="24" fill="white"/></clipPath></defs>
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Floating Input Bar */}
+          {/* Input Bar */}
           <div className="input-container">
             <div className="input-wrapper">
-              <button className="input-btn">
-                <i className="fa-regular fa-face-smile"></i>
-              </button>
-
-              <div
-                contentEditable="true"
-                className="input-field"
-                data-placeholder="Type a message..."
-              ></div>
-
-              <button className="input-btn">
-                <i className="fa-solid fa-paperclip"></i>
-              </button>
+              <button className="input-btn"><i className="fa-regular fa-face-smile"></i></button>
+              <div contentEditable="true" className="input-field" data-placeholder="Type a message..."></div>
+              <button className="input-btn"><i className="fa-solid fa-paperclip"></i></button>
             </div>
           </div>
         </div>
