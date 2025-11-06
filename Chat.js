@@ -173,7 +173,7 @@ const Chat = () => {
         style={{
           position: 'absolute',
           right: '16px',
-          bottom: '14px',               // lifted 9px higher
+          bottom: '21px',               // lifted 9px higher
           width: '54px',
           height: '54px',
           background: '#749cbf',
