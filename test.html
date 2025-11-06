@@ -69,7 +69,7 @@
           <div className="flex-1 p-3 pb-20 overflow-y-auto">
             {/* Date Divider */}
             <div className="flex justify-center mb-3">
-              <div className="bg-white/70 backdrop-blur-sm px-3 py-1 rounded-full">
+              <div className="bg-white px-3 py-0.5 rounded-full">
                 <span className="text-xs text-gray-700">September 18</span>
               </div>
             </div>
@@ -121,12 +121,17 @@
                 </svg>
               </button>
 
-              {/* Input */}
-              <input
-                type="text"
-                placeholder="Type a message..."
+              {/* Content div */}
+              <div
+                contentEditable="true"
                 className="flex-1 px-3 py-1 text-sm outline-none bg-transparent"
-              />
+                data-placeholder="Type a message..."
+                style={{
+                  minHeight: '24px',
+                  maxHeight: '120px',
+                  overflowY: 'auto'
+                }}
+              ></div>
 
               {/* Attachment Icon */}
               <button className="text-gray-500 hover:text-gray-700 p-1">
