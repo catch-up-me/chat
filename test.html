@@ -113,34 +113,33 @@
     /* Chat Messages Styles */
     .chat-messages {
       flex: 1;
-      display: flex;
-      flex-direction: column;
       position: relative;
+      overflow: hidden;
     }
 
     .date-divider {
       position: sticky;
       top: 0;
-      z-index: 10;
       display: flex;
       justify-content: center;
       padding: 12px 0;
+      z-index: 10;
       background-image: url("https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg");
       background-size: cover;
       background-position: center;
     }
 
-    .chat-scroll-area {
-      flex: 1;
-      padding: 0 12px 80px 12px;
+    .messages-scroll {
+      height: 100%;
       overflow-y: auto;
+      padding: 0 12px 80px 12px;
     }
 
-    .chat-scroll-area::-webkit-scrollbar {
+    .messages-scroll::-webkit-scrollbar {
       display: none;
     }
 
-    .chat-scroll-area {
+    .messages-scroll {
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
@@ -317,15 +316,15 @@
 
           {/* Chat Messages */}
           <div className="chat-messages">
-            {/* Date Divider - Fixed */}
+            {/* Date Divider */}
             <div className="date-divider">
               <div className="date-badge">
                 <span>September 18</span>
               </div>
             </div>
 
-            {/* Scrollable Chat Area */}
-            <div className="chat-scroll-area">
+            {/* Scrollable Messages */}
+            <div className="messages-scroll">
               {/* Left Message */}
               <div className="message-left">
                 <div className="message-bubble message-bubble-left">
