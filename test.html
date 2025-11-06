@@ -9,6 +9,26 @@
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+    [contenteditable]:empty:before {
+      content: attr(data-placeholder);
+      color: #9CA3AF;
+    }
+    /* Hide scrollbar */
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
 </head>
 <body>
   <div id="root"></div>
@@ -34,7 +54,7 @@
 
     function TelegramHeader() {
       return (
-        <div className="min-h-screen flex flex-col" style={{
+        <div className="h-screen flex flex-col" style={{
           backgroundImage: 'url("https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -67,10 +87,10 @@
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 p-3 pb-20 overflow-y-auto">
+          <div className="flex-1 p-3 pb-20 overflow-y-auto hide-scrollbar">
             {/* Date Divider */}
             <div className="flex justify-center mb-3">
-              <div className="bg-white px-3 py-0.5 rounded-full">
+              <div className="bg-white px-3 py-0.5 rounded-full flex items-center">
                 <span className="text-xs text-gray-700">September 18</span>
               </div>
             </div>
