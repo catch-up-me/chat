@@ -8,6 +8,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div id="root"></div>
@@ -78,7 +79,7 @@
                     <TelegramHeader />
                     
                     {/* Chat Area - Scrollable */}
-                    <div className="flex-1 overflow-y-auto pt-8" style={{ 
+                    <div className="flex-1 overflow-y-auto pt-8 pb-2" style={{ 
                         backgroundImage: 'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
@@ -126,9 +127,60 @@
                             </div>
                         </div>
                     </div>
+
+                    {/* Bottom Input Container */}
+                    <div className="bg-white px-2 py-2" style={{ 
+                        backgroundImage: 'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        backgroundRepeat: 'no-repeat'
+                    }}>
+                        <div className="flex items-center gap-2">
+                            {/* Smile Icon */}
+                            <button className="text-gray-500 text-xl p-2 hover:text-gray-700">
+                                <i className="fa-regular fa-face-smile"></i>
+                            </button>
+
+                            {/* Input Field */}
+                            <div 
+                                className="flex-1 bg-white px-4 py-2 text-gray-900 focus:outline-none"
+                                contentEditable="true"
+                                data-placeholder="Type to Message.."
+                                style={{ 
+                                    borderRadius: '4px',
+                                    minHeight: '40px',
+                                    maxHeight: '120px',
+                                    overflowY: 'auto'
+                                }}
+                                onInput={(e) => {
+                                    if (e.target.textContent.trim() === '') {
+                                        e.target.setAttribute('data-empty', 'true');
+                                    } else {
+                                        e.target.removeAttribute('data-empty');
+                                    }
+                                }}
+                            ></div>
+
+                            {/* Attachment Icon */}
+                            <button className="text-gray-500 text-xl p-2 hover:text-gray-700">
+                                <i className="fa-solid fa-paperclip"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             );
         }
+
+        // Add custom CSS for placeholder
+        const style = document.createElement('style');
+        style.textContent = `
+            [contentEditable="true"]:empty:before {
+                content: attr(data-placeholder);
+                color: #9ca3af;
+                pointer-events: none;
+            }
+        `;
+        document.head.appendChild(style);
 
         // Render the app
         const root = ReactDOM.createRoot(document.getElementById('root'));
