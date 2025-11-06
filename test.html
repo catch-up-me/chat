@@ -7,9 +7,9 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+<body>
     <div id="root"></div>
 
     <script type="text/babel">
@@ -33,124 +33,39 @@
 
         function TelegramHeader() {
             return (
-                <div style={{
-                    backgroundColor: 'white',
-                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                    position: 'relative',
-                    flexShrink: 0
-                }}>
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '8px 12px'
-                    }}>
+                <div className="bg-white shadow-sm relative">
+                    <div className="flex items-center justify-between px-3 py-2">
                         {/* Back Button */}
-                        <button style={{
-                            padding: '8px',
-                            borderRadius: '9999px',
-                            transition: 'background-color 0.2s',
-                            border: 'none',
-                            background: 'transparent',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}>
+                        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                             <ArrowLeft />
                         </button>
 
                         {/* Avatar and User Info */}
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            flex: 1,
-                            margin: '0 12px',
-                            minWidth: 0
-                        }}>
-                            <div style={{
-                                width: '44px',
-                                height: '44px',
-                                borderRadius: '50%',
-                                backgroundColor: '#fb923c',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0
-                            }}>
-                                <span style={{
-                                    color: 'white',
-                                    fontWeight: 500,
-                                    fontSize: '16px'
-                                }}>DS</span>
+                        <div className="flex items-center flex-1 mx-3">
+                            <div className="w-11 h-11 rounded-full bg-orange-400 flex items-center justify-center flex-shrink-0">
+                                <span className="text-white font-medium text-base">DS</span>
                             </div>
                             
-                            <div style={{
-                                marginLeft: '12px',
-                                flex: 1,
-                                minWidth: 0
-                            }}>
-                                <h1 style={{
-                                    color: '#111827',
-                                    fontWeight: 500,
-                                    fontSize: '16px',
-                                    lineHeight: 1.25,
-                                    margin: 0
-                                }}>
+                            <div className="ml-3 flex-1 min-w-0">
+                                <h1 className="text-gray-900 font-medium text-base leading-tight">
                                     Daddy Steve
                                 </h1>
-                                <p style={{
-                                    color: '#6b7280',
-                                    fontSize: '14px',
-                                    lineHeight: 1.25,
-                                    margin: 0
-                                }}>
+                                <p className="text-gray-500 text-sm leading-tight">
                                     last seen within a week
                                 </p>
                             </div>
                         </div>
 
                         {/* Menu Button */}
-                        <button style={{
-                            padding: '8px',
-                            borderRadius: '9999px',
-                            transition: 'background-color 0.2s',
-                            border: 'none',
-                            background: 'transparent',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}>
+                        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                             <MoreVertical />
                         </button>
                     </div>
                     
                     {/* Date Badge */}
-                    <div style={{
-                        position: 'absolute',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        zIndex: 10,
-                        bottom: '-27px'
-                    }}>
-                        <div style={{
-                            padding: '5px 12px',
-                            borderRadius: '9999px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            backgroundColor: '#749cbf'
-                        }}>
-                            <span style={{
-                                color: 'white',
-                                fontSize: '12px',
-                                fontWeight: 500,
-                                lineHeight: 1
-                            }}>June 6</span>
+                    <div className="absolute left-1/2 transform -translate-x-1/2 z-10" style={{ bottom: '-27px' }}>
+                        <div className="px-3 rounded-full flex items-center" style={{ backgroundColor: '#749cbf', paddingTop: '5px', paddingBottom: '5px' }}>
+                            <span className="text-white text-xs font-medium" style={{ lineHeight: '1' }}>June 6</span>
                         </div>
                     </div>
                 </div>
@@ -159,128 +74,42 @@
 
         function TelegramLayout() {
             return (
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100vh',
-                    backgroundColor: '#f9fafb'
-                }}>
+                <div className="flex flex-col h-screen bg-gray-50">
                     <TelegramHeader />
                     
                     {/* Chat Area - Scrollable */}
-                    <div style={{ 
-                        flex: 1,
-                        overflowY: 'auto',
-                        paddingTop: '32px',
-                        paddingBottom: '8px',
+                    <div className="flex-1 overflow-y-auto pt-8" style={{ 
                         backgroundImage: 'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat',
-                        msOverflowStyle: 'none',
-                        scrollbarWidth: 'none'
+                        backgroundRepeat: 'no-repeat'
                     }}>
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'flex-end',
-                            minHeight: '100%',
-                            padding: '16px',
-                            gap: '16px'
-                        }}>
+                        <div className="flex flex-col justify-end min-h-full px-4 py-4 space-y-4">
                             {/* Date Badge Above Message */}
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'center'
-                            }}>
-                                <div style={{
-                                    padding: '5px 12px',
-                                    borderRadius: '9999px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    backgroundColor: '#749cbf'
-                                }}>
-                                    <span style={{
-                                        color: 'white',
-                                        fontSize: '12px',
-                                        fontWeight: 500,
-                                        lineHeight: 1
-                                    }}>June 16</span>
+                            <div className="flex justify-center">
+                                <div className="px-3 rounded-full flex items-center" style={{ backgroundColor: '#749cbf', paddingTop: '5px', paddingBottom: '5px' }}>
+                                    <span className="text-white text-xs font-medium" style={{ lineHeight: '1' }}>June 16</span>
                                 </div>
                             </div>
                             
                             {/* Messages */}
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'flex-end',
-                                gap: '8px'
-                            }}>
-                                <div style={{
-                                    backgroundColor: 'white',
-                                    borderRadius: '16px',
-                                    borderBottomLeftRadius: '6px',
-                                    padding: '8px 16px',
-                                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                                    maxWidth: '288px'
-                                }}>
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'flex-end',
-                                        gap: '4px'
-                                    }}>
-                                        <span style={{
-                                            color: '#111827',
-                                            fontSize: '16px',
-                                            whiteSpace: 'nowrap'
-                                        }}>Bro</span>
-                                        <span style={{
-                                            color: '#9ca3af',
-                                            fontSize: '12px',
-                                            marginLeft: '4px'
-                                        }}>1:38 PM</span>
+                            <div className="flex items-end gap-2">
+                                <div className="bg-white rounded-2xl rounded-bl-md px-4 py-2 shadow-sm max-w-xs">
+                                    <div className="flex items-end gap-1">
+                                        <span className="text-gray-900 text-base whitespace-nowrap">Bro</span>
+                                        <span className="text-gray-400 text-xs ml-1">1:38 PM</span>
                                     </div>
                                 </div>
                             </div>
                             
                             {/* Right side message bubble */}
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'flex-end',
-                                gap: '8px',
-                                justifyContent: 'flex-end'
-                            }}>
-                                <div style={{
-                                    borderRadius: '16px',
-                                    borderBottomRightRadius: '6px',
-                                    padding: '8px 16px',
-                                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                                    maxWidth: '288px',
-                                    backgroundColor: '#5d7d99'
-                                }}>
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'flex-end',
-                                        gap: '4px'
-                                    }}>
-                                        <span style={{
-                                            color: 'white',
-                                            fontSize: '16px',
-                                            whiteSpace: 'nowrap'
-                                        }}>Hey</span>
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                            marginLeft: '4px'
-                                        }}>
-                                            <span style={{
-                                                color: '#dbeafe',
-                                                fontSize: '12px'
-                                            }}>1:39 PM</span>
-                                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{
-                                                width: '16px',
-                                                height: '16px'
-                                            }}>
+                            <div className="flex items-end gap-2 justify-end">
+                                <div className="rounded-2xl rounded-br-md px-4 py-2 shadow-sm max-w-xs" style={{ backgroundColor: '#5d7d99' }}>
+                                    <div className="flex items-end gap-1">
+                                        <span className="text-white text-base whitespace-nowrap">Hey</span>
+                                        <div className="flex items-center gap-1 ml-1">
+                                            <span className="text-blue-100 text-xs">1:39 PM</span>
+                                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4">
                                                 <g clipPath="url(#clip0_949_23339)">
                                                     <path d="M17.5821 6.95711C17.9726 6.56658 17.9726 5.93342 17.5821 5.54289C17.1916 5.15237 16.5584 5.15237 16.1679 5.54289L5.54545 16.1653L1.70711 12.327C1.31658 11.9365 0.683417 11.9365 0.292893 12.327C-0.0976311 12.7175 -0.097631 13.3507 0.292893 13.7412L4.83835 18.2866C5.22887 18.6772 5.86204 18.6772 6.25256 18.2866L17.5821 6.95711Z" fill="#9ebad2"></path>
                                                     <path d="M23.5821 6.95711C23.9726 6.56658 23.9726 5.93342 23.5821 5.54289C23.1915 5.15237 22.5584 5.15237 22.1678 5.54289L10.8383 16.8724C10.4478 17.263 10.4478 17.8961 10.8383 18.2866C11.2288 18.6772 11.862 18.6772 12.2525 18.2866L23.5821 6.95711Z" fill="#9ebad2"></path>
@@ -297,103 +126,9 @@
                             </div>
                         </div>
                     </div>
-
-                    {/* Bottom Input Container */}
-                    <div style={{
-                        padding: '96px 8px 2px 8px',
-                        flexShrink: 0,
-                        backgroundImage: 'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat'
-                    }}>
-                        {/* White Content Div with icons inside */}
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            backgroundColor: 'white',
-                            padding: '0 8px',
-                            minHeight: '48px',
-                            borderRadius: '6px'
-                        }}>
-                            {/* Smile Icon - Inside left */}
-                            <button style={{
-                                color: '#6b7280',
-                                fontSize: '24px',
-                                padding: '8px',
-                                border: 'none',
-                                background: 'transparent',
-                                cursor: 'pointer',
-                                flexShrink: 0,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                            onMouseEnter={(e) => e.target.style.color = '#374151'}
-                            onMouseLeave={(e) => e.target.style.color = '#6b7280'}>
-                                <i className="fa-regular fa-face-smile"></i>
-                            </button>
-
-                            {/* Input Field */}
-                            <div 
-                                contentEditable="true"
-                                data-placeholder="Message"
-                                style={{ 
-                                    flex: 1,
-                                    padding: '8px 12px',
-                                    color: '#111827',
-                                    outline: 'none',
-                                    minHeight: '32px',
-                                    maxHeight: '120px',
-                                    overflowY: 'auto'
-                                }}
-                                onInput={(e) => {
-                                    if (e.target.textContent.trim() === '') {
-                                        e.target.setAttribute('data-empty', 'true');
-                                    } else {
-                                        e.target.removeAttribute('data-empty');
-                                    }
-                                }}
-                            ></div>
-
-                            {/* Attachment Icon - Inside right */}
-                            <button style={{
-                                color: '#6b7280',
-                                fontSize: '24px',
-                                padding: '8px',
-                                border: 'none',
-                                background: 'transparent',
-                                cursor: 'pointer',
-                                flexShrink: 0,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}
-                            onMouseEnter={(e) => e.target.style.color = '#374151'}
-                            onMouseLeave={(e) => e.target.style.color = '#6b7280'}>
-                                <i className="fa-solid fa-paperclip"></i>
-                            </button>
-                        </div>
-                    </div>
                 </div>
             );
         }
-
-        // Add custom CSS for placeholder and scrollbar
-        const style = document.createElement('style');
-        style.textContent = `
-            [contentEditable="true"]:empty:before {
-                content: attr(data-placeholder);
-                color: #9ca3af;
-                pointer-events: none;
-            }
-            
-            /* Hide scrollbar for chat area */
-            div[style*="overflow-y: auto"]::-webkit-scrollbar {
-                display: none;
-            }
-        `;
-        document.head.appendChild(style);
 
         // Render the app
         const root = ReactDOM.createRoot(document.getElementById('root'));
