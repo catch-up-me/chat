@@ -22,6 +22,37 @@
         html,body{height:100dvh;margin:0;padding:0;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
         #root{height:100dvh}
         [contentEditable=true]:empty:before{content:attr(placeholder);color:#9ca3af;pointer-events:none;opacity:.7}
+        
+        /* Prevent selection, copy, context menu, drag */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        [contentEditable=true] {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        img, video, a {
+            pointer-events: none;
+        }
+        body {
+            -webkit-context-menu: none;
+            context-menu: none;
+        }
+        img {
+            -webkit-user-drag: none;
+            -khtml-user-drag: none;
+            -moz-user-drag: none;
+            -o-user-drag: none;
+            user-drag: none;
+        }
+        * {
+            -webkit-touch-callout: none;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -70,12 +101,12 @@
                         <button className="p-2 hover:bg-gray-100 rounded-full transition-colors"><MoreVertical/></button>
                     </div>
 
-                    {/* Sticky Header Date - Hidden by default, appears on scroll */}
                     <div className={`absolute left-1/2 transform -translate-x-1/2 transition-opacity duration-200 pointer-events-none ${stickyDate ? 'opacity-100' : 'opacity-0'}`}
-                         style={{ bottom: '-34px' }}>
-                        <div className="px-4 py-2 rounded-full flex items-center shadow-sm" style={{ 
+                         style={{ bottom: '-32px' }}>
+                        <div className="px-4 rounded-full flex items-center shadow-sm" style={{ 
                             backgroundColor: '#749cbf',
-                            minHeight: '30px'
+                            minHeight: '26px',
+                            height: '26px'
                         }}>
                             <span className="text-white text-xs font-medium" style={{ lineHeight: '1' }}>{stickyDate || 'June 6'}</span>
                         </div>
@@ -88,8 +119,10 @@
             const scrollRef = useRef(null);
             const inputRef = useRef(null);
             const inputContainerRef = useRef(null);
+            const bottomSheetRef = useRef(null);
             const [stickyDate, setStickyDate] = useState(null);
             const [isScrolling, setIsScrolling] = useState(false);
+            const [showEmojiPicker, setShowEmojiPicker] = useState(false);
             let scrollTimeout = useRef(null);
 
             useEffect(() => {
@@ -108,7 +141,7 @@
                     const newHeight = Math.min(input.scrollHeight, 100);
                     input.style.height = `${newHeight}px`;
                     container.style.height = `${newHeight + 24}px`;
-                    const bottomPadding = newHeight + 32;
+                    const bottomPadding = newHeight + 32 + (showEmojiPicker ? 280 : 0);
                     chat.style.paddingBottom = `${bottomPadding}px`;
                 };
 
@@ -116,14 +149,14 @@
                 handleInput();
 
                 return () => input.removeEventListener('input', handleInput);
-            }, []);
+            }, [showEmojiPicker]);
 
             useEffect(() => {
                 const chat = scrollRef.current;
                 if (!chat) return;
 
                 const dateBadges = chat.querySelectorAll('.chat-date');
-                const headerHeight = 80; // Approximate header height
+                const headerHeight = 80;
                 let currentStickyDate = null;
 
                 const checkStickyDate = () => {
@@ -147,7 +180,7 @@
                     scrollTimeout.current = setTimeout(() => {
                         setIsScrolling(false);
                         setStickyDate(null);
-                    }, 800); // Hide after 800ms of no scroll
+                    }, 800);
                 };
 
                 const handleScroll = () => {
@@ -161,6 +194,10 @@
                 };
             }, []);
 
+            const toggleEmojiPicker = () => {
+                setShowEmojiPicker(prev => !prev);
+            };
+
             const handleMouseDown = (e) => {
                 e.preventDefault();
             };
@@ -170,19 +207,20 @@
             };
 
             return (
-                <div className="flex flex-col h-dvh bg-gray-50">
+                <div className="flex flex-col h-dvh bg-gray-50 relative">
                     <ChatHeader stickyDate={isScrolling ? stickyDate : null} />
 
                     <div ref={scrollRef}
                          onMouseDown={handleChatClick}
                          onTouchStart={handleChatClick}
-                         className="flex-1 overflow-y-auto pt-20 px-4 transition-padding duration-100"
+                         className="flex-1 overflow-y-auto pt-20 px-4 transition-padding duration-300"
                          style={{
                              backgroundImage:'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
                              backgroundSize:'cover',
                              backgroundPosition:'center',
                              backgroundRepeat:'no-repeat',
-                             paddingBottom: '64px'
+                             paddingBottom: '64px',
+                             transition: 'padding-bottom 300ms ease'
                          }}>
                         <div className="flex flex-col justify-end min-h-full space-y-4 py-4">
                             <div className="flex justify-center">
@@ -224,14 +262,16 @@
                         </div>
                     </div>
 
-                    <div className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)]"
+                    {/* Bottom Input + Emoji Picker */}
+                    <div className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)] transition-transform duration-300"
                          style={{
                              backgroundImage:'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
                              backgroundSize:'cover',
                              backgroundPosition:'center',
                              backgroundRepeat:'no-repeat',
                              paddingTop:'8px',
-                             paddingBottom:'8px'
+                             paddingBottom:'8px',
+                             transform: showEmojiPicker ? 'translateY(-280px)' : 'translateY(0)',
                          }}>
                         <div className="mx-3 flex items-center gap-2">
                             <div ref={inputContainerRef}
@@ -242,9 +282,11 @@
                                      height:'48px',
                                      overflow:'hidden'
                                  }}>
-                                <button className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 mr-3"
-                                        onMouseDown={handleMouseDown}
-                                        onTouchStart={handleMouseDown}>
+                                <button 
+                                    className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 mr-3"
+                                    onMouseDown={handleMouseDown}
+                                    onTouchStart={handleMouseDown}
+                                    onClick={toggleEmojiPicker}>
                                     <i className="fa-regular fa-face-smile text-2xl"></i>
                                 </button>
                                 <div ref={inputRef}
@@ -273,6 +315,25 @@
                                     }}>
                                 <MicrophoneIcon />
                             </button>
+                        </div>
+                    </div>
+
+                    {/* Emoji Picker Bottom Sheet */}
+                    <div 
+                        ref={bottomSheetRef}
+                        className={`fixed bottom-0 left-0 right-0 bg-white z-30 transition-transform duration-300 ease-out ${
+                            showEmojiPicker ? 'translate-y-0' : 'translate-y-full'
+                        }`}
+                        style={{
+                            height: '280px',
+                            boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+                            backgroundImage: 'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            backgroundRepeat: 'no-repeat',
+                        }}>
+                        <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                            {/* Empty space as requested */}
                         </div>
                     </div>
                 </div>
