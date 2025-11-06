@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport content="width=device-width, initial-scale=1.0">
     <title>Telegram Chat Interface</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -31,16 +31,31 @@
             </svg>
         );
 
+        const Smile = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                <line x1="9" y1="9" x2="9.01" y2="9"/>
+                <line x1="15" y1="9" x2="15.01" y2="9"/>
+            </svg>
+        );
+
+        const Mic = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+        );
+
         function TelegramHeader() {
             return (
                 <div className="bg-white shadow-sm relative">
                     <div className="flex items-center justify-between px-3 py-2">
-                        {/* Back Button */}
                         <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                             <ArrowLeft />
                         </button>
 
-                        {/* Avatar and User Info */}
                         <div className="flex items-center flex-1 mx-3">
                             <div className="w-11 h-11 rounded-full bg-orange-400 flex items-center justify-center flex-shrink-0">
                                 <span className="text-white font-medium text-base">DS</span>
@@ -56,13 +71,11 @@
                             </div>
                         </div>
 
-                        {/* Menu Button */}
                         <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                             <MoreVertical />
                         </button>
                     </div>
                     
-                    {/* Date Badge */}
                     <div className="absolute left-1/2 transform -translate-x-1/2 z-10" style={{ bottom: '-27px' }}>
                         <div className="px-3 rounded-full flex items-center" style={{ backgroundColor: '#749cbf', paddingTop: '5px', paddingBottom: '5px' }}>
                             <span className="text-white text-xs font-medium" style={{ lineHeight: '1' }}>June 6</span>
@@ -78,13 +91,13 @@
                     <TelegramHeader />
                     
                     {/* Chat Area - Scrollable */}
-                    <div className="flex-1 overflow-y-auto pt-8 pb-4" style={{ 
+                    <div className="flex-1 overflow-y-auto pt-8" style={{ 
                         backgroundImage: 'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat'
                     }}>
-                        <div className="px-4 space-y-4">
+                        <div className="flex flex-col justify-start min-h-full px-4 py-4 space-y-4" style={{ paddingBottom: '120px' }}>
                             {/* Date Badge Above Message */}
                             <div className="flex justify-center">
                                 <div className="px-3 rounded-full flex items-center" style={{ backgroundColor: '#749cbf', paddingTop: '5px', paddingBottom: '5px' }}>
@@ -126,26 +139,22 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     {/* Input Wrapper - Full Width */}
-                    <div className="bg-white border-t border-gray-200 px-2 py-2 shadow-lg">
+                    <div className="bg-white border-t border-gray-200 px-4 py-3">
                         <div className="flex items-center gap-2">
-                            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                                </svg>
+                            <button className="p-2 text-gray-500 hover:text-gray-700 transition-colors">
+                                <Smile />
                             </button>
+                            
                             <input 
                                 type="text" 
                                 placeholder="Message" 
-                                className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-base outline-none focus:bg-gray-200 transition-colors"
+                                className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
                             />
-                            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                                    <line x1="12" x2="12" y1="19" y2="22"/>
-                                </svg>
+                            
+                            <button className="p-2 text-gray-500 hover:text-gray-700 transition-colors">
+                                <Mic />
                             </button>
                         </div>
                     </div>
@@ -153,7 +162,6 @@
             );
         }
 
-        // Render the app
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<TelegramLayout />);
     </script>
