@@ -194,7 +194,20 @@
             }, []);
 
             const toggleEmojiPicker = () => {
-                setShowEmojiPicker(prev => !prev);
+                const willOpen = !showEmojiPicker;
+                setShowEmojiPicker(willOpen);
+
+                // Always blur input and prevent keyboard when smile icon is clicked
+                if (inputRef.current) {
+                    inputRef.current.blur();
+                }
+
+                // Force keyboard to hide
+                setTimeout(() => {
+                    if (inputRef.current) {
+                        inputRef.current.blur();
+                    }
+                }, 100);
             };
 
             const closeEmojiPicker = () => {
