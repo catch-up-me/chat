@@ -188,7 +188,7 @@
                 <div className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50 pt-[env(safe-area-inset-top)]">
                     <div className="flex items-center justify-between px-3 py-2">
                         <button className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft/></button>
-                        <div classemoji className="flex items-center flex-1 mx-3">
+                        <div className="flex items-center flex-1 mx-3">
                             <div className="w-11 h-11 rounded-full bg-orange-400 flex items-center justify-center flex-shrink-0">
                                 <span className="text-white font-medium text-base">DS</span>
                             </div>
@@ -216,282 +216,318 @@
 
         function ChatLayout() {
             const scrollRef = useRef(null);
-            const inputRef = useRef(null);
-            const inputContainerRef = useRef(null);
-            const [stickyDate, setStickyDate] = useState(null);
-            const [isScrolling, setIsScrolling] = useState(false);
-            const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-            const [hasText, setHasText] = useState(false);
-            const [messages, setMessages] = useState([
-                { text: 'Bro this is a long message that wraps to multiple lines and keeps going even more until the line is completely full before wrapping', time: '1:38 PM', incoming: true },
-                { text: 'Hey this is a very long outgoing message that wraps multiple times and fills the line completely with no early breaks or gaps', time: '1:39 PM', incoming: false },
-                { text: 'Short', time: '1:40 PM', incoming: true },
-                { text: 'Okay', time: '1:41 PM', incoming: false }
-            ]);
-            let scrollTimeout = useRef(null);
+    const inputRef = useRef(null);
+    const inputContainerRef = useRef(null);
+    const [stickyDate, setStickyDate] = useState(null);
+    const [isScrolling, setIsScrolling] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const [hasText, setHasText] = useState(false);
+    const [messages, setMessages] = useState([
+        { text: 'Bro this is a long message that wraps to multiple lines and keeps going even more until the line is completely full before wrapping', time: '1:38 PM', incoming: true },
+        { text: 'Hey this is a very long outgoing message that wraps multiple times and fills the line completely with no early breaks or gaps', time: '1:39 PM', incoming: false },
+        { text: 'Short', time: '1:40 PM', incoming: true },
+        { text: 'Okay', time: '1:41 PM', incoming: false }
+    ]);
+    let scrollTimeout = useRef(null);
 
-            useEffect(() => {
-                if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-            }, [messages]);
+    // Auto-scroll when new message is added
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTo({
+                top: scrollRef.current.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    }, [messages]);
 
-            useEffect(() => {
-                const input = inputRef.current;
-                const container = inputContainerRef.current;
-                const chat = scrollRef.current;
+    // Input handling + auto-scroll on focus/resize
+    useEffect(() => {
+        const input = inputRef.current;
+        const container = inputContainerRef.current;
+        const chat = scrollRef.current;
 
-                if (!input || !container || !chat) return;
+        if (!input || !container || !chat) return;
 
-                const handleInput = () => {
-                    const text = input.textContent || '';
-                    setHasText(text.trim().length > 0);
+        const scrollToBottom = (smooth = true) => {
+            if (chat) {
+                chat.scrollTo({
+                    top: chat.scrollHeight,
+                    behavior: smooth ? 'smooth' : 'auto'
+                });
+            }
+        };
 
-                    input.style.height = 'auto';
-                    const newHeight = Math.min(input.scrollHeight, 100);
-                    input.style.height = `${newHeight}px`;
-                    container.style.height = `${newHeight + 24}px`;
+        const handleInput = () => {
+            const text = input.textContent || '';
+            setHasText(text.trim().length > 0);
 
-                    // FIXED TIGHT GAP: ~12px between last message and input bar
-                    const fixedGap = 12;
-                    const emojiOffset = showEmojiPicker ? 280 : 0;
-                    chat.style.paddingBottom = `${fixedGap + emojiOffset}px`;
-                };
+            input.style.height = 'auto';
+            const newHeight = Math.min(input.scrollHeight, 100);
+            input.style.height = `${newHeight}px`;
+            container.style.height = `${newHeight + 24}px`;
 
-                input.addEventListener('input', handleInput);
-                input.addEventListener('paste', () => setTimeout(handleInput, 0));
-                handleInput();
+            const fixedGap = 12;
+            const emojiOffset = showEmojiPicker ? 280 : 0;
+            chat.style.paddingBottom = `${fixedGap + emojiOffset}px`;
 
-                return () => {
-                    input.removeEventListener('input', handleInput);
-                };
-            }, [showEmojiPicker]);
+            // Scroll when typing grows input
+            setTimeout(() => scrollToBottom(false), 0);
+        };
 
-            useEffect(() => {
-                const chat = scrollRef.current;
-                if (!chat) return;
+        input.addEventListener('input', handleInput);
+        input.addEventListener('paste', () => setTimeout(handleInput, 0));
 
-                const dateBadges = chat.querySelectorAll('.chat-date');
-                const headerHeight = 80;
-                let currentStickyDate = null;
+        // Scroll when input is focused (keyboard opens)
+        input.addEventListener('focus', () => {
+            setTimeout(() => scrollToBottom(), 300);
+        });
 
-                const checkStickyDate = () => {
-                    setIsScrolling(true);
-                    clearTimeout(scrollTimeout.current);
+        handleInput();
 
-                    let newStickyDate = null;
-                    dateBadges.forEach(badge => {
-                        const rect = badge.getBoundingClientRect();
-                        const badgeTop = rect.top;
-                        if (badgeTop <= headerHeight + 10 && badgeTop + rect.height > headerHeight - 20) {
-                            newStickyDate = badge.textContent.trim();
-                        }
-                    });
+        return () => {
+            input.removeEventListener('input', handleInput);
+            input.removeEventListener('focus', () => {});
+        };
+    }, [showEmojiPicker]);
 
-                    if (newStickyDate !== currentStickyDate) {
-                        setStickyDate(newStickyDate);
-                        currentStickyDate = newStickyDate;
-                    }
+    // Sticky date logic
+    useEffect(() => {
+        const chat = scrollRef.current;
+        if (!chat) return;
 
-                    scrollTimeout.current = setTimeout(() => {
-                        setIsScrolling(false);
-                        setStickyDate(null);
-                    }, 800);
-                };
+        const dateBadges = chat.querySelectorAll('.chat-date');
+        const headerHeight = 80;
+        let currentStickyDate = null;
 
-                chat.addEventListener('scroll', checkStickyDate);
-                return () => chat.removeEventListener('scroll', checkStickyDate);
-            }, []);
+        const checkStickyDate = () => {
+            setIsScrolling(true);
+            clearTimeout(scrollTimeout.current);
 
-            const toggleEmojiPicker = () => {
-                const willOpen = !showEmojiPicker;
-                setShowEmojiPicker(willOpen);
-                if (inputRef.current) inputRef.current.blur();
-                setTimeout(() => inputRef.current?.blur(), 100);
-            };
-
-            const closeEmojiPicker = () => setShowEmojiPicker(false);
-
-            const handleInputClick = () => {
-                if (showEmojiPicker) closeEmojiPicker();
-            };
-
-            const sendMessage = () => {
-                const text = inputRef.current?.textContent?.trim();
-                if (!text || text.length === 0) return;
-
-                const newMsg = {
-                    text: text,
-                    time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-                    incoming: false
-                };
-                setMessages(prev => [...prev, newMsg]);
-                inputRef.current.textContent = '';
-                setHasText(false);
-                if (inputRef.current) {
-                    inputRef.current.style.height = 'auto';
-                    inputContainerRef.current.style.height = '48px';
+            let newStickyDate = null;
+            dateBadges.forEach(badge => {
+                const rect = badge.getBoundingClientRect();
+                const badgeTop = rect.top;
+                if (badgeTop <= headerHeight + 10 && badgeTop + rect.height > headerHeight - 20) {
+                    newStickyDate = badge.textContent.trim();
                 }
-            };
+            });
 
-            const handleMouseDown = (e) => e.preventDefault();
-            const handleChatClick = (e) => e.preventDefault();
+            if (newStickyDate !== currentStickyDate) {
+                setStickyDate(newStickyDate);
+                currentStickyDate = newStickyDate;
+            }
 
-            // Helper: Check if message is multi-line
-            const isMultiLine = (text) => {
-                const temp = document.createElement('span');
-                temp.style.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                temp.style.whiteSpace = 'pre-wrap';
-                temp.style.wordBreak = 'break-word';
-                temp.style.visibility = 'hidden';
-                temp.style.position = 'absolute';
-                temp.style.maxWidth = '260px';
-                temp.textContent = text;
-                document.body.appendChild(temp);
-                const height = temp.offsetHeight;
-                document.body.removeChild(temp);
-                return height > 28;
-            };
+            scrollTimeout.current = setTimeout(() => {
+                setIsScrolling(false);
+                setStickyDate(null);
+            }, 800);
+        };
 
-            return (
-                <div className="flex flex-col h-dvh bg-gray-50 relative">
-                    <ChatHeader stickyDate={isScrolling ? stickyDate : null} />
+        chat.addEventListener('scroll', checkStickyDate);
+        return () => chat.removeEventListener('scroll', checkStickyDate);
+    }, []);
 
-                    <div ref={scrollRef}
-                         onMouseDown={handleChatClick}
-                         onTouchStart={handleChatClick}
-                         className="flex-1 overflow-y-auto pt-20 px-4 transition-padding duration-300"
-                         style={{
-                             backgroundImage:'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
-                             backgroundSize:'cover',
-                             backgroundPosition:'center',
-                             backgroundRepeat:'no-repeat',
-                             paddingBottom: '12px', /* Default fallback */
-                             transition: 'padding-bottom 300ms ease'
-                         }}>
-                        <div className="flex flex-col justify-end min-h-full space-y-4 py-4">
-                            <div className="flex justify-center">
-                                <div className="px-4 py-2 rounded-full flex items-center shadow-sm chat-date" style={{backgroundColor:'#749cbf',minHeight:'30px'}}>
-                                    <span className="text-white text-xs font-medium" style={{lineHeight:'1'}}>June 16</span>
-                                </div>
-                            </div>
+    const toggleEmojiPicker = () => {
+        const willOpen = !showEmojiPicker;
+        setShowEmojiPicker(willOpen);
+        if (inputRef.current) inputRef.current.blur();
+        setTimeout(() => inputRef.current?.blur(), 100);
+    };
 
-                            {messages.map((msg, i) => {
-                                const multiLine = isMultiLine(msg.text);
-                                return (
-                                    <div key={i} className={`flex items-end gap-2 ${msg.incoming ? '' : 'justify-end'}`}
-                                         onMouseDown={handleMouseDown}
-                                         onTouchStart={handleMouseDown}>
-                                        <div className={`rounded-2xl ${msg.incoming ? 'rounded-bl-md bg-white' : 'rounded-br-md'} 
-                                                        px-4 py-2 shadow-sm max-w-xs 
-                                                        ${msg.incoming ? 'incoming' : 'outgoing'} 
-                                                        ${multiLine ? 'multi-line' : 'single-line'}`}
-                                             style={msg.incoming ? {} : {backgroundColor:'#5d7d99'}}>
-                                            <div className="message-content">
-                                                <span className="message-text">{msg.text}</span>
-                                                <div className="message-metadata">
-                                                    <span>{msg.time}</span>
-                                                    {!msg.incoming && (
-                                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4">
-                                                            <g clipPath="url(#clip0_949_23339)">
-                                                                <path d="M17.5821 6.95711C17.9726 6.56658 17.9726 5.93342 17.5821 5.54289C17.1916 5.15237 16.5584 5.15237 16.1679 5.54289L5.54545 16.1653L1.70711 12.327C1.31658 11.9365 0.683417 11.9365 0.292893 12.327C-0.0976311 12.7175 -0.097631 13.3507 0.292893 13.7412L4.83835 18.2866C5.22887 18.6772 5.86204 18.6772 6.25256 18.2866L17.5821 6.95711Z" fill="#9ebad2"/>
-                                                                <path d="M23.5821 6.95711C23.9726 6.56658 23.9726 5.93342 23.5821 5.54289C23.1915 5.15237 22.5584 5.15237 22.1678 5.54289L10.8383 16.8724C10.4478 17.263 10.4478 17.8961 10.8383 18.2866C11.2288 18.6772 11.862 18.6772 12.2525 18.2866L23.5821 6.95711Z" fill="#9ebad2"/>
-                                                            </g>
-                                                            <defs><clipPath id="clip0_949_23339"><rect width="24" height="24" fill="white"/></clipPath></defs>
-                                                        </svg>
-                                                    )}
-                                                </div>
-                                            </div>
+    const closeEmojiPicker = () => setShowEmojiPicker(false);
+
+    const handleInputClick = () => {
+        if (showEmojiPicker) closeEmojiPicker();
+    };
+
+    const sendMessage = () => {
+        const text = inputRef.current?.textContent?.trim();
+        if (!text || text.length === 0) return;
+
+        const newMsg = {
+            text: text,
+            time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+            incoming: false
+        };
+        setMessages(prev => [...prev, newMsg]);
+        inputRef.current.textContent = '';
+        setHasText(false);
+        if (inputRef.current) {
+            inputRef.current.style.height = 'auto';
+            inputContainerRef.current.style.height = '48px';
+        }
+
+        // Smooth scroll after send
+        setTimeout(() => {
+            if (scrollRef.current) {
+                scrollRef.current.scrollTo({
+                    top: scrollRef.current.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
+        }, 50);
+    };
+
+    const handleMouseDown = (e) => e.preventDefault();
+    const handleChatClick = (e) => e.preventDefault();
+
+    // Helper: Check if message is multi-line
+    const isMultiLine = (text) => {
+        const temp = document.createElement('span');
+        temp.style.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        temp.style.whiteSpace = 'pre-wrap';
+        temp.style.wordBreak = 'break-word';
+        temp.style.visibility = 'hidden';
+        temp.style.position = 'absolute';
+        temp.style.maxWidth = '260px';
+        temp.textContent = text;
+        document.body.appendChild(temp);
+        const height = temp.offsetHeight;
+        document.body.removeChild(temp);
+        return height > 28;
+    };
+
+    return (
+        <div className="flex flex-col h-dvh bg-gray-50 relative">
+            <ChatHeader stickyDate={isScrolling ? stickyDate : null} />
+
+            <div ref={scrollRef}
+                 onMouseDown={handleChatClick}
+                 onTouchStart={handleChatClick}
+                 className="flex-1 overflow-y-auto pt-20 px-4 transition-padding duration-300"
+                 style={{
+                     backgroundImage:'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
+                     backgroundSize:'cover',
+                     backgroundPosition:'center',
+                     backgroundRepeat:'no-repeat',
+                     paddingBottom: '12px',
+                     transition: 'padding-bottom 300ms ease'
+                 }}>
+                <div className="flex flex-col justify-end min-h-full space-y-4 py-4">
+                    <div className="flex justify-center">
+                        <div className="px-4 py-2 rounded-full flex items-center shadow-sm chat-date" style={{backgroundColor:'#749cbf',minHeight:'30px'}}>
+                            <span className="text-white text-xs font-medium" style={{lineHeight:'1'}}>June 16</span>
+                        </div>
+                    </div>
+
+                    {messages.map((msg, i) => {
+                        const multiLine = isMultiLine(msg.text);
+                        return (
+                            <div key={i} className={`flex items-end gap-2 ${msg.incoming ? '' : 'justify-end'}`}
+                                 onMouseDown={handleMouseDown}
+                                 onTouchStart={handleMouseDown}>
+                                <div className={`rounded-2xl ${msg.incoming ? 'rounded-bl-md bg-white' : 'rounded-br-md'} 
+                                                px-4 py-2 shadow-sm max-w-xs 
+                                                ${msg.incoming ? 'incoming' : 'outgoing'} 
+                                                ${multiLine ? 'multi-line' : 'single-line'}`}
+                                     style={msg.incoming ? {} : {backgroundColor:'#5d7d99'}}>
+                                    <div className="message-content">
+                                        <span className="message-text">{msg.text}</span>
+                                        <div className="message-metadata">
+                                            <span>{msg.time}</span>
+                                            {!msg.incoming && (
+                                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4">
+                                                    <g clipPath="url(#clip0_949_23339)">
+                                                        <path d="M17.5821 6.95711C17.9726 6.56658 17.9726 5.93342 17.5821 5.54289C17.1916 5.15237 16.5584 5.15237 16.1679 5.54289L5.54545 16.1653L1.70711 12.327C1.31658 11.9365 0.683417 11.9365 0.292893 12.327C-0.0976311 12.7175 -0.097631 13.3507 0.292893 13.7412L4.83835 18.2866C5.22887 18.6772 5.86204 18.6772 6.25256 18.2866L17.5821 6.95711Z" fill="#9ebad2"/>
+                                                        <path d="M23.5821 6.95711C23.9726 6.56658 23.9726 5.93342 23.5821 5.54289C23.1915 5.15237 22.5584 5.15237 22.1678 5.54289L10.8383 16.8724C10.4478 17.263 10.4478 17.8961 10.8383 18.2866C11.2288 18.6772 11.862 18.6772 12.2525 18.2866L23.5821 6.95711Z" fill="#9ebad2"/>
+                                                    </g>
+                                                    <defs><clipPath id="clip0_949_23339"><rect width="24" height="24" fill="white"/></clipPath></defs>
+                                                </svg>
+                                            )}
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Bottom Input + Send Button */}
-                    <div className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)] transition-transform duration-300"
-                         style={{
-                             backgroundImage:'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
-                             backgroundSize:'cover',
-                             backgroundPosition:'center',
-                             backgroundRepeat:'no-repeat',
-                             paddingTop:'8px',
-                             paddingBottom:'8px',
-                             transform: showEmojiPicker ? 'translateY(-280px)' : 'translateY(0)',
-                         }}>
-                        <div className="mx-3 flex items-center gap-2">
-                            <div ref={inputContainerRef}
-                                 className="bg-white shadow-sm flex items-center px-3 py-3 transition-all duration-100 flex-1"
-                                 style={{
-                                     borderRadius:'13px',
-                                     minHeight:'48px',
-                                     height:'48px',
-                                     overflow:'hidden'
-                                 }}>
-                                <button 
-                                    className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 mr-3 p-1"
-                                    onMouseDown={handleMouseDown}
-                                    onTouchStart={handleMouseDown}
-                                    onClick={toggleEmojiPicker}>
-                                    {showEmojiPicker ? (
-                                        <KeyboardIcon />
-                                    ) : (
-                                        <i className="fa-regular fa-face-smile text-2xl"></i>
-                                    )}
-                                </button>
-                                <div 
-                                    ref={inputRef}
-                                    contentEditable="true"
-                                    placeholder="Message"
-                                    className="flex-1 outline-none text-gray-900 text-base"
-                                    onClick={handleInputClick}
-                                    onFocus={handleInputClick}
-                                    style={{
-                                        minHeight:'24px',
-                                        maxHeight:'100px',
-                                        overflowY:'auto',
-                                        resize:'none',
-                                        lineHeight:'1.5'
-                                    }}>
                                 </div>
-                                <button className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 ml-3"
-                                        onMouseDown={handleMouseDown}
-                                        onTouchStart={handleMouseDown}>
-                                    <i className="fa-solid fa-paperclip text-2xl"></i>
-                                </button>
                             </div>
-                            <button 
-                                className="w-12 h-12 flex-shrink-0 flex items-center justify-center shadow-sm transition-all duration-200 rounded-full" 
-                                onMouseDown={handleMouseDown}
-                                onTouchStart={handleMouseDown}
-                                onClick={hasText ? sendMessage : null}
-                                style={{
-                                    backgroundColor: hasText ? 'var(--btn-bg-active)' : 'var(--btn-bg-active)',
-                                    color: hasText ? 'var(--btn-icon-active)' : 'var(--btn-icon-active)',
-                                    opacity: 1,
-                                    cursor: 'pointer'
-                                }}>
-                                {hasText ? <SendArrowIcon /> : <MicrophoneIcon />}
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Emoji Picker */}
-                    <div 
-                        className={`fixed bottom-0 left-0 right-0 bg-white z-30 transition-transform duration-300 ease-out ${
-                            showEmojiPicker ? 'translate-y-0' : 'translate-y-full'
-                        }`}
-                        style={{
-                            height: '280px',
-                            boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
-                            backgroundColor: '#ffffff',
-                        }}>
-                        <div className="h-full flex items-center justify-center text-gray-400 text-sm">
-                            {/* Placeholder */}
-                        </div>
-                    </div>
+                        );
+                    })}
                 </div>
-            );
-        }
+            </div>
+
+            {/* Bottom Input + Send Button */}
+            <div className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)] transition-transform duration-300"
+                 style={{
+                     backgroundImage:'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
+                     backgroundSize:'cover',
+                     backgroundPosition:'center',
+                     backgroundRepeat:'no-repeat',
+                     paddingTop:'8px',
+                     paddingBottom:'8px',
+                     transform: showEmojiPicker ? 'translateY(-280px)' : 'translateY(0)',
+                 }}>
+                <div className="mx-3 flex items-center gap-2">
+                    <div ref={inputContainerRef}
+                         className="bg-white shadow-sm flex items-center px-3 py-3 transition-all duration-100 flex-1"
+                         style={{
+                             borderRadius:'13px',
+                             minHeight:'48px',
+                             height:'48px',
+                             overflow:'hidden'
+                         }}>
+                        <button 
+                            className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 mr-3 p-1"
+                            onMouseDown={handleMouseDown}
+                            onTouchStart={handleMouseDown}
+                            onClick={toggleEmojiPicker}>
+                            {showEmojiPicker ? (
+                                <KeyboardIcon />
+                            ) : (
+                                <i className="fa-regular fa-face-smile text-2xl"></i>
+                            )}
+                        </button>
+                        <div 
+                            ref={inputRef}
+                            contentEditable="true"
+                            placeholder="Message"
+                            className="flex-1 outline-none text-gray-900 text-base"
+                            onClick={handleInputClick}
+                            onFocus={handleInputClick}
+                            style={{
+                                minHeight:'24px',
+                                maxHeight:'100px',
+                                overflowY:'auto',
+                                resize:'none',
+                                lineHeight:'1.5'
+                            }}>
+                        </div>
+                        <button className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 ml-3"
+                                onMouseDown={handleMouseDown}
+                                onTouchStart={handleMouseDown}>
+                            <i className="fa-solid fa-paperclip text-2xl"></i>
+                        </button>
+                    </div>
+                    <button 
+                        className="w-12 h-12 flex-shrink-0 flex items-center justify-center shadow-sm transition-all duration-200 rounded-full" 
+                        onMouseDown={handleMouseDown}
+                        onTouchStart={handleMouseDown}
+                        onClick={hasText ? sendMessage : null}
+                        style={{
+                            backgroundColor: hasText ? 'var(--btn-bg-active)' : 'var(--btn-bg-active)',
+                            color: hasText ? 'var(--btn-icon-active)' : 'var(--btn-icon-active)',
+                            opacity: 1,
+                            cursor: 'pointer'
+                        }}>
+                        {hasText ? <SendArrowIcon /> : <MicrophoneIcon />}
+                    </button>
+                </div>
+            </div>
+
+            {/* Emoji Picker */}
+            <div 
+                className={`fixed bottom-0 left-0 right-0 bg-white z-30 transition-transform duration-300 ease-out ${
+                    showEmojiPicker ? 'translate-y-0' : 'translate-y-full'
+                }`}
+                style={{
+                    height: '280px',
+                    boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+                    backgroundColor: '#ffffff',
+                }}>
+                <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                    {/* Placeholder */}
+                </div>
+            </div>
+        </div>
+    );
+}
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<ChatLayout/>);
