@@ -73,7 +73,7 @@
 
         .message-text {
             flex: 1;
-            min-width: 60px; /* Prevents collapse */
+            min-width: 60px;
             white-space: pre-wrap;
             word-break: break-word;
             hyphens: auto;
@@ -431,12 +431,11 @@
                                 onTouchStart={handleMouseDown}
                                 onClick={hasText ? sendMessage : null}
                                 style={{
-                                    backgroundColor: hasText ? 'var(--btn-bg-active)' : 'var(--btn-bg-inactive)',
-                                    color: hasText ? 'var(--btn-icon-active)' : 'var(--btn-icon-inactive)',
-                                    opacity: hasText ? 1 : 0.6,
-                                    cursor: hasText ? 'pointer' : 'default'
-                                }}
-                                disabled={!hasText}>
+                                    backgroundColor: hasText ? 'var(--btn-bg-active)' : 'var(--btn-bg-active)',
+                                    color: hasText ? 'var(--btn-icon-active)' : 'var(--btn-icon-active)',
+                                    opacity: 1,
+                                    cursor: 'pointer'
+                                }}>
                                 {hasText ? <SendArrowIcon /> : <MicrophoneIcon />}
                             </button>
                         </div>
