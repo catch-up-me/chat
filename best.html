@@ -250,8 +250,8 @@
                     input.style.height = `${newHeight}px`;
                     container.style.height = `${newHeight + 24}px`;
                     
-                    // FIXED: Use consistent padding regardless of input height
-                    const bottomPadding = 80 + (showEmojiPicker ? 280 : 0);
+                    // FIXED: Reduced padding for tighter spacing (like Telegram)
+                    const bottomPadding = 68 + (showEmojiPicker ? 280 : 0);
                     chat.style.paddingBottom = `${bottomPadding}px`;
                 };
 
@@ -363,7 +363,7 @@
                              backgroundSize:'cover',
                              backgroundPosition:'center',
                              backgroundRepeat:'no-repeat',
-                             paddingBottom: '80px',
+                             paddingBottom: '68px',
                              transition: 'padding-bottom 300ms ease'
                          }}>
                         <div className="flex flex-col justify-end min-h-full space-y-4 py-4">
