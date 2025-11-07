@@ -250,7 +250,6 @@
                     input.style.height = `${newHeight}px`;
                     container.style.height = `${newHeight + 24}px`;
                     
-                    // Changed to 61px for tighter spacing
                     const bottomPadding = 61 + (showEmojiPicker ? 280 : 0);
                     chat.style.paddingBottom = `${bottomPadding}px`;
                 };
@@ -334,7 +333,6 @@
             const handleMouseDown = (e) => e.preventDefault();
             const handleChatClick = (e) => e.preventDefault();
 
-            // Helper: Check if message is multi-line
             const isMultiLine = (text) => {
                 const temp = document.createElement('span');
                 temp.style.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
@@ -342,12 +340,12 @@
                 temp.style.wordBreak = 'break-word';
                 temp.style.visibility = 'hidden';
                 temp.style.position = 'absolute';
-                temp.style.maxWidth = '260px'; // ~max-w-xs
+                temp.style.maxWidth = '260px';
                 temp.textContent = text;
                 document.body.appendChild(temp);
                 const height = temp.offsetHeight;
                 document.body.removeChild(temp);
-                return height > 28; // ~1.5 lines
+                return height > 28;
             };
 
             return (
@@ -419,16 +417,17 @@
                          }}>
                         <div className="mx-3 flex items-end gap-2">
                             <div ref={inputContainerRef}
-                                 className="bg-white shadow-sm flex items-center px-3 py-3 transition-all duration-100 flex-1"
+                                 className="bg-white shadow-sm flex px-3 py-3 transition-all duration-100 flex-1"
                                  style={{
                                      borderRadius:'13px',
                                      minHeight:'48px',
                                      height:'48px',
-                                     overflow:'hidden'
+                                     overflow:'hidden',
+                                     alignItems:'center'
                                  }}>
                                 <button 
                                     className="text-gray-400 hover:text-gray-600 transition-colors mr-3 p-1"
-                                    style={{ flexShrink: 0, alignSelf: 'flex-end', marginBottom: '4px' }}
+                                    style={{ flexShrink: 0 }}
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}
                                     onClick={toggleEmojiPicker}>
@@ -455,7 +454,7 @@
                                 </div>
                                 <button 
                                     className="text-gray-400 hover:text-gray-600 transition-colors ml-3"
-                                    style={{ flexShrink: 0, alignSelf: 'flex-end', marginBottom: '4px' }}
+                                    style={{ flexShrink: 0 }}
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}>
                                     <i className="fa-solid fa-paperclip" style={{ fontSize: '24px' }}></i>
