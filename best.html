@@ -70,34 +70,32 @@
             max-width: 100%;
             overflow-wrap: anywhere;
             display: block;
-            margin-bottom: 2px;
+            margin-bottom: 0;
         }
 
         .message-metadata {
             font-size: 0.75rem;
             line-height: 1;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 4px;
             white-space: nowrap;
+            margin-top: 4px; /* "a little bit down" */
         }
 
-        /* Incoming (white) */
-        .incoming .message-text {
-            color: #111827;
-        }
-        .incoming .message-metadata {
-            color: #68727c;
-            justify-content: flex-start;
+        /* Multi-line: timestamp under last line */
+        .multi-line .message-content {
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Outgoing (blue) */
-        .outgoing .message-text {
-            color: white;
+        .multi-line .message-text {
+            display: inline;
         }
-        .outgoing .message-metadata {
-            color: #bfdbfe;
-            justify-content: flex-end;
+
+        .multi-line .message-metadata {
+            align-self: flex-end;
+            margin-top: 4px;
         }
 
         /* Single-line: inline timestamp */
@@ -107,13 +105,26 @@
             gap: 6px;
         }
 
-        /* Multi-line: block layout */
-        .multi-line .message-content {
-            display: flex;
-            flex-direction: column;
+        .single-line .message-metadata {
+            margin-top: 0;
         }
-        .multi-line .message-metadata {
-            margin-top: -2px;
+
+        /* Incoming (white) */
+        .incoming .message-text {
+            color: #111827;
+        }
+
+        .incoming .message-metadata {
+            color: #68727c;
+        }
+
+        /* Outgoing (blue) */
+        .outgoing .message-text {
+            color: white;
+        }
+
+        .outgoing .message-metadata {
+            color: #bfdbfe;
         }
     </style>
 </head>
@@ -167,7 +178,7 @@
                     <path d="M16 12C16 12.5523 15.5523 13 15 13C14.4477 13 14 12.5523 14 12C14 11.4477 14.4477 11 15 11C15.5523 11 16 11.4477 16 12Z" fill="#6b7280"></path>
                     <path d="M19 9C19 9.55228 18.5523 10 18 10C17.4477 10 17 9.55228 17 9C17 8.44772 17.4477 8 18 8C18.5523 8 19 8.44772 19 9Z" fill="#6b7280"></path>
                     <path d="M19 12C19 12.5523 18.5523 13 18 13C17.4477 13 17 12.5523 17 12C17 11.4477 17.4477 11 18 11C18.5523 11 19 11.4477 19 12Z" fill="#6b7280"></path>
-                    <path d="M2 11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5H16C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V11Z" stroke="#6b7280" strokeWidth="1.5"></path>
+                    <path d="M2 11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5H16C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V11Z" stroke="#6b7280" strokeWidth="1.5"></path>
                     <path d="M7 16H17" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round"></path>
                 </g>
             </svg>
@@ -213,7 +224,7 @@
             const [showEmojiPicker, setShowEmojiPicker] = useState(false);
             const [hasText, setHasText] = useState(false);
             const [messages, setMessages] = useState([
-                { text: 'Bro this is a long message that wraps to multiple lines and keeps going even more and more until the line is completely full before wrapping', time: '1:38 PM', incoming: true },
+                { text: 'Bro this is a long message that wraps to multiple lines and keeps going even more until the line is completely full before wrapping', time: '1:38 PM', incoming: true },
                 { text: 'Hey this is a very long outgoing message that wraps multiple times and fills the line completely with no early breaks or gaps', time: '1:39 PM', incoming: false },
                 { text: 'Short', time: '1:40 PM', incoming: true },
                 { text: 'Okay', time: '1:41 PM', incoming: false }
@@ -325,16 +336,17 @@
             // Helper: Check if message is multi-line
             const isMultiLine = (text) => {
                 const temp = document.createElement('span');
-                temp.style.font = window.getComputedStyle(document.body).font;
+                temp.style.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
                 temp.style.whiteSpace = 'pre-wrap';
                 temp.style.wordBreak = 'break-word';
                 temp.style.visibility = 'hidden';
                 temp.style.position = 'absolute';
+                temp.style.maxWidth = '260px'; // ~max-w-xs
                 temp.textContent = text;
                 document.body.appendChild(temp);
                 const height = temp.offsetHeight;
                 document.body.removeChild(temp);
-                return height > 24; // ~1.5 lines
+                return height > 28; // ~1.5 lines
             };
 
             return (
@@ -366,12 +378,13 @@
                                     <div key={i} className={`flex items-end gap-2 ${msg.incoming ? '' : 'justify-end'}`}
                                          onMouseDown={handleMouseDown}
                                          onTouchStart={handleMouseDown}>
-                                        <div className={`rounded-2xl ${msg.incoming ? 'rounded-bl-md bg-white' : 'rounded-br-md'} px-4 py-2 shadow-sm max-w-xs ${msg.incoming ? 'incoming' : 'outgoing'} ${multiLine ? 'multi-line' : 'single-line'}`}
+                                        <div className={`rounded-2xl ${msg.incoming ? 'rounded-bl-md bg-white' : 'rounded-br-md'} 
+                                                        px-4 py-2 shadow-sm max-w-xs 
+                                                        ${msg.incoming ? 'incoming' : 'outgoing'} 
+                                                        ${multiLine ? 'multi-line' : 'single-line'}`}
                                              style={msg.incoming ? {} : {backgroundColor:'#5d7d99'}}>
                                             <div className="message-content">
-                                                <span className="message-text">
-                                                    {msg.text}
-                                                </span>
+                                                <span className="message-text">{msg.text}</span>
                                                 <div className="message-metadata">
                                                     <span>{msg.time}</span>
                                                     {!msg.incoming && (
@@ -458,6 +471,7 @@
                                 {hasText ? <SendArrowIcon /> : <MicrophoneIcon />}
                             </button>
                         </div>
+                    nominal>
                     </div>
 
                     {/* Emoji Picker */}
