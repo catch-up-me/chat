@@ -197,12 +197,11 @@
                 const willOpen = !showEmojiPicker;
                 setShowEmojiPicker(willOpen);
 
-                // Always blur input and prevent keyboard when smile icon is clicked
+                // Always close keyboard when smile/keyboard icon is clicked
                 if (inputRef.current) {
                     inputRef.current.blur();
                 }
 
-                // Force keyboard to hide
                 setTimeout(() => {
                     if (inputRef.current) {
                         inputRef.current.blur();
@@ -309,7 +308,11 @@
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}
                                     onClick={toggleEmojiPicker}>
-                                    <i className="fa-regular fa-face-smile text-2xl"></i>
+                                    {showEmojiPicker ? (
+                                        <i className="fa-solid fa-keyboard text-2xl"></i>
+                                    ) : (
+                                        <i className="fa-regular fa-face-smile text-2xl"></i>
+                                    )}
                                 </button>
                                 <div 
                                     ref={inputRef}
