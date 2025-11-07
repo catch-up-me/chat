@@ -75,15 +75,14 @@
 
         .message-metadata {
             font-size: 0.75rem;
-            line-height: 1;
+            line-height: 1.2;
             display: inline-flex;
             align-items: center;
             gap: 4px;
             white-space: nowrap;
-            margin-top: 1px; /* Tighter gap for multi-line */
         }
 
-        /* Multi-line: timestamp under last line */
+        /* Multi-line: timestamp HUGS last line */
         .multi-line .message-content {
             display: flex;
             flex-direction: column;
@@ -95,7 +94,7 @@
 
         .multi-line .message-metadata {
             align-self: flex-end;
-            margin-top: 1px; /* Only 1px down — close to text */
+            margin-top: -2px; /* TIGHT — NO GAP */
         }
 
         /* Single-line: inline timestamp */
