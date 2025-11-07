@@ -188,7 +188,7 @@
                 <div className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50 pt-[env(safe-area-inset-top)]">
                     <div className="flex items-center justify-between px-3 py-2">
                         <button className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft/></button>
-                        <div className="flex items-center flex-1 mx-3">
+                        <div classemoji className="flex items-center flex-1 mx-3">
                             <div className="w-11 h-11 rounded-full bg-orange-400 flex items-center justify-center flex-shrink-0">
                                 <span className="text-white font-medium text-base">DS</span>
                             </div>
@@ -249,8 +249,11 @@
                     const newHeight = Math.min(input.scrollHeight, 100);
                     input.style.height = `${newHeight}px`;
                     container.style.height = `${newHeight + 24}px`;
-                    const bottomPadding = newHeight + 32 + (showEmojiPicker ? 280 : 0);
-                    chat.style.paddingBottom = `${bottomPadding}px`;
+
+                    // FIXED TIGHT GAP: ~12px between last message and input bar
+                    const fixedGap = 12;
+                    const emojiOffset = showEmojiPicker ? 280 : 0;
+                    chat.style.paddingBottom = `${fixedGap + emojiOffset}px`;
                 };
 
                 input.addEventListener('input', handleInput);
@@ -340,12 +343,12 @@
                 temp.style.wordBreak = 'break-word';
                 temp.style.visibility = 'hidden';
                 temp.style.position = 'absolute';
-                temp.style.maxWidth = '260px'; // ~max-w-xs
+                temp.style.maxWidth = '260px';
                 temp.textContent = text;
                 document.body.appendChild(temp);
                 const height = temp.offsetHeight;
                 document.body.removeChild(temp);
-                return height > 28; // ~1.5 lines
+                return height > 28;
             };
 
             return (
@@ -361,7 +364,7 @@
                              backgroundSize:'cover',
                              backgroundPosition:'center',
                              backgroundRepeat:'no-repeat',
-                             paddingBottom: '64px',
+                             paddingBottom: '12px', /* Default fallback */
                              transition: 'padding-bottom 300ms ease'
                          }}>
                         <div className="flex flex-col justify-end min-h-full space-y-4 py-4">
