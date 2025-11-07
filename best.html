@@ -65,7 +65,7 @@
             display: flex;
             align-items: flex-end;
             flex-wrap: wrap;
-            gap: 0; /* No gap between text and timer */
+            gap: 0;
             width: 100%;
         }
 
@@ -114,13 +114,90 @@
         .outgoing .message-metadata {
             color: #bfdbfe;
         }
+
+        /* === BUBBLE EDGE TIGHT TO TIMESTAMP === */
+        .incoming .rounded-bl-md {
+            border-bottom-left-radius: 4px !important;
+        }
+        .outgoing .rounded-br-md {
+            border-bottom-right-radius: 4px !important;
+        }
+
+        /* === PREVENT CHAT JUMP WHEN TYPING === */
+        .chat-container {
+            padding-bottom: 64px;
+            transition: padding-bottom 300ms ease;
+        }
+
+        .input-container {
+            min-height: 48px;
+            height: 48px;
+            overflow: hidden;
+            border-radius: 13px;
+            transition: all 100ms ease;
+        }
+
+        .input-field {
+            min-height: 24px;
+            max-height: 100px;
+            overflow-y: auto;
+            resize: none;
+            line-height: 1.5;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* === KEYBOARD & EMOJI PICKER: NO PUSH-UP === */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 40;
+            padding-bottom: env(safe-area-inset-bottom);
+            background-image: url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            transform: translateY(0);
+            transition: transform 300ms ease;
+        }
+
+        .emoji-picker {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 280px;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 30;
+            transform: translateY(100%);
+            transition: transform 300ms ease-out;
+        }
+
+        .emoji-picker.open {
+            transform: translateY(0);
+        }
+
+        .chat-scroll {
+            overflow-y: auto;
+            padding-bottom: calc(64px + var(--input-height, 48px));
+            transition: padding-bottom 300ms ease;
+        }
+
+        .chat-scroll.emoji-open {
+            padding-bottom: calc(64px + var(--input-height, 48px) + 280px);
+        }
     </style>
 </head>
 <body class="bg-gray-50">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useEffect, useRef, useState } = React;
+        const { useEffect, useRef, useState, useLayoutEffect } = React;
 
         const ArrowLeft = () => (
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -134,7 +211,6 @@
             </svg>
         );
 
-        // Original Microphone Icon (White)
         const MicrophoneIcon = () => (
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
                 <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
@@ -146,14 +222,12 @@
             </svg>
         );
 
-        // Custom Send Arrow Icon (White)
         const SendArrowIcon = () => (
             <svg viewBox="0 -0.5 21 21" className="w-6 h-6">
                 <path d="M2.61258 9L0.05132 1.31623C-0.22718 0.48074 0.63218 -0.28074 1.42809 0.09626L20.4281 9.0963C21.1906 9.4575 21.1906 10.5425 20.4281 10.9037L1.42809 19.9037C0.63218 20.2807 -0.22718 19.5193 0.05132 18.6838L2.61258 11H8.9873C9.5396 11 9.9873 10.5523 9.9873 10C9.9873 9.4477 9.5396 9 8.9873 9H2.61258z" fill="#fff" fillRule="evenodd" clipRule="evenodd"></path>
             </svg>
         );
 
-        // ORIGINAL Keyboard SVG - 100% EXACT
         const KeyboardIcon = () => (
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
                 <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
@@ -210,48 +284,86 @@
             const scrollRef = useRef(null);
             const inputRef = useRef(null);
             const inputContainerRef = useRef(null);
+            const chatContainerRef = useRef(null);
+            const bottomBarRef = useRef(null);
             const [stickyDate, setStickyDate] = useState(null);
             const [isScrolling, setIsScrolling] = useState(false);
             const [showEmojiPicker, setShowEmojiPicker] = useState(false);
             const [hasText, setHasText] = useState(false);
+            const [inputHeight, setInputHeight] = useState(48);
             const [messages, setMessages] = useState([
                 { text: 'This message will fill the entire line completely before the timer appears on the same line', time: '1:38 PM', incoming: true },
                 { text: 'Outgoing message fills to the very edge before the timestamp pushes to the next line', time: '1:39 PM', incoming: false }
             ]);
             let scrollTimeout = useRef(null);
 
+            // Auto-scroll to bottom on new message
             useEffect(() => {
-                if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+                if (scrollRef.current) {
+                    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+                }
             }, [messages]);
 
-            useEffect(() => {
+            // Input height management
+            useLayoutEffect(() => {
                 const input = inputRef.current;
                 const container = inputContainerRef.current;
                 const chat = scrollRef.current;
+                const chatContainer = chatContainerRef.current;
 
-                if (!input || !container || !chat) return;
+                if (!input || !container || !chat || !chatContainer) return;
 
-                const handleInput = () => {
+                const updateHeight = () => {
                     const text = input.textContent || '';
                     setHasText(text.trim().length > 0);
 
                     input.style.height = 'auto';
-                    const newHeight = Math.min(input.scrollHeight, 100);
+                    const scrollHeight = input.scrollHeight;
+                    const newHeight = Math.min(scrollHeight, 100);
                     input.style.height = `${newHeight}px`;
-                    container.style.height = `${newHeight + 24}px`;
-                    const bottomPadding = newHeight + 32 + (showEmojiPicker ? 280 : 0);
-                    chat.style.paddingBottom = `${bottomPadding}px`;
+
+                    const containerHeight = newHeight + 24;
+                    container.style.height = `${containerHeight}px`;
+
+                    const totalInputSpace = containerHeight + 16;
+                    setInputHeight(totalInputSpace);
+
+                    chatContainer.style.setProperty('--input-height', `${totalInputSpace}px`);
+
+                    // Update padding based on emoji state
+                    if (showEmojiPicker) {
+                        chat.classList.add('emoji-open');
+                    } else {
+                        chat.classList.remove('emoji-open');
+                    }
                 };
 
-                input.addEventListener('input', handleInput);
-                input.addEventListener('paste', () => setTimeout(handleInput, 0));
-                handleInput();
+                const observer = new MutationObserver(updateHeight);
+                observer.observe(input, { childList: true, subtree: true, characterData: true });
+
+                input.addEventListener('input', updateHeight);
+                input.addEventListener('paste', () => setTimeout(updateHeight, 0));
+                updateHeight();
 
                 return () => {
-                    input.removeEventListener('input', handleInput);
+                    observer.disconnect();
+                    input.removeEventListener('input', updateHeight);
                 };
             }, [showEmojiPicker]);
 
+            // Handle emoji picker open/close
+            useEffect(() => {
+                const chat = scrollRef.current;
+                if (!chat) return;
+
+                if (showEmojiPicker) {
+                    chat.classList.add('emoji-open');
+                } else {
+                    chat.classList.remove('emoji-open');
+                }
+            }, [showEmojiPicker, inputHeight]);
+
+            // Sticky date logic
             useEffect(() => {
                 const chat = scrollRef.current;
                 if (!chat) return;
@@ -313,10 +425,6 @@
                 setMessages(prev => [...prev, newMsg]);
                 inputRef.current.textContent = '';
                 setHasText(false);
-                if (inputRef.current) {
-                    inputRef.current.style.height = 'auto';
-                    inputContainerRef.current.style.height = '48px';
-                }
             };
 
             const handleMouseDown = (e) => e.preventDefault();
@@ -326,74 +434,61 @@
                 <div className="flex flex-col h-dvh bg-gray-50 relative">
                     <ChatHeader stickyDate={isScrolling ? stickyDate : null} />
 
-                    <div ref={scrollRef}
-                         onMouseDown={handleChatClick}
-                         onTouchStart={handleChatClick}
-                         className="flex-1 overflow-y-auto pt-20 px-4 transition-padding duration-300"
-                         style={{
-                             backgroundImage:'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
-                             backgroundSize:'cover',
-                             backgroundPosition:'center',
-                             backgroundRepeat:'no-repeat',
-                             paddingBottom: '64px',
-                             transition: 'padding-bottom 300ms ease'
-                         }}>
-                        <div className="flex flex-col justify-end min-h-full space-y-4 py-4">
-                            <div className="flex justify-center">
-                                <div className="px-4 py-2 rounded-full flex items-center shadow-sm chat-date" style={{backgroundColor:'#749cbf',minHeight:'30px'}}>
-                                    <span className="text-white text-xs font-medium" style={{lineHeight:'1'}}>June 16</span>
+                    <div 
+                        ref={chatContainerRef}
+                        className="chat-container"
+                        style={{
+                            backgroundImage:'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
+                            backgroundSize:'cover',
+                            backgroundPosition:'center',
+                            backgroundRepeat:'no-repeat',
+                        }}>
+                        <div ref={scrollRef}
+                             onMouseDown={handleChatClick}
+                             onTouchStart={handleChatClick}
+                             className="flex-1 overflow-y-auto pt-20 px-4 chat-scroll">
+                            <div className="flex flex-col justify-end min-h-full space-y-4 py-4">
+                                <div className="flex justify-center">
+                                    <div className="px-4 py-2 rounded-full flex items-center shadow-sm chat-date" style={{backgroundColor:'#749cbf',minHeight:'30px'}}>
+                                        <span className="text-white text-xs font-medium" style={{lineHeight:'1'}}>June 16</span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            {messages.map((msg, i) => (
-                                <div key={i} className={`flex items-end gap-2 ${msg.incoming ? '' : 'justify-end'}`}
-                                     onMouseDown={handleMouseDown}
-                                     onTouchStart={handleMouseDown}>
-                                    <div className={`rounded-2xl ${msg.incoming ? 'rounded-bl-md bg-white' : 'rounded-br-md'} px-4 py-2 shadow-sm max-w-xs ${msg.incoming ? 'incoming' : 'outgoing'}`}
-                                         style={msg.incoming ? {} : {backgroundColor:'#5d7d99'}}>
-                                        <div className="message-content">
-                                            <span className="message-text">
-                                                {msg.text}
-                                            </span>
-                                            <div className="message-metadata">
-                                                <span>{msg.time}</span>
-                                                {!msg.incoming && (
-                                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4">
-                                                        <g clipPath="url(#clip0_949_23339)">
-                                                            <path d="M17.5821 6.95711C17.9726 6.56658 17.9726 5.93342 17.5821 5.54289C17.1916 5.15237 16.5584 5.15237 16.1679 5.54289L5.54545 16.1653L1.70711 12.327C1.31658 11.9365 0.683417 11.9365 0.292893 12.327C-0.0976311 12.7175 -0.097631 13.3507 0.292893 13.7412L4.83835 18.2866C5.22887 18.6772 5.86204 18.6772 6.25256 18.2866L17.5821 6.95711Z" fill="#9ebad2"/>
-                                                            <path d="M23.5821 6.95711C23.9726 6.56658 23.9726 5.93342 23.5821 5.54289C23.1915 5.15237 22.5584 5.15237 22.1678 5.54289L10.8383 16.8724C10.4478 17.263 10.4478 17.8961 10.8383 18.2866C11.2288 18.6772 11.862 18.6772 12.2525 18.2866L23.5821 6.95711Z" fill="#9ebad2"/>
-                                                        </g>
-                                                        <defs><clipPath id="clip0_949_23339"><rect width="24" height="24" fill="white"/></clipPath></defs>
-                                                    </svg>
-                                                )}
+                                {messages.map((msg, i) => (
+                                    <div key={i} className={`flex items-end gap-2 ${msg.incoming ? '' : 'justify-end'}`}
+                                         onMouseDown={handleMouseDown}
+                                         onTouchStart={handleMouseDown}>
+                                        <div className={`rounded-2xl ${msg.incoming ? 'rounded-bl-md bg-white' : 'rounded-br-md'} px-4 py-2 shadow-sm max-w-xs ${msg.incoming ? 'incoming' : 'outgoing'}`}
+                                             style={msg.incoming ? {} : {backgroundColor:'#5d7d99'}}>
+                                            <div className="message-content">
+                                                <span className="message-text">
+                                                    {msg.text}
+                                                </span>
+                                                <div className="message-metadata">
+                                                    <span>{msg.time}</span>
+                                                    {!msg.incoming && (
+                                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4">
+                                                            <g clipPath="url(#clip0_949_23339)">
+                                                                <path d="M17.5821 6.95711C17.9726 6.56658 17.9726 5.93342 17.5821 5.54289C17.1916 5.15237 16.5584 5.15237 16.1679 5.54289L5.54545 16.1653L1.70711 12.327C1.31658 11.9365 0.683417 11.9365 0.292893 12.327C-0.0976311 12.7175 -0.097631 13.3507 0.292893 13.7412L4.83835 18.2866C5.22887 18.6772 5.86204 18.6772 6.25256 18.2866L17.5821 6.95711Z" fill="#9ebad2"/>
+                                                                <path d="M23.5821 6.95711C23.9726 6.56658 23.9726 5.93342 23.5821 5.54289C23.1915 5.15237 22.5584 5.15237 22.1678 5.54289L10.8383 16.8724C10.4478 17.263 10.4478 17.8961 10.8383 18.2866C11.2288 18.6772 11.862 18.6772 12.2525 18.2866L23.5821 6.95711Z" fill="#9ebad2"/>
+                                                            </g>
+                                                            <defs><clipPath id="clip0_949_23339"><rect width="24" height="24" fill="white"/></clipPath></defs>
+                                                        </svg>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Bottom Input + Send Button */}
-                    <div className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)] transition-transform duration-300"
-                         style={{
-                             backgroundImage:'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
-                             backgroundSize:'cover',
-                             backgroundPosition:'center',
-                             backgroundRepeat:'no-repeat',
-                             paddingTop:'8px',
-                             paddingBottom:'8px',
-                             transform: showEmojiPicker ? 'translateY(-280px)' : 'translateY(0)',
-                         }}>
+                    {/* Bottom Input Bar */}
+                    <div ref={bottomBarRef} className=";BOTTOM-BAR">
                         <div className="mx-3 flex items-center gap-2">
                             <div ref={inputContainerRef}
-                                 className="bg-white shadow-sm flex items-center px-3 py-3 transition-all duration-100 flex-1"
-                                 style={{
-                                     borderRadius:'13px',
-                                     minHeight:'48px',
-                                     height:'48px',
-                                     overflow:'hidden'
-                                 }}>
+                                 className="bg-white shadow-sm flex items-center px-3 py-3 transition-all duration-100 flex-1 input-container">
                                 <button 
                                     className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 mr-3 p-1"
                                     onMouseDown={handleMouseDown}
@@ -409,16 +504,9 @@
                                     ref={inputRef}
                                     contentEditable="true"
                                     placeholder="Message"
-                                    className="flex-1 outline-none text-gray-900 text-base"
+                                    className="flex-1 outline-none text-gray-900 text-base input-field"
                                     onClick={handleInputClick}
-                                    onFocus={handleInputClick}
-                                    style={{
-                                        minHeight:'24px',
-                                        maxHeight:'100px',
-                                        overflowY:'auto',
-                                        resize:'none',
-                                        lineHeight:'1.5'
-                                    }}>
+                                    onFocus={handleInputClick}>
                                 </div>
                                 <button className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 ml-3"
                                         onMouseDown={handleMouseDown}
@@ -444,16 +532,9 @@
 
                     {/* Emoji Picker */}
                     <div 
-                        className={`fixed bottom-0 left-0 right-0 bg-white z-30 transition-transform duration-300 ease-out ${
-                            showEmojiPicker ? 'translate-y-0' : 'translate-y-full'
-                        }`}
-                        style={{
-                            height: '280px',
-                            boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
-                            backgroundColor: '#ffffff',
-                        }}>
+                        className={`emoji-picker ${showEmojiPicker ? 'open' : ''}`}>
                         <div className="h-full flex items-center justify-center text-gray-400 text-sm">
-                            {/* Empty space */}
+                            {/* Placeholder */}
                         </div>
                     </div>
                 </div>
