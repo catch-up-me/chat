@@ -62,28 +62,30 @@
             --btn-icon-inactive: #6b7280;
         }
 
-        /* === PERFECT LINE FILLING: NO GAPS, NO EARLY WRAP === */
+        /* === CRITICAL: FULL LINE FILL BEFORE WRAP === */
         .message-content {
             display: flex;
             align-items: flex-end;
             flex-wrap: wrap;
-            gap: 0; /* Remove gap */
+            gap: 6px;
             width: 100%;
         }
+
         .message-text {
             flex: 1;
-            min-width: 0;
-            white-space: normal;
+            min-width: 60px; /* Prevents collapse */
+            white-space: pre-wrap;
             word-break: break-word;
-            line-height: 1.4;
+            hyphens: auto;
             max-width: 100%;
+            overflow-wrap: anywhere;
         }
+
         .message-metadata {
             flex-shrink: 0;
             white-space: nowrap;
             font-size: 0.75rem;
             line-height: 1;
-            margin-left: 4px;
             display: inline-flex;
             align-items: center;
             gap: 4px;
@@ -93,16 +95,23 @@
         .incoming .message-content {
             justify-content: flex-start;
         }
+        .incoming .message-text {
+            color: #111827;
+        }
         .incoming .message-metadata {
             color: #68727c;
+            margin-left: 4px;
         }
 
         /* Outgoing (blue) */
         .outgoing .message-content {
             justify-content: flex-end;
         }
+        .outgoing .message-text {
+            color: white;
+        }
         .outgoing .message-metadata {
-            color: #9ebad2;
+            color: #bfdbfe;
         }
     </style>
 </head>
@@ -205,8 +214,8 @@
             const [showEmojiPicker, setShowEmojiPicker] = useState(false);
             const [hasText, setHasText] = useState(false);
             const [messages, setMessages] = useState([
-                { text: 'Bro this is a long message that wraps to multiple lines and keeps going even more to test full line filling', time: '1:38 PM', incoming: true },
-                { text: 'Hey this is a very long outgoing message that wraps multiple times and fills the line perfectly without gaps', time: '1:39 PM', incoming: false }
+                { text: 'Bro this is a long message that wraps to multiple lines and keeps going even more and more until the line is completely full before wrapping', time: '1:38 PM', incoming: true },
+                { text: 'Hey this is a very long outgoing message that wraps multiple times and fills the line completely with no early breaks or gaps', time: '1:39 PM', incoming: false }
             ]);
             let scrollTimeout = useRef(null);
 
@@ -342,10 +351,10 @@
                                     <div className={`rounded-2xl ${msg.incoming ? 'rounded-bl-md bg-white' : 'rounded-br-md'} px-4 py-2 shadow-sm max-w-xs ${msg.incoming ? 'incoming' : 'outgoing'}`}
                                          style={msg.incoming ? {} : {backgroundColor:'#5d7d99'}}>
                                         <div className="message-content">
-                                            <span className={`message-text ${msg.incoming ? 'text-gray-900' : 'text-white'} text-base`}>
+                                            <span className="message-text">
                                                 {msg.text}
                                             </span>
-                                            <div className={`message-metadata ${msg.incoming ? 'text-gray-500' : 'text-blue-100'}`}>
+                                            <div className="message-metadata">
                                                 <span>{msg.time}</span>
                                                 {!msg.incoming && (
                                                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4">
