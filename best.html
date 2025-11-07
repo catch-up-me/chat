@@ -123,18 +123,13 @@
             border-bottom-right-radius: 4px !important;
         }
 
-        /* === PREVENT CHAT JUMP WHEN TYPING === */
-        .chat-container {
-            padding-bottom: 64px;
-            transition: padding-bottom 300ms ease;
-        }
-
+        /* === INPUT & BOTTOM BAR === */
         .input-container {
             min-height: 48px;
             height: 48px;
             overflow: hidden;
             border-radius: 13px;
-            transition: all 100ms ease;
+            transition: height 100ms ease;
         }
 
         .input-field {
@@ -147,7 +142,6 @@
             margin: 0;
         }
 
-        /* === KEYBOARD & EMOJI PICKER: NO PUSH-UP === */
         .bottom-bar {
             position: fixed;
             bottom: 0;
@@ -161,7 +155,6 @@
             background-repeat: no-repeat;
             padding-top: 8px;
             padding-bottom: 8px;
-            transform: translateY(0);
             transition: transform 300ms ease;
         }
 
@@ -184,12 +177,8 @@
 
         .chat-scroll {
             overflow-y: auto;
-            padding-bottom: calc(64px + var(--input-height, 48px));
+            padding-bottom: 80px;
             transition: padding-bottom 300ms ease;
-        }
-
-        .chat-scroll.emoji-open {
-            padding-bottom: calc(64px + var(--input-height, 48px) + 280px);
         }
     </style>
 </head>
@@ -285,12 +274,12 @@
             const inputRef = useRef(null);
             const inputContainerRef = useRef(null);
             const chatContainerRef = useRef(null);
-            const bottomBarRef = useRef(null);
             const [stickyDate, setStickyDate] = useState(null);
             const [isScrolling, setIsScrolling] = useState(false);
             const [showEmojiPicker, setShowEmojiPicker] = useState(false);
             const [hasText, setHasText] = useState(false);
             const [inputHeight, setInputHeight] = useState(48);
+            const [isAtBottom, setIsAtBottom] = useState(true);
             const [messages, setMessages] = useState([
                 { text: 'This message will fill the entire line completely before the timer appears on the same line', time: '1:38 PM', incoming: true },
                 { text: 'Outgoing message fills to the very edge before the timestamp pushes to the next line', time: '1:39 PM', incoming: false }
@@ -299,19 +288,34 @@
 
             // Auto-scroll to bottom on new message
             useEffect(() => {
-                if (scrollRef.current) {
+                if (scrollRef.current && isAtBottom) {
                     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
                 }
-            }, [messages]);
+            }, [messages, isAtBottom]);
+
+            // Track scroll position
+            useEffect(() => {
+                const chat = scrollRef.current;
+                if (!chat) return;
+
+                const checkBottom = () => {
+                    const { scrollTop, scrollHeight, clientHeight } = chat;
+                    const atBottom = scrollHeight - scrollTop - clientHeight < 10;
+                    setIsAtBottom(atBottom);
+                };
+
+                checkBottom();
+                chat.addEventListener('scroll', checkBottom);
+                return () => chat.removeEventListener('scroll', checkBottom);
+            }, []);
 
             // Input height management
             useLayoutEffect(() => {
                 const input = inputRef.current;
                 const container = inputContainerRef.current;
                 const chat = scrollRef.current;
-                const chatContainer = chatContainerRef.current;
 
-                if (!input || !container || !chat || !chatContainer) return;
+                if (!input || !container || !chat) return;
 
                 const updateHeight = () => {
                     const text = input.textContent || '';
@@ -328,13 +332,13 @@
                     const totalInputSpace = containerHeight + 16;
                     setInputHeight(totalInputSpace);
 
-                    chatContainer.style.setProperty('--input-height', `${totalInputSpace}px`);
-
-                    // Update padding based on emoji state
-                    if (showEmojiPicker) {
-                        chat.classList.add('emoji-open');
-                    } else {
-                        chat.classList.remove('emoji-open');
+                    // Only auto-scroll if user is at bottom
+                    if (isAtBottom) {
+                        setTimeout(() => {
+                            if (scrollRef.current) {
+                                scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+                            }
+                        }, 50);
                     }
                 };
 
@@ -349,19 +353,16 @@
                     observer.disconnect();
                     input.removeEventListener('input', updateHeight);
                 };
-            }, [showEmojiPicker]);
+            }, [isAtBottom]);
 
-            // Handle emoji picker open/close
+            // Emoji picker: only auto-scroll if at bottom
             useEffect(() => {
-                const chat = scrollRef.current;
-                if (!chat) return;
-
-                if (showEmojiPicker) {
-                    chat.classList.add('emoji-open');
-                } else {
-                    chat.classList.remove('emoji-open');
+                if (showEmojiPicker && isAtBottom && scrollRef.current) {
+                    setTimeout(() => {
+                        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+                    }, 300);
                 }
-            }, [showEmojiPicker, inputHeight]);
+            }, [showEmojiPicker, isAtBottom]);
 
             // Sticky date logic
             useEffect(() => {
@@ -436,7 +437,6 @@
 
                     <div 
                         ref={chatContainerRef}
-                        className="chat-container"
                         style={{
                             backgroundImage:'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
                             backgroundSize:'cover',
@@ -485,7 +485,7 @@
                     </div>
 
                     {/* Bottom Input Bar */}
-                    <div ref={bottomBarRef} className=";BOTTOM-BAR">
+                    <div className="bottom-bar">
                         <div className="mx-3 flex items-center gap-2">
                             <div ref={inputContainerRef}
                                  className="bg-white shadow-sm flex items-center px-3 py-3 transition-all duration-100 flex-1 input-container">
