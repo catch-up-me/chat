@@ -62,61 +62,47 @@
             --btn-icon-inactive: #6b7280;
         }
 
-        /* Incoming (white) bubble: full width per line, no early wrap */
-        .incoming .message-content {
+        /* === PERFECT LINE FILLING: NO GAPS, NO EARLY WRAP === */
+        .message-content {
             display: flex;
             align-items: flex-end;
             flex-wrap: wrap;
-            gap: 4px;
+            gap: 0; /* Remove gap */
             width: 100%;
-            justify-content: flex-start;
         }
-        .incoming .message-text {
-            display: inline;
-            white-space: normal;
-            word-break: break-word;
+        .message-text {
             flex: 1;
             min-width: 0;
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.4;
             max-width: 100%;
         }
-        .incoming .message-metadata {
+        .message-metadata {
+            flex-shrink: 0;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            line-height: 1;
+            margin-left: 4px;
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            margin-left: 4px;
-            font-size: 0.75rem;
-            line-height: 1;
-            flex-shrink: 0;
-            white-space: nowrap;
+        }
+
+        /* Incoming (white) */
+        .incoming .message-content {
+            justify-content: flex-start;
+        }
+        .incoming .message-metadata {
             color: #68727c;
         }
 
-        /* Outgoing (blue) bubble: full width per line, metadata at right edge */
+        /* Outgoing (blue) */
         .outgoing .message-content {
-            display: flex;
-            align-items: flex-end;
-            flex-wrap: wrap;
-            gap: 4px;
-            width: 100%;
             justify-content: flex-end;
         }
-        .outgoing .message-text {
-            display: inline;
-            white-space: normal;
-            word-break: break-word;
-            flex: 1;
-            min-width: 0;
-            max-width: 100%;
-        }
         .outgoing .message-metadata {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            margin-left: 4px;
-            font-size: 0.75rem;
-            line-height: 1;
-            flex-shrink: 0;
-            white-space: nowrap;
+            color: #9ebad2;
         }
     </style>
 </head>
@@ -219,8 +205,8 @@
             const [showEmojiPicker, setShowEmojiPicker] = useState(false);
             const [hasText, setHasText] = useState(false);
             const [messages, setMessages] = useState([
-                { text: 'Bro this is a long message that wraps to multiple lines and keeps going even more', time: '1:38 PM', incoming: true },
-                { text: 'Hey this is a very long outgoing message that wraps multiple times and fills the line', time: '1:39 PM', incoming: false }
+                { text: 'Bro this is a long message that wraps to multiple lines and keeps going even more to test full line filling', time: '1:38 PM', incoming: true },
+                { text: 'Hey this is a very long outgoing message that wraps multiple times and fills the line perfectly without gaps', time: '1:39 PM', incoming: false }
             ]);
             let scrollTimeout = useRef(null);
 
