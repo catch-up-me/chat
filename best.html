@@ -54,8 +54,45 @@
             -webkit-touch-callout: none;
         }
 
-        /* Message wrap + metadata aligned to right edge */
-        .message-content {
+        /* === GLOBAL BUTTON COLORS === */
+        :root {
+            --btn-bg-active: #749cbf;
+            --btn-bg-inactive: #e5e7eb;
+            --btn-icon-active: #ffffff;
+            --btn-icon-inactive: #6b7280;
+        }
+
+        /* Incoming (white) bubble: full width per line, no early wrap */
+        .incoming .message-content {
+            display: flex;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 4px;
+            width: 100%;
+            justify-content: flex-start;
+        }
+        .incoming .message-text {
+            display: inline;
+            white-space: normal;
+            word-break: break-word;
+            flex: 1;
+            min-width: 0;
+            max-width: 100%;
+        }
+        .incoming .message-metadata {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 4px;
+            font-size: 0.75rem;
+            line-height: 1;
+            flex-shrink: 0;
+            white-space: nowrap;
+            color: #68727c;
+        }
+
+        /* Outgoing (blue) bubble: full width per line, metadata at right edge */
+        .outgoing .message-content {
             display: flex;
             align-items: flex-end;
             flex-wrap: wrap;
@@ -63,14 +100,15 @@
             width: 100%;
             justify-content: flex-end;
         }
-        .message-text {
+        .outgoing .message-text {
             display: inline;
             white-space: normal;
             word-break: break-word;
             flex: 1;
             min-width: 0;
+            max-width: 100%;
         }
-        .message-metadata {
+        .outgoing .message-metadata {
             display: inline-flex;
             align-items: center;
             gap: 4px;
@@ -119,7 +157,7 @@
             </svg>
         );
 
-        // ORIGINAL Keyboard SVG - EXACTLY AS BEFORE (Color: #6b7280)
+        // ORIGINAL Keyboard SVG - 100% EXACT
         const KeyboardIcon = () => (
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
                 <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
@@ -181,8 +219,8 @@
             const [showEmojiPicker, setShowEmojiPicker] = useState(false);
             const [hasText, setHasText] = useState(false);
             const [messages, setMessages] = useState([
-                { text: 'Bro', time: '1:38 PM', incoming: true },
-                { text: 'Hey', time: '1:39 PM', incoming: false }
+                { text: 'Bro this is a long message that wraps to multiple lines and keeps going even more', time: '1:38 PM', incoming: true },
+                { text: 'Hey this is a very long outgoing message that wraps multiple times and fills the line', time: '1:39 PM', incoming: false }
             ]);
             let scrollTimeout = useRef(null);
 
@@ -200,17 +238,6 @@
                 const handleInput = () => {
                     const text = input.textContent || '';
                     setHasText(text.trim().length > 0);
-
-                    // Enforce max 20 characters
-                    if (text.length > 20) {
-                        input.textContent = text.substring(0, 20);
-                        const range = new Range();
-                        range.selectNodeContents(input);
-                        range.collapse(false);
-                        const sel = window.getSelection();
-                        sel.removeAllRanges();
-                        sel.addRange(range);
-                    }
 
                     input.style.height = 'auto';
                     const newHeight = Math.min(input.scrollHeight, 100);
@@ -283,7 +310,7 @@
                 if (!text || text.length === 0) return;
 
                 const newMsg = {
-                    text: text.substring(0, 20),
+                    text: text,
                     time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
                     incoming: false
                 };
@@ -296,7 +323,6 @@
                 }
             };
 
-            // REMOVED: Enter key send (only button sends)
             const handleMouseDown = (e) => e.preventDefault();
             const handleChatClick = (e) => e.preventDefault();
 
@@ -327,13 +353,13 @@
                                 <div key={i} className={`flex items-end gap-2 ${msg.incoming ? '' : 'justify-end'}`}
                                      onMouseDown={handleMouseDown}
                                      onTouchStart={handleMouseDown}>
-                                    <div className={`rounded-2xl ${msg.incoming ? 'rounded-bl-md bg-white' : 'rounded-br-md'} px-4 py-2 shadow-sm max-w-xs`}
+                                    <div className={`rounded-2xl ${msg.incoming ? 'rounded-bl-md bg-white' : 'rounded-br-md'} px-4 py-2 shadow-sm max-w-xs ${msg.incoming ? 'incoming' : 'outgoing'}`}
                                          style={msg.incoming ? {} : {backgroundColor:'#5d7d99'}}>
                                         <div className="message-content">
                                             <span className={`message-text ${msg.incoming ? 'text-gray-900' : 'text-white'} text-base`}>
                                                 {msg.text}
                                             </span>
-                                            <div className={`message-metadata ${msg.incoming ? 'text-gray-400' : 'text-blue-100'}`}>
+                                            <div className={`message-metadata ${msg.incoming ? 'text-gray-500' : 'text-blue-100'}`}>
                                                 <span>{msg.time}</span>
                                                 {!msg.incoming && (
                                                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4">
@@ -410,7 +436,8 @@
                                 onTouchStart={handleMouseDown}
                                 onClick={hasText ? sendMessage : null}
                                 style={{
-                                    backgroundColor: hasText ? '#749cbf' : '#e5e7eb',
+                                    backgroundColor: hasText ? 'var(--btn-bg-active)' aside: 'var(--btn-bg-inactive)',
+                                    color: hasText ? 'var(--btn-icon-active)' : 'var(--btn-icon-inactive)',
                                     opacity: hasText ? 1 : 0.6,
                                     cursor: hasText ? 'pointer' : 'default'
                                 }}
