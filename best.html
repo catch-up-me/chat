@@ -57,38 +57,40 @@
         /* === GLOBAL BUTTON COLORS === */
         :root {
             --btn-bg-active: #749cbf;
-            --btn-bg-inactive: #e5e7eb;
             --btn-icon-active: #ffffff;
-            --btn-icon-inactive: #6b7280;
         }
 
-        /* === CRITICAL: FULL LINE FILL BEFORE WRAP === */
+        /* === MAXIMUM LINE FILL: TEXT REACHES EDGE BEFORE TIMER === */
         .message-content {
             display: flex;
             align-items: flex-end;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 0; /* No gap between text and timer */
             width: 100%;
         }
 
         .message-text {
             flex: 1;
-            min-width: 60px;
+            min-width: 80px;
             white-space: pre-wrap;
             word-break: break-word;
+            overflow-wrap: anywhere;
             hyphens: auto;
             max-width: 100%;
-            overflow-wrap: anywhere;
+            margin: 0;
+            padding: 0;
+            line-height: 1.4;
         }
 
         .message-metadata {
             flex-shrink: 0;
             white-space: nowrap;
             font-size: 0.75rem;
-            line-height: 1;
+            line-height: 1.4;
             display: inline-flex;
             align-items: center;
             gap: 4px;
+            margin-left: 4px;
         }
 
         /* Incoming (white) */
@@ -100,7 +102,6 @@
         }
         .incoming .message-metadata {
             color: #68727c;
-            margin-left: 4px;
         }
 
         /* Outgoing (blue) */
@@ -214,8 +215,8 @@
             const [showEmojiPicker, setShowEmojiPicker] = useState(false);
             const [hasText, setHasText] = useState(false);
             const [messages, setMessages] = useState([
-                { text: 'Bro this is a long message that wraps to multiple lines and keeps going even more and more until the line is completely full before wrapping', time: '1:38 PM', incoming: true },
-                { text: 'Hey this is a very long outgoing message that wraps multiple times and fills the line completely with no early breaks or gaps', time: '1:39 PM', incoming: false }
+                { text: 'This message will fill the entire line completely before the timer appears on the same line', time: '1:38 PM', incoming: true },
+                { text: 'Outgoing message fills to the very edge before the timestamp pushes to the next line', time: '1:39 PM', incoming: false }
             ]);
             let scrollTimeout = useRef(null);
 
@@ -431,8 +432,8 @@
                                 onTouchStart={handleMouseDown}
                                 onClick={hasText ? sendMessage : null}
                                 style={{
-                                    backgroundColor: hasText ? 'var(--btn-bg-active)' : 'var(--btn-bg-active)',
-                                    color: hasText ? 'var(--btn-icon-active)' : 'var(--btn-icon-active)',
+                                    backgroundColor: 'var(--btn-bg-active)',
+                                    color: 'var(--btn-icon-active)',
                                     opacity: 1,
                                     cursor: 'pointer'
                                 }}>
