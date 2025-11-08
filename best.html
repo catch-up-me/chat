@@ -427,7 +427,6 @@
                                     style={{ 
                                         flexShrink: 0, 
                                         alignSelf: 'flex-end', 
-                                        transform: 'translateY(3px)' // Lowering the icon
                                     }}
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}
@@ -435,7 +434,13 @@
                                     {showEmojiPicker ? (
                                         <KeyboardIcon />
                                     ) : (
-                                        <i className="fa-regular fa-face-smile" style={{ fontSize: '24px' }}></i>
+                                        <i className="fa-regular fa-face-smile" 
+                                           style={{ 
+                                              fontSize: '24px',
+                                              display: 'block', // Added display block to enable transform
+                                              transform: 'translateY(3px)' // Lowering the smile icon
+                                           }}>
+                                        </i>
                                     )}
                                 </button>
                                 <div 
@@ -458,7 +463,7 @@
                                     style={{ 
                                         flexShrink: 0, 
                                         alignSelf: 'flex-end', 
-                                        transform: 'translateY(3px)' // Lowering the icon
+                                        transform: 'translateY(3px)' // Lowering the attachment icon
                                     }}
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}>
