@@ -293,9 +293,13 @@
 
             /* ---- EMOJI PICKER OPEN / CLOSE ---- */
             useLayoutEffect(() => {
+                // Scroll immediately when emoji picker state changes
+                scrollToBottom(false);
+                
+                // Then do a smooth scroll after animation completes
                 const timer = setTimeout(() => {
-                    scrollToBottom(!showEmojiPicker);
-                }, 320);
+                    scrollToBottom(true);
+                }, 350);
                 return () => clearTimeout(timer);
             }, [showEmojiPicker]);
 
