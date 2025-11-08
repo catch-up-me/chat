@@ -437,13 +437,13 @@
                                     onTouchStart={handleMouseDown}
                                     onClick={toggleEmojiPicker}>
                                     {showEmojiPicker ? (
-                                        <KeyboardIcon style={{ transform: 'translateY(3px)' }} /> 
+                                        <KeyboardIcon style={{ transform: 'translateY(5px)' }} /> {/* CHANGED TO 5PX */}
                                     ) : (
                                         <i className="fa-regular fa-face-smile" 
                                            style={{ 
                                               fontSize: '24px',
                                               display: 'block', 
-                                              transform: 'translateY(3px)' // Lowering the smile icon
+                                              transform: 'translateY(3px)' // REMAINS AT 3PX
                                            }}>
                                         </i>
                                     )}
@@ -468,7 +468,7 @@
                                     style={{ 
                                         flexShrink: 0, 
                                         alignSelf: 'flex-end', 
-                                        transform: 'translateY(3px)' // Lowering the attachment icon
+                                        transform: 'translateY(3px)' // REMAINS AT 3PX
                                     }}
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}>
