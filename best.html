@@ -125,16 +125,6 @@
         .outgoing .message-metadata {
             color: #bfdbfe;
         }
-
-        /* FIXED ICON BUTTONS — NEVER GROW */
-        .input-icon-btn {
-            flex: 0 0 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -364,7 +354,7 @@
 
                     <div ref={scrollRef}
                          onMouseDown={handleChatClick}
-                         onTouchStart={handleChatClick}
+                         onTouchStart={ {handleChatClick}
                          className="flex-1 overflow-y-auto pt-20 px-4 transition-padding duration-300"
                          style={{
                              backgroundImage:'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
@@ -427,25 +417,21 @@
                          }}>
                         <div className="mx-3 flex items-end gap-2">
                             <div ref={inputContainerRef}
-                                 className="bg-white shadow-sm flex px-3 py-3 transition-all duration-100 flex-1"
+                                 className="bg-white shadow-sm flex px-3 py-3 transition-all duration-100 flex-1 items-start"
                                  style={{
                                      borderRadius:'13px',
                                      minHeight:'48px',
                                      height:'48px',
-                                     overflow:'hidden',
-                                     alignItems:'center'
+                                     overflow:'hidden'
                                  }}>
                                 {/* Smile / Keyboard Button */}
                                 <button 
-                                    className="input-icon-btn text-gray-400 hover:text-gray-600 transition-colors mr-3"
+                                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors mr-3 p-0 self-center"
+                                    style={{ flex: '0 0 40px', minWidth: '40px', minHeight: '40px' }}
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}
                                     onClick={toggleEmojiPicker}>
-                                    {showEmojiPicker ? (
-                                        <KeyboardIcon />
-                                    ) : (
-                                        <i className="fa-regular fa-face-smile text-2xl"></i>
-                                    )}
+                                    {showEmojiPicker ? <KeyboardIcon /> : <i className="fa-regular fa-face-smile text-2xl"></i>}
                                 </button>
 
                                 {/* Editable Input */}
@@ -453,20 +439,24 @@
                                     ref={inputRef}
                                     contentEditable="true"
                                     placeholder="Message"
-                                    className="flex-1 outline-none text-gray-900 text-base overflow-y-auto"
+                                    className="flex-1 outline-none text-gray-900 text-base min-h-6"
                                     onClick={handleInputClick}
                                     onFocus={handleInputClick}
                                     style={{
                                         minHeight:'24px',
                                         maxHeight:'100px',
                                         lineHeight:'1.5',
-                                        resize:'none'
+                                        overflowY:'auto',
+                                        resize:'none',
+                                        paddingTop: '6px',
+                                        paddingBottom: '6px'
                                     }}>
                                 </div>
 
                                 {/* Attachment Button */}
                                 <button 
-                                    className="input-icon-btn text-gray-400 hover:text-gray-600 transition-colors ml-3"
+                                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors ml-3 p-0 self-center"
+                                    style={{ flex: '0 0 40px', minWidth: '40px', minHeight: '40px' }}
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}>
                                     <i className="fa-solid fa-paperclip text-2xl"></i>
@@ -475,10 +465,13 @@
 
                             {/* Send / Mic Button */}
                             <button 
-                                className="flex-shrink-0 w-12 h-12 rounded-full shadow-sm transition-all duration-200 flex items-center justify-center"
+                                className="w-12 h-12 rounded-full shadow-sm transition-all duration-200 flex items-center justify-center self-start"
                                 style={{
                                     backgroundColor: 'var(--btn-bg-active)',
-                                    color: 'var(--btn-icon-active)'
+                                    color: 'var(--btn-icon-active)',
+                                    flex: '0 0 48px',
+                                    minWidth: '48px',
+                                    minHeight: '48px'
                                 }}
                                 onMouseDown={handleMouseDown}
                                 onTouchStart={handleMouseDown}
