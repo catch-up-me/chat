@@ -13,29 +13,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="main.css">
-    
-    <script type="text/babel">
-        // Placeholder for Head.js content
-        window.ChatHeader = function ChatHeader({ stickyDate }) {
-            return (
-                <div className="fixed top-0 left-0 right-0 z-50 shadow-md p-4 flex items-center justify-between"
-                     style={{ height: '80px', backgroundColor: '#5d7d99', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
-                    <div className="flex items-center">
-                        <i className="fa-solid fa-arrow-left text-white text-xl mr-3"></i>
-                        <div className="text-white font-semibold text-lg">Daddy Steve</div>
-                    </div>
-                    {stickyDate && (
-                        <div className="absolute top-[80px] left-0 right-0 h-8 flex items-center justify-center bg-gray-200/90 backdrop-blur-sm shadow-sm z-50">
-                            <span className="text-gray-600 text-xs font-medium">{stickyDate}</span>
-                        </div>
-                    )}
-                </div>
-            );
-        };
-    </script>
 </head>
 <body class="bg-gray-50">
     <div id="root"></div>
+
+    <script type="text/babel" src="Head.js"></script>
 
     <script type="text/babel">
         const { useEffect, useRef, useState, useLayoutEffect } = React;
@@ -259,7 +241,7 @@
             return tall;
         };
 
-        /* ---------- MAIN CHAT ---------- */
+        /* ---------- MAIN CHAT (WITH FIX) ---------- */
         function ChatLayout() {
             const scrollRef = useRef(null);
             const inputRef = useRef(null);
@@ -278,8 +260,6 @@
             const scrollTimeout = useRef(null);
             const lastScrollHeight = useRef(0);
             const isInputFocused = useRef(false);
-            // NEW STATE FOR EMOJI PICKER FIX
-            const [isFirstEmojiToggle, setIsFirstEmojiToggle] = useState(true);
 
             const scrollToBottom = (smooth = true) => {
                 if (!scrollRef.current) return;
@@ -300,29 +280,22 @@
                 setReplyingTo(null);
             };
 
-            /* ---- INITIAL LOAD (Scroll to bottom instantly) ---- */
+            /* ---- INITIAL LOAD ---- */
             useEffect(() => scrollToBottom(false), []);
 
-            /* ---- NEW MESSAGE (Scroll to bottom smoothly) ---- */
+            /* ---- NEW MESSAGE ---- */
             useEffect(() => scrollToBottom(true), [messages]);
 
-            /* ---- EMOJI PICKER OPEN / CLOSE (FIXED SCROLL LOGIC) ---- */
+            /* ---- EMOJI PICKER OPEN / CLOSE (FIX APPLIED) ---- */
             useLayoutEffect(() => {
-                // Prevent this from running on the initial component mount
-                if (isFirstEmojiToggle) {
-                    setIsFirstEmojiToggle(false);
-                    return;
-                }
-                
-                // Schedule the scroll to run after the CSS transition (300ms + buffer)
+                // Use a small timeout to allow the DOM to finish painting 
+                // the new layout (input bar moving, padding changing) before scrolling.
                 const timer = setTimeout(() => {
-                    // Scroll instantly when the input/picker area changes height
-                    scrollToBottom(false); 
-                }, 320); 
+                    scrollToBottom(false); // Scroll instantly after layout change
+                }, 50);
 
                 return () => clearTimeout(timer);
-            }, [showEmojiPicker, isFirstEmojiToggle]);
-
+            }, [showEmojiPicker]);
 
             /* ---- KEYBOARD RESIZE ---- */
             useLayoutEffect(() => {
@@ -354,17 +327,19 @@
                     const txt = input.textContent || '';
                     setHasText(txt.trim().length > 0);
 
+                    // 1. Calculate and set Input height
                     input.style.height = 'auto';
                     const h = Math.min(input.scrollHeight, 100);
                     input.style.height = `${h}px`;
 
-                    const contH = h + 24;
+                    // 2. Calculate and set Input Container height
+                    const contH = h + 24; // Input height + padding
                     container.style.height = `${contH}px`;
 
-                    const totalInput = contH + 16;
+                    // 3. Calculate and set Chat content padding
+                    const totalInput = contH + 16; // Container height + outer padding (8px top, 8px bottom)
                     const pickerH = showEmojiPicker ? 280 : 0;
                     const replyH = replyingTo ? 60 : 0;
-                    // Adjust chat padding dynamically based on all bottom UI elements
                     chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`;
 
                     if (chat.scrollHeight > lastScrollHeight.current) scrollToBottom();
@@ -374,6 +349,7 @@
                 handle();
                 input.addEventListener('input', handle);
                 input.addEventListener('paste', () => setTimeout(handle,0));
+                
                 return () => input.removeEventListener('input', handle);
             }, [showEmojiPicker, replyingTo]);
 
@@ -422,6 +398,7 @@
                 inputRef.current.textContent = '';
                 setHasText(false);
                 setReplyingTo(null);
+                // Reset input height state
                 inputRef.current.style.height = 'auto';
                 inputContainerRef.current.style.height = '48px';
             };
@@ -440,7 +417,7 @@
                              backgroundSize:'cover',
                              backgroundPosition:'center',
                              backgroundRepeat:'no-repeat',
-                             paddingBottom:'61px',
+                             paddingBottom:'61px', // Default padding before dynamic calc
                              transition:'padding-bottom 300ms ease'
                          }}>
                         <div className="flex flex-col justify-end min-h-full space-y-4 py-4">
@@ -507,8 +484,8 @@
                             <button className="flex-shrink-0 flex items-center justify-center shadow-sm transition-all duration-200 rounded-full"
                                     style={{
                                         width:'48px',height:'48px',
-                                        backgroundColor:'#5d7d99', // Custom var was here, replaced with a hardcode for simplicity
-                                        color:'white',
+                                        backgroundColor:'var(--btn-bg-active)',
+                                        color:'var(--btn-icon-active)',
                                         opacity:1,cursor:'pointer'
                                     }}
                                     onMouseDown={block} onTouchStart={block}
