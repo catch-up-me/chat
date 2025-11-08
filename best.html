@@ -231,6 +231,7 @@
             ]);
             let scrollTimeout = useRef(null);
             const lastScrollHeight = useRef(0);
+            const isInputFocused = useRef(false); // Track input focus
 
             // Function to scroll to the bottom with smooth behavior
             const scrollToBottom = (isSmooth = true) => {
@@ -242,18 +243,36 @@
                 }
             };
 
-            // Scroll to bottom on initial load and when new messages arrive
+            // Scroll to bottom on initial load
             useEffect(() => {
-                // Scroll instantly on initial load (not visible to user)
                 scrollToBottom(false); 
             }, []);
 
             // Scroll to bottom whenever messages are updated (new message sent/received)
             useEffect(() => {
-                 // Use smooth scrolling for new messages
                 scrollToBottom(true);
             }, [messages]);
 
+            // Visual viewport resize → scroll when keyboard appears/disappears
+            useLayoutEffect(() => {
+                const onResize = () => {
+                    if (isInputFocused.current && scrollRef.current) {
+                        scrollRef.current.scrollTo({
+                            top: scrollRef.current.scrollHeight,
+                            behavior: 'instant',
+                        });
+                    }
+                };
+
+                const vv = window.visualViewport;
+                if (vv) {
+                    vv.addEventListener('resize', onResize);
+                    return () => vv.removeEventListener('resize', onResize);
+                }
+
+                window.addEventListener('resize', onResize);
+                return () => window.removeEventListener('resize', onResize);
+            }, []);
 
             // Manage input height and chat padding
             useEffect(() => {
@@ -289,10 +308,8 @@
                         scrollToBottom();
                     }
                     lastScrollHeight.current = chat.scrollHeight;
-
                 };
 
-                // The handleInput call on mount/dependency change ensures initial setup.
                 handleInput();
 
                 input.addEventListener('input', handleInput);
@@ -352,12 +369,15 @@
             const closeEmojiPicker = () => setShowEmojiPicker(false);
 
             const handleInputFocus = () => {
-                // When input receives focus (keyboard appears), close the emoji picker and scroll to bottom
+                isInputFocused.current = true;
                 if (showEmojiPicker) closeEmojiPicker();
-                // Crucial fix: Trigger scroll to ensure the latest message is visible above the keyboard/input
                 setTimeout(() => scrollToBottom(), 50); 
             };
-            
+
+            const handleInputBlur = () => {
+                isInputFocused.current = false;
+            };
+
             const sendMessage = () => {
                 const text = inputRef.current?.textContent?.trim();
                 if (!text || text.length === 0) return;
@@ -371,17 +391,15 @@
                 inputRef.current.textContent = '';
                 setHasText(false);
                 
-                // Reset input height state after sending
                 if (inputRef.current) {
                     inputRef.current.style.height = 'auto';
-                    inputContainerRef.current.style.height = '48px'; // Back to minimum height
+                    inputContainerRef.current.style.height = '48px';
                 }
             };
 
             const handleMouseDown = (e) => e.preventDefault();
             const handleChatClick = (e) => e.preventDefault();
 
-            // Helper: Check if message is multi-line
             const isMultiLine = (text) => {
                 const temp = document.createElement('span');
                 temp.style.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
@@ -389,12 +407,12 @@
                 temp.style.wordBreak = 'break-word';
                 temp.style.visibility = 'hidden';
                 temp.style.position = 'absolute';
-                temp.style.maxWidth = '260px'; // ~max-w-xs
+                temp.style.maxWidth = '260px';
                 temp.textContent = text;
                 document.body.appendChild(temp);
                 const height = temp.offsetHeight;
                 document.body.removeChild(temp);
-                return height > 28; // ~1.5 lines
+                return height > 28;
             };
 
             return (
@@ -410,7 +428,7 @@
                              backgroundSize:'cover',
                              backgroundPosition:'center',
                              backgroundRepeat:'no-repeat',
-                             paddingBottom: '61px', // Initial padding based on min input height
+                             paddingBottom: '61px',
                              transition: 'padding-bottom 300ms ease'
                          }}>
                         <div className="flex flex-col justify-end min-h-full space-y-4 py-4">
@@ -499,8 +517,9 @@
                                     contentEditable="true"
                                     placeholder="Message"
                                     className="flex-1 outline-none text-gray-900 text-base"
-                                    onFocus={handleInputFocus} // New: Trigger scroll on focus
-                                    onClick={handleInputFocus} // New: Trigger scroll on click
+                                    onFocus={handleInputFocus}
+                                    onBlur={handleInputBlur}
+                                    onClick={handleInputFocus}
                                     style={{
                                         minHeight:'24px',
                                         maxHeight:'100px',
@@ -562,4 +581,3 @@
     </script>
 </body>
 </html>
-
