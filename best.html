@@ -232,17 +232,28 @@
             let scrollTimeout = useRef(null);
             const lastScrollHeight = useRef(0);
 
-            // Function to scroll to the bottom
-            const scrollToBottom = () => {
+            // Function to scroll to the bottom with smooth behavior
+            const scrollToBottom = (isSmooth = true) => {
                 if (scrollRef.current) {
-                    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+                    scrollRef.current.scrollTo({
+                        top: scrollRef.current.scrollHeight,
+                        behavior: isSmooth ? 'smooth' : 'instant',
+                    });
                 }
             };
 
             // Scroll to bottom on initial load and when new messages arrive
             useEffect(() => {
-                scrollToBottom();
+                // Scroll instantly on initial load (not visible to user)
+                scrollToBottom(false); 
+            }, []);
+
+            // Scroll to bottom whenever messages are updated (new message sent/received)
+            useEffect(() => {
+                 // Use smooth scrolling for new messages
+                scrollToBottom(true);
             }, [messages]);
+
 
             // Manage input height and chat padding
             useEffect(() => {
@@ -265,17 +276,15 @@
                     const containerHeight = newHeight + 24; // 12px padding top + 12px padding bottom in container
                     container.style.height = `${containerHeight}px`;
                     
-                    // 3. Calculate chat padding (Input container height + fixed padding/margin)
-                    // 48px is the fixed height of the full input bar (input container + send button area margin)
-                    const totalInputBarHeight = containerHeight + 16; // The 16px is from the outer container's vertical padding (8px top + 8px bottom)
+                    // 3. Calculate chat padding
+                    const totalInputBarHeight = containerHeight + 16; // 16px is from the outer container's vertical padding (8px top + 8px bottom)
 
                     const emojiPickerHeight = showEmojiPicker ? 280 : 0;
                     const bottomPadding = totalInputBarHeight + emojiPickerHeight;
                     
                     chat.style.paddingBottom = `${bottomPadding}px`;
                     
-                    // Only auto-scroll when expanding the input or adding text
-                    // If the user was manually scrolled up, we don't want to force scroll unless a new message is sent.
+                    // Auto-scroll when input height changes due to typing
                     if (chat.scrollHeight > lastScrollHeight.current) {
                         scrollToBottom();
                     }
@@ -288,10 +297,6 @@
 
                 input.addEventListener('input', handleInput);
                 input.addEventListener('paste', () => setTimeout(handleInput, 0));
-
-                // We need an observer or similar if the keyboard changes height dynamically.
-                // For now, focusing on the input will handle the viewport resizing on mobile devices,
-                // and the `handleInput` will update padding if height changes.
 
                 return () => {
                     input.removeEventListener('input', handleInput);
@@ -340,20 +345,17 @@
                 setShowEmojiPicker(willOpen);
                 
                 if (willOpen) {
-                    // When opening picker, blur the input to hide the device keyboard
                     if (inputRef.current) inputRef.current.blur();
-                } else {
-                    // When closing picker, focus the input to bring device keyboard back (if desired)
-                    // If focusing, use a slight delay
-                    // setTimeout(() => inputRef.current?.focus(), 100); 
-                }
+                } 
             };
 
             const closeEmojiPicker = () => setShowEmojiPicker(false);
 
-            const handleInputClick = () => {
-                // When user clicks input, they likely want the device keyboard, so close the emoji picker if open.
+            const handleInputFocus = () => {
+                // When input receives focus (keyboard appears), close the emoji picker and scroll to bottom
                 if (showEmojiPicker) closeEmojiPicker();
+                // Crucial fix: Trigger scroll to ensure the latest message is visible above the keyboard/input
+                setTimeout(() => scrollToBottom(), 50); 
             };
             
             const sendMessage = () => {
@@ -374,9 +376,6 @@
                     inputRef.current.style.height = 'auto';
                     inputContainerRef.current.style.height = '48px'; // Back to minimum height
                 }
-                
-                // Scroll to bottom immediately after state update
-                setTimeout(scrollToBottom, 50); 
             };
 
             const handleMouseDown = (e) => e.preventDefault();
@@ -500,8 +499,8 @@
                                     contentEditable="true"
                                     placeholder="Message"
                                     className="flex-1 outline-none text-gray-900 text-base"
-                                    onFocus={handleInputClick} // Use onFocus to trigger the emoji picker close
-                                    onClick={handleInputClick}
+                                    onFocus={handleInputFocus} // New: Trigger scroll on focus
+                                    onClick={handleInputFocus} // New: Trigger scroll on click
                                     style={{
                                         minHeight:'24px',
                                         maxHeight:'100px',
