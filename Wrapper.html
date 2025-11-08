@@ -15,13 +15,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="main.css">
+    <style>
+        [contenteditable]:empty:before {
+            content: attr(placeholder);
+            color: #9ca3af;
+            pointer-events: none;
+        }
+        .incoming { background-color: white; }
+        .outgoing { background-color: #5d7d99; color: white; }
+        .multi-line { border-radius: 16px; }
+        .single-line { border-radius: 20px; }
+        .message-text { word-break: break-word; }
+        .message-metadata { font-size: 11px; opacity: 0.8; margin-top: 2px; display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+    </style>
 </head>
 <body class="bg-gray-50">
     <div id="root"></div>
 
     <!-- Header Component -->
-    <script type="text/babel" src="Head.js"></script>
+    <script type="text/babel" src="Header.js"></script>
 
     <!-- Main Chat UI -->
     <script type="text/babel">
@@ -96,27 +108,21 @@
                 const diffX = currentX - startX.current;
                 const diffY = currentY - startY.current;
                 
-                // Determine if this is a horizontal or vertical swipe
                 if (!isDragging.current && !isHorizontalSwipe.current) {
-                    // Only commit to horizontal swipe if horizontal movement is significantly more than vertical
                     if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
                         isHorizontalSwipe.current = true;
                         isDragging.current = true;
                     } else if (Math.abs(diffY) > 10) {
-                        // This is a vertical scroll, don't interfere
                         return;
                     } else {
-                        // Not enough movement yet
                         return;
                     }
                 }
 
                 if (!isHorizontalSwipe.current) return;
 
-                // Prevent scrolling when horizontal swipe is detected
                 e.preventDefault();
                 
-                // Incoming messages: swipe right (positive), Outgoing: swipe left (negative)
                 if (incoming && diffX > 0 && diffX <= 80) {
                     setOffset(diffX);
                 } else if (!incoming && diffX < 0 && diffX >= -80) {
@@ -132,12 +138,10 @@
                 }
 
                 const threshold = 50;
-                
                 if (Math.abs(offset) >= threshold) {
                     onReply(message);
                 }
                 
-                // Bounce back animation
                 setOffset(0);
                 isDragging.current = false;
                 isHorizontalSwipe.current = false;
@@ -265,13 +269,13 @@
             const scrollTimeout = useRef(null);
             const lastScrollHeight = useRef(0);
             const isInputFocused = useRef(false);
+            const prevEmojiOpen = useRef(false);
 
-            const scrollToBottom = (smooth = true) => {
-                if (!scrollRef.current) return;
-                scrollRef.current.scrollTo({
-                    top: scrollRef.current.scrollHeight,
-                    behavior: smooth ? 'smooth' : 'instant'
-                });
+            const scrollToBottom = (behavior = 'smooth') => {
+                const anchor = document.getElementById('scroll-anchor');
+                if (anchor) {
+                    anchor.scrollIntoView({ behavior, block: 'end' });
+                }
             };
 
             const handleReply = (message) => {
@@ -286,31 +290,52 @@
             };
 
             /* ---- INITIAL LOAD ---- */
-            useEffect(() => scrollToBottom(false), []);
+            useEffect(() => {
+                scrollToBottom('auto');
+            }, []);
 
             /* ---- NEW MESSAGE ---- */
-            useEffect(() => scrollToBottom(true), [messages]);
+            useEffect(() => {
+                scrollToBottom('smooth');
+            }, [messages]);
 
-            /* ---- EMOJI PICKER OPEN / CLOSE ---- */
+            /* ---- EMOJI PICKER SCROLL ---- */
             useLayoutEffect(() => {
-                // Scroll immediately when emoji picker state changes
-                scrollToBottom(false);
-                
-                // Then do a smooth scroll after animation completes
-                const timer = setTimeout(() => {
-                    scrollToBottom(true);
-                }, 350);
-                return () => clearTimeout(timer);
+                const wasOpen = prevEmojiOpen.current;
+                prevEmojiOpen.current = showEmojiPicker;
+
+                if (!wasOpen && showEmojiPicker) {
+                    // Opening: wait for layout
+                    let raf;
+                    let attempts = 0;
+                    const maxAttempts = 30;
+
+                    const tryScroll = () => {
+                        const picker = document.querySelector('.emoji-picker-container');
+                        if (picker && picker.offsetHeight > 200 && scrollRef.current) {
+                            scrollToBottom('smooth');
+                            return;
+                        }
+                        if (attempts++ < maxAttempts) {
+                            raf = requestAnimationFrame(tryScroll);
+                        } else {
+                            scrollToBottom('smooth');
+                        }
+                    };
+
+                    raf = requestAnimationFrame(tryScroll);
+                    return () => raf && cancelAnimationFrame(raf);
+                } else if (wasOpen && !showEmojiPicker) {
+                    // Closing
+                    scrollToBottom('smooth');
+                }
             }, [showEmojiPicker]);
 
             /* ---- KEYBOARD RESIZE ---- */
             useLayoutEffect(() => {
                 const onResize = () => {
                     if (isInputFocused.current && scrollRef.current) {
-                        scrollRef.current.scrollTo({
-                            top: scrollRef.current.scrollHeight,
-                            behavior: 'instant'
-                        });
+                        scrollToBottom('auto');
                     }
                 };
                 const vv = window.visualViewport;
@@ -323,13 +348,13 @@
             }, []);
 
             /* ---- INPUT HEIGHT & PADDING ---- */
-            useEffect(() => {
+            useLayoutEffect(() => {
                 const input = inputRef.current;
                 const container = inputContainerRef.current;
                 const chat = scrollRef.current;
                 if (!input || !container || !chat) return;
 
-                const handle = () => {
+                const update = () => {
                     const txt = input.textContent || '';
                     setHasText(txt.trim().length > 0);
 
@@ -344,15 +369,9 @@
                     const pickerH = showEmojiPicker ? 280 : 0;
                     const replyH = replyingTo ? 60 : 0;
                     chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`;
-
-                    if (chat.scrollHeight > lastScrollHeight.current) scrollToBottom();
-                    lastScrollHeight.current = chat.scrollHeight;
                 };
 
-                handle();
-                input.addEventListener('input', handle);
-                input.addEventListener('paste', () => setTimeout(handle,0));
-                return () => input.removeEventListener('input', handle);
+                update();
             }, [showEmojiPicker, replyingTo]);
 
             /* ---- STICKY DATE ---- */
@@ -388,7 +407,7 @@
             const handleInputFocus = () => {
                 isInputFocused.current = true;
                 if (showEmojiPicker) closeEmojiPicker();
-                setTimeout(() => scrollToBottom(), 50);
+                setTimeout(() => scrollToBottom('auto'), 100);
             };
             const handleInputBlur = () => { isInputFocused.current = false; };
 
@@ -438,6 +457,9 @@
                                     onReply={handleReply}
                                 />
                             ))}
+
+                            {/* Scroll Anchor */}
+                            <div id="scroll-anchor" style={{ height: 0 }}></div>
                         </div>
                     </div>
 
@@ -497,7 +519,7 @@
                     </div>
 
                     {/* EMOJI PICKER */}
-                    <div className={`fixed bottom-0 left-0 right-0 bg-white z-30 transition-transform duration-300 ease-out ${showEmojiPicker?'translate-y-0':'translate-y-full'}`}
+                    <div className={`fixed bottom-0 left-0 right-0 bg-white z-30 transition-transform duration-300 ease-out emoji-picker-container ${showEmojiPicker?'translate-y-0':'translate-y-full'}`}
                          style={{height:'280px',boxShadow:'0 -2px 10px rgba(0,0,0,0.1)',backgroundColor:'#fff'}}>
                         <div className="h-full flex items-center justify-center text-gray-400 text-sm">
                             Emoji Picker Placeholder
