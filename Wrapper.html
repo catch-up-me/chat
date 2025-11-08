@@ -186,6 +186,12 @@
         function ReplyUI({ replyingTo, onCancel }) {
             if (!replyingTo) return null;
 
+            const handleClose = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onCancel();
+            };
+
             return (
                 <div className="px-3 py-2 flex items-center gap-2" style={{ 
                     borderLeft: '3px solid #5d7d99',
@@ -216,7 +222,8 @@
                         </div>
                     </div>
                     <button 
-                        onClick={onCancel}
+                        onMouseDown={handleClose}
+                        onTouchStart={handleClose}
                         className="text-gray-500 hover:text-gray-700 p-1"
                         style={{ flexShrink: 0 }}
                     >
@@ -503,4 +510,3 @@
     </script>
 </body>
 </html>
-
