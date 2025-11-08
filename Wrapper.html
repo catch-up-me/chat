@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Chat Interface</title>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="main.css">
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useEffect, useRef, useState, useLayoutEffect } = React;
+
+        // Mock Header (Since it wasn't provided)
+        const ChatHeader = ({ stickyDate }) => (
+            <div className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md p-4 pt-[env(safe-area-inset-top)]" style={{height:'80px'}}>
+                <div className="text-center font-bold text-lg">Chat Title</div>
+                {stickyDate && <div className="absolute bottom-1 right-2 text-xs text-gray-500">Date: {stickyDate}</div>}
+            </div>
+        );
+
+
+        /* ---------- ICONS (Simplified) ---------- */
+        const CloseIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        );
+        const KeyboardIcon = ({style}) => (<i className="fa-solid fa-keyboard" style={{fontSize:'24px', ...style}}></i>);
+        const MicrophoneIcon = () => (<i className="fa-solid fa-microphone text-white" style={{fontSize:'24px'}}></i>);
+        const SendArrowIcon = () => (<i className="fa-solid fa-arrow-up text-white" style={{fontSize:'20px'}}></i>);
+        // Assuming other icons are correctly defined or replaced with FontAwesome above
+
+        /* ---------- SWIPEABLE MESSAGE ---------- */
+        function SwipeableMessage({ message, index, incoming, onReply }) {
+            const [offset, setOffset] = useState(0);
+            const startX = useRef(0);
+            const startY = useRef(0);
+            const isDragging = useRef(false);
+            const isHorizontalSwipe = useRef(false);
+            const messageRef = useRef(null);
+
+            const handleTouchStart = (e) => {
+                startX.current = e.touches[0].clientX;
+                startY.current = e.touches[0].clientY;
+                isDragging.current = false;
+                isHorizontalSwipe.current = false;
+            };
+
+            const handleTouchMove = (e) => {
+                const currentX = e.touches[0].clientX;
+                const currentY = e.touches[0].clientY;
+                const diffX = currentX - startX.current;
+                const diffY = currentY - startY.current;
+                
+                // Determine if this is a horizontal or vertical swipe
+                if (!isDragging.current && !isHorizontalSwipe.current) {
+                    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+                        isHorizontalSwipe.current = true;
+                        isDragging.current = true;
+                    } else if (Math.abs(diffY) > 10) {
+                        return; // Vertical scroll, allow it
+                    } else {
+                        return;
+                    }
+                }
+                
+                // If a horizontal swipe is committed, prevent default immediately
+                if (isHorizontalSwipe.current) {
+                    e.preventDefault(); 
+                }
+                
+                if (!isHorizontalSwipe.current) return;
+
+                // Incoming messages: swipe right (positive), Outgoing: swipe left (negative)
+                if (incoming && diffX > 0 && diffX <= 80) {
+                    setOffset(diffX);
+                } else if (!incoming && diffX < 0 && diffX >= -80) {
+                    setOffset(diffX);
+                }
+            };
+
+            const handleTouchEnd = () => {
+                if (!isHorizontalSwipe.current) {
+                    setOffset(0);
+                    isDragging.current = false;
+                    return;
+                }
+
+                const threshold = 50;
+                
+                if (Math.abs(offset) >= threshold) {
+                    onReply(message);
+                }
+                
+                setOffset(0);
+                isDragging.current = false;
+                isHorizontalSwipe.current = false;
+            };
+
+            const isMultiLine = (txt) => { /* simplified check */ return txt.length > 50; };
+            const ml = isMultiLine(message.text);
+
+            return (
+                <div 
+                    ref={messageRef}
+                    className={`flex items-end gap-2 ${incoming ? '' : 'justify-end'}`}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    style={{
+                        // Hardware Acceleration applied to the transforming element
+                        transform: `translateX(${offset}px) translateZ(0)`, 
+                        transition: isDragging.current ? 'none' : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        willChange: 'transform' 
+                    }}
+                >
+                    <div className={`rounded-2xl ${incoming ? 'rounded-bl-md bg-white' : 'rounded-br-md'} 
+                                    px-4 py-2 shadow-sm max-w-xs 
+                                    ${incoming ? 'incoming' : 'outgoing'} 
+                                    ${ml ? 'multi-line' : 'single-line'}`}
+                         style={incoming ? {} : { backgroundColor: '#5d7d99' }}>
+                        <div className="message-content">
+                            <span className="message-text">{message.text}</span>
+                            <div className="message-metadata">
+                                <span>{message.time}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        /* ---------- REPLY UI COMPONENT (Simplified) ---------- */
+        function ReplyUI({ replyingTo, onCancel }) {
+            if (!replyingTo) return null;
+            const handleClose = (e) => { e.preventDefault(); onCancel(); };
+            return (
+                <div className="px-3 py-2 flex items-center gap-2" style={{ borderLeft: '3px solid #5d7d99', backgroundColor: '#f3f4f6', borderRadius: '8px', marginLeft: '12px', marginRight: '12px', marginBottom: '8px', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                    <div className="flex-1 min-w-0">
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#5d7d99', marginBottom: '2px' }}>{replyingTo.incoming ? 'Daddy Steve' : 'You'}</div>
+                        <div style={{ fontSize: '14px', color: '#6b7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{replyingTo.text}</div>
+                    </div>
+                    <button onMouseDown={handleClose} className="text-gray-500 hover:text-gray-700 p-1" style={{ flexShrink: 0 }}><CloseIcon /></button>
+                </div>
+            );
+        }
+
+        /* ---------- MAIN CHAT ---------- */
+        function ChatLayout() {
+            const scrollRef = useRef(null);
+            const inputRef = useRef(null);
+            const inputContainerRef = useRef(null);
+            const [stickyDate, setStickyDate] = useState(null);
+            const [isScrolling, setIsScrolling] = useState(false);
+            const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+            const [hasText, setHasText] = useState(false);
+            const [replyingTo, setReplyingTo] = useState(null);
+            const [messages, setMessages] = useState([
+                {text:'Bro this is a very, very long message that wraps multiple times and takes up significant viewport space.',time:'1:38 PM',incoming:true},
+                {text:'Hey this is a very long outgoing message that wraps multiple times and fills the line completely with no early breaks or gaps',time:'1:39 PM',incoming:false},
+                {text:'Short',time:'1:40 PM',incoming:true},
+                {text:'Okay',time:'1:41 PM',incoming:false}
+            ]);
+            const scrollTimeout = useRef(null);
+            const lastScrollHeight = useRef(0);
+            const isInputFocused = useRef(false);
+            const hasScrolledAfterPickerOpen = useRef(false);
+
+            const scrollToBottom = (smooth = true) => {
+                if (!scrollRef.current) return;
+                scrollRef.current.scrollTo({
+                    top: scrollRef.current.scrollHeight,
+                    behavior: smooth ? 'smooth' : 'instant'
+                });
+            };
+
+            const handleReply = (message) => {
+                setReplyingTo(message);
+                if (inputRef.current) {
+                    inputRef.current.focus();
+                }
+            };
+
+            const cancelReply = () => {
+                setReplyingTo(null);
+            };
+
+            /* ---- INITIAL LOAD ---- */
+            useEffect(() => scrollToBottom(false), []);
+
+            /* ---- NEW MESSAGE (Fixes 1 & 3: Force padding recalculation) ---- */
+            useEffect(() => {
+                scrollToBottom(true);
+                
+                const input = inputRef.current;
+                const container = inputContainerRef.current;
+                const chat = scrollRef.current;
+
+                if (input && container && chat) {
+                    const h = Math.min(input.scrollHeight, 100);
+                    const contH = h + 24; 
+                    const pickerH = showEmojiPicker ? 280 : 0;
+                    const replyH = replyingTo ? 60 : 0;
+                    const totalInput = contH + 16; 
+                    chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`;
+                }
+
+            }, [messages]);
+
+            /* ---- INPUT HEIGHT & PADDING (Typing logic) ---- */
+            useEffect(() => {
+                const input = inputRef.current;
+                const container = inputContainerRef.current;
+                const chat = scrollRef.current;
+                if (!input || !container || !chat) return;
+
+                const handle = () => {
+                    const txt = input.textContent || '';
+                    setHasText(txt.trim().length > 0);
+
+                    // 1. Calculate and set Input height
+                    input.style.height = 'auto';
+                    const h = Math.min(input.scrollHeight, 100);
+                    input.style.height = `${h}px`;
+
+                    // 2. Calculate and set Input Container height
+                    const contH = h + 24; 
+                    container.style.height = `${contH}px`;
+
+                    // 3. Calculate and set Chat content padding
+                    const totalInput = contH + 16; 
+                    const pickerH = showEmojiPicker ? 280 : 0;
+                    const replyH = replyingTo ? 60 : 0;
+                    
+                    chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`; 
+
+                    // 4. Scroll Logic
+                    if (replyingTo) { 
+                        scrollToBottom(false); 
+                    } else if (chat.scrollHeight > lastScrollHeight.current) {
+                        scrollToBottom();
+                    }
+                    lastScrollHeight.current = chat.scrollHeight;
+                };
+
+                handle();
+                input.addEventListener('input', handle);
+                input.addEventListener('paste', () => setTimeout(handle,0));
+                
+                return () => input.removeEventListener('input', handle);
+            }, [showEmojiPicker, replyingTo]); 
+
+            /* ---- STICKY DATE (Simplified) ---- */
+            useEffect(() => {
+                const chat = scrollRef.current;
+                if (!chat) return;
+                const check = () => {
+                    setIsScrolling(true);
+                    clearTimeout(scrollTimeout.current);
+                    // Simplified sticky logic...
+                    scrollTimeout.current = setTimeout(() => { setIsScrolling(false); setStickyDate(null); }, 800);
+                };
+                chat.addEventListener('scroll', check);
+                return () => chat.removeEventListener('scroll', check);
+            }, []);
+
+            const toggleEmojiPicker = () => {
+                const willOpen = !showEmojiPicker;
+                setShowEmojiPicker(willOpen);
+                
+                if (willOpen && inputRef.current) {
+                    inputRef.current.blur();
+                    
+                    const delay = hasScrolledAfterPickerOpen.current ? 300 : 400; 
+
+                    setTimeout(() => {
+                        scrollToBottom(false); 
+                        hasScrolledAfterPickerOpen.current = true;
+                    }, delay);
+                }
+            };
+            const closeEmojiPicker = () => setShowEmojiPicker(false);
+
+            const handleInputFocus = () => {
+                isInputFocused.current = true;
+                if (showEmojiPicker) closeEmojiPicker();
+                setTimeout(() => scrollToBottom(), 50);
+            };
+            const handleInputBlur = () => { isInputFocused.current = false; };
+
+            const sendMessage = () => {
+                const txt = inputRef.current?.textContent?.trim();
+                if (!txt) return;
+                const msg = {text:txt,time:new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}),incoming:false};
+                setMessages(p=>[...p,msg]);
+                inputRef.current.textContent = '';
+                setHasText(false);
+                setReplyingTo(null);
+                inputRef.current.style.height = 'auto';
+                inputContainerRef.current.style.height = '48px';
+            };
+
+            const block = e => e.preventDefault();
+
+            return (
+                <div className="flex flex-col h-dvh bg-gray-50 relative">
+                    <ChatHeader stickyDate={isScrolling?stickyDate:null} />
+
+                    {/* CHAT CONTENT AREA */}
+                    <div ref={scrollRef}
+                         className="flex-1 overflow-y-auto pt-20 px-4 transition-padding duration-300 shadow-inner"
+                         style={{
+                             backgroundImage:'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
+                             backgroundSize:'cover',
+                             backgroundPosition:'center',
+                             backgroundRepeat:'no-repeat',
+                             paddingBottom:'61px', 
+                             transition:'padding-bottom 300ms ease'
+                         }}>
+                        <div className="flex flex-col justify-end min-h-full space-y-4 py-4">
+                            <div className="flex justify-center">
+                                <div className="px-4 py-2 rounded-full flex items-center shadow-sm chat-date"
+                                     style={{backgroundColor:'#749cbf',minHeight:'30px'}}>
+                                    <span className="text-white text-xs font-medium" style={{lineHeight:'1'}}>June 16</span>
+                                </div>
+                            </div>
+
+                            {messages.map((m,i) => (
+                                <SwipeableMessage 
+                                    key={i}
+                                    message={m}
+                                    index={i}
+                                    incoming={m.incoming}
+                                    onReply={handleReply}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* INPUT BAR */}
+                    <div className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)] transition-transform duration-300"
+                         style={{
+                             backgroundColor: 'white',
+                             paddingTop:'8px',
+                             paddingBottom:'8px',
+                             transform: showEmojiPicker ? 'translateY(-280px)' : 'translateY(0)'
+                         }}>
+                        {replyingTo && <ReplyUI replyingTo={replyingTo} onCancel={cancelReply} />}
+                        
+                        <div className="mx-3 flex items-end gap-2">
+                            <div ref={inputContainerRef}
+                                 className="bg-white shadow-sm flex items-center px-3 py-3 transition-all duration-100 flex-1"
+                                 style={{borderRadius:'13px',minHeight:'48px',height:'48px',overflow:'hidden'}}>
+                                <button className="text-gray-400 hover:text-gray-600 transition-colors mr-3 p-1"
+                                        style={{flexShrink:0,alignSelf:'flex-end'}}
+                                        onMouseDown={block} onTouchStart={block}
+                                        onClick={toggleEmojiPicker}>
+                                    {showEmojiPicker ?
+                                        <KeyboardIcon style={{transform:'translateY(5px)'}}/> :
+                                        <i className="fa-regular fa-face-smile" style={{fontSize:'24px',display:'block',transform:'translateY(3px)'}}></i>
+                                    }
+                                </button>
+
+                                <div ref={inputRef}
+                                     contentEditable="true"
+                                     placeholder="Message"
+                                     className="flex-1 outline-none text-gray-900 text-base"
+                                     onFocus={handleInputFocus}
+                                     onBlur={handleInputBlur}
+                                     onClick={handleInputFocus}
+                                     style={{minHeight:'24px',maxHeight:'100px',overflowY:'auto',resize:'none',lineHeight:'1.5'}}>
+                                </div>
+
+                                <button className="text-gray-400 hover:text-gray-600 transition-colors ml-3"
+                                        style={{flexShrink:0,alignSelf:'flex-end',transform:'translateY(3px)'}}
+                                        onMouseDown={block} onTouchStart={block}>
+                                    <i className="fa-solid fa-paperclip" style={{fontSize:'24px'}}></i>
+                                </button>
+                            </div>
+
+                            <button className="flex-shrink-0 flex items-center justify-center shadow-sm transition-all duration-200 rounded-full"
+                                    style={{
+                                        width:'48px',height:'48px',
+                                        backgroundColor:'var(--btn-bg-active)',
+                                        color:'var(--btn-icon-active)',
+                                        opacity:1,cursor:'pointer'
+                                    }}
+                                    onMouseDown={block} onTouchStart={block}
+                                    onClick={hasText?sendMessage:null}>
+                                {hasText ? <SendArrowIcon/> : <MicrophoneIcon/>}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* EMOJI PICKER */}
+                    <div className={`fixed bottom-0 left-0 right-0 bg-white z-30 transition-transform duration-300 ease-out ${showEmojiPicker?'translate-y-0':'translate-y-full'}`}
+                         style={{height:'280px',boxShadow:'0 -2px 10px rgba(0,0,0,0.1)',backgroundColor:'#fff'}}>
+                        <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                            Emoji Picker Placeholder
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ChatLayout/>);
+    </script>
+</body>
+</html>
+
