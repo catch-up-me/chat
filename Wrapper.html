@@ -78,29 +78,59 @@
         function SwipeableMessage({ message, index, incoming, onReply }) {
             const [offset, setOffset] = useState(0);
             const startX = useRef(0);
+            const startY = useRef(0);
             const isDragging = useRef(false);
+            const isHorizontalSwipe = useRef(false);
             const messageRef = useRef(null);
 
             const handleTouchStart = (e) => {
                 startX.current = e.touches[0].clientX;
-                isDragging.current = true;
+                startY.current = e.touches[0].clientY;
+                isDragging.current = false;
+                isHorizontalSwipe.current = false;
             };
 
             const handleTouchMove = (e) => {
-                if (!isDragging.current) return;
                 const currentX = e.touches[0].clientX;
-                const diff = currentX - startX.current;
+                const currentY = e.touches[0].clientY;
+                const diffX = currentX - startX.current;
+                const diffY = currentY - startY.current;
+                
+                // Determine if this is a horizontal or vertical swipe
+                if (!isDragging.current && !isHorizontalSwipe.current) {
+                    // Only commit to horizontal swipe if horizontal movement is significantly more than vertical
+                    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+                        isHorizontalSwipe.current = true;
+                        isDragging.current = true;
+                    } else if (Math.abs(diffY) > 10) {
+                        // This is a vertical scroll, don't interfere
+                        return;
+                    } else {
+                        // Not enough movement yet
+                        return;
+                    }
+                }
+
+                if (!isHorizontalSwipe.current) return;
+
+                // Prevent scrolling when horizontal swipe is detected
+                e.preventDefault();
                 
                 // Incoming messages: swipe right (positive), Outgoing: swipe left (negative)
-                if (incoming && diff > 0 && diff <= 80) {
-                    setOffset(diff);
-                } else if (!incoming && diff < 0 && diff >= -80) {
-                    setOffset(diff);
+                if (incoming && diffX > 0 && diffX <= 80) {
+                    setOffset(diffX);
+                } else if (!incoming && diffX < 0 && diffX >= -80) {
+                    setOffset(diffX);
                 }
             };
 
             const handleTouchEnd = () => {
-                isDragging.current = false;
+                if (!isHorizontalSwipe.current) {
+                    setOffset(0);
+                    isDragging.current = false;
+                    return;
+                }
+
                 const threshold = 50;
                 
                 if (Math.abs(offset) >= threshold) {
@@ -109,6 +139,8 @@
                 
                 // Bounce back animation
                 setOffset(0);
+                isDragging.current = false;
+                isHorizontalSwipe.current = false;
             };
 
             const ml = isMultiLine(message.text);
@@ -161,7 +193,8 @@
                     borderRadius: '8px',
                     marginLeft: '12px',
                     marginRight: '12px',
-                    marginBottom: '8px'
+                    marginBottom: '8px',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)'
                 }}>
                     <div className="flex-1 min-w-0">
                         <div style={{ 
@@ -411,8 +444,8 @@
                         
                         <div className="mx-3 flex items-end gap-2">
                             <div ref={inputContainerRef}
-                                 className="bg-white flex items-center px-3 py-3 transition-all duration-100 flex-1"
-                                 style={{borderRadius:'13px',minHeight:'48px',height:'48px',overflow:'hidden',border:'1px solid #e5e7eb'}}>
+                                 className="bg-white shadow-sm flex items-center px-3 py-3 transition-all duration-100 flex-1"
+                                 style={{borderRadius:'13px',minHeight:'48px',height:'48px',overflow:'hidden'}}>
                                 <button className="text-gray-400 hover:text-gray-600 transition-colors mr-3 p-1"
                                         style={{flexShrink:0,alignSelf:'flex-end'}}
                                         onMouseDown={block} onTouchStart={block}
@@ -470,3 +503,4 @@
     </script>
 </body>
 </html>
+
