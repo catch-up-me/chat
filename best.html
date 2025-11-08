@@ -231,9 +231,9 @@
             ]);
             let scrollTimeout = useRef(null);
             const lastScrollHeight = useRef(0);
-            const isInputFocused = useRef(false); // Track input focus
+            const isInputFocused = useRef(false);
 
-            // Function to scroll to the bottom with smooth behavior
+            // Scroll to bottom helper
             const scrollToBottom = (isSmooth = true) => {
                 if (scrollRef.current) {
                     scrollRef.current.scrollTo({
@@ -243,17 +243,28 @@
                 }
             };
 
-            // Scroll to bottom on initial load
+            // Initial scroll
             useEffect(() => {
-                scrollToBottom(false); 
+                scrollToBottom(false);
             }, []);
 
-            // Scroll to bottom whenever messages are updated (new message sent/received)
+            // Scroll on new messages
             useEffect(() => {
                 scrollToBottom(true);
             }, [messages]);
 
-            // Visual viewport resize → scroll when keyboard appears/disappears
+            // === NEW: Scroll when emoji picker opens/closes ===
+            useLayoutEffect(() => {
+                if (showEmojiPicker) {
+                    // Picker just opened → instant scroll
+                    scrollToBottom(false);
+                } else {
+                    // Picker closed → smooth scroll back to bottom
+                    setTimeout(() => scrollToBottom(true), 50);
+                }
+            }, [showEmojiPicker]);
+
+            // === Visual viewport resize (keyboard) ===
             useLayoutEffect(() => {
                 const onResize = () => {
                     if (isInputFocused.current && scrollRef.current) {
@@ -269,12 +280,11 @@
                     vv.addEventListener('resize', onResize);
                     return () => vv.removeEventListener('resize', onResize);
                 }
-
                 window.addEventListener('resize', onResize);
                 return () => window.removeEventListener('resize', onResize);
             }, []);
 
-            // Manage input height and chat padding
+            // Input height & padding
             useEffect(() => {
                 const input = inputRef.current;
                 const container = inputContainerRef.current;
@@ -286,24 +296,19 @@
                     const text = input.textContent || '';
                     setHasText(text.trim().length > 0);
 
-                    // 1. Resize the input field
                     input.style.height = 'auto';
                     const newHeight = Math.min(input.scrollHeight, 100);
                     input.style.height = `${newHeight}px`;
 
-                    // 2. Adjust the container height (Input + padding)
-                    const containerHeight = newHeight + 24; // 12px padding top + 12px padding bottom in container
+                    const containerHeight = newHeight + 24;
                     container.style.height = `${containerHeight}px`;
-                    
-                    // 3. Calculate chat padding
-                    const totalInputBarHeight = containerHeight + 16; // 16px is from the outer container's vertical padding (8px top + 8px bottom)
 
+                    const totalInputBarHeight = containerHeight + 16;
                     const emojiPickerHeight = showEmojiPicker ? 280 : 0;
                     const bottomPadding = totalInputBarHeight + emojiPickerHeight;
-                    
+
                     chat.style.paddingBottom = `${bottomPadding}px`;
-                    
-                    // Auto-scroll when input height changes due to typing
+
                     if (chat.scrollHeight > lastScrollHeight.current) {
                         scrollToBottom();
                     }
@@ -311,16 +316,13 @@
                 };
 
                 handleInput();
-
                 input.addEventListener('input', handleInput);
                 input.addEventListener('paste', () => setTimeout(handleInput, 0));
 
-                return () => {
-                    input.removeEventListener('input', handleInput);
-                };
+                return () => input.removeEventListener('input', handleInput);
             }, [showEmojiPicker]);
 
-            // Scroll position tracking for sticky date
+            // Sticky date
             useEffect(() => {
                 const chat = scrollRef.current;
                 if (!chat) return;
@@ -360,10 +362,9 @@
             const toggleEmojiPicker = () => {
                 const willOpen = !showEmojiPicker;
                 setShowEmojiPicker(willOpen);
-                
-                if (willOpen) {
-                    if (inputRef.current) inputRef.current.blur();
-                } 
+                if (willOpen && inputRef.current) {
+                    inputRef.current.blur(); // Close keyboard
+                }
             };
 
             const closeEmojiPicker = () => setShowEmojiPicker(false);
@@ -371,7 +372,7 @@
             const handleInputFocus = () => {
                 isInputFocused.current = true;
                 if (showEmojiPicker) closeEmojiPicker();
-                setTimeout(() => scrollToBottom(), 50); 
+                setTimeout(() => scrollToBottom(), 50);
             };
 
             const handleInputBlur = () => {
@@ -380,17 +381,17 @@
 
             const sendMessage = () => {
                 const text = inputRef.current?.textContent?.trim();
-                if (!text || text.length === 0) return;
+                if (!text) return;
 
                 const newMsg = {
-                    text: text,
+                    text,
                     time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
                     incoming: false
                 };
                 setMessages(prev => [...prev, newMsg]);
                 inputRef.current.textContent = '';
                 setHasText(false);
-                
+
                 if (inputRef.current) {
                     inputRef.current.style.height = 'auto';
                     inputContainerRef.current.style.height = '48px';
@@ -434,7 +435,7 @@
                         <div className="flex flex-col justify-end min-h-full space-y-4 py-4">
                             <div className="flex justify-center">
                                 <div className="px-4 py-2 rounded-full flex items-center shadow-sm chat-date" style={{backgroundColor:'#749cbf',minHeight:'30px'}}>
-                                    <span className="text-white text-xs font-medium" style={{lineHeight:'1'}}>June 16</span>
+                                    <span className="text-white text-xs font1 font-medium" style={{lineHeight:'1'}}>June 16</span>
                                 </div>
                             </div>
 
@@ -493,10 +494,7 @@
                                  }}>
                                 <button 
                                     className="text-gray-400 hover:text-gray-600 transition-colors mr-3 p-1"
-                                    style={{ 
-                                        flexShrink: 0, 
-                                        alignSelf: 'flex-end', 
-                                    }}
+                                    style={{ flexShrink: 0, alignSelf: 'flex-end' }}
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}
                                     onClick={toggleEmojiPicker}>
@@ -504,11 +502,7 @@
                                         <KeyboardIcon style={{ transform: 'translateY(5px)' }} /> 
                                     ) : (
                                         <i className="fa-regular fa-face-smile" 
-                                           style={{ 
-                                              fontSize: '24px',
-                                              display: 'block', 
-                                              transform: 'translateY(3px)' 
-                                           }}>
+                                           style={{ fontSize: '24px', display: 'block', transform: 'translateY(3px)' }}>
                                         </i>
                                     )}
                                 </button>
@@ -530,11 +524,7 @@
                                 </div>
                                 <button 
                                     className="text-gray-400 hover:text-gray-600 transition-colors ml-3"
-                                    style={{ 
-                                        flexShrink: 0, 
-                                        alignSelf: 'flex-end', 
-                                        transform: 'translateY(3px)' 
-                                    }}
+                                    style={{ flexShrink: 0, alignSelf: 'flex-end', transform: 'translateY(3px)' }}
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}>
                                     <i className="fa-solid fa-paperclip" style={{ fontSize: '24px' }}></i>
@@ -545,8 +535,8 @@
                                 style={{
                                     width: '48px',
                                     height: '48px',
-                                    backgroundColor: hasText ? 'var(--btn-bg-active)' : 'var(--btn-bg-active)',
-                                    color: hasText ? 'var(--btn-icon-active)' : 'var(--btn-icon-active)',
+                                    backgroundColor: 'var(--btn-bg-active)',
+                                    color: 'var(--btn-icon-active)',
                                     opacity: 1,
                                     cursor: 'pointer'
                                 }}
@@ -569,7 +559,7 @@
                             backgroundColor: '#ffffff',
                         }}>
                         <div className="h-full flex items-center justify-center text-gray-400 text-sm">
-                            {/* Placeholder */}
+                            Emoji Picker Here
                         </div>
                     </div>
                 </div>
