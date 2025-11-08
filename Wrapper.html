@@ -5,25 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Chat Interface</title>
 
-    <!-- React & Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Tailwind & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="main.css">
+    
+    <script type="text/babel">
+        // Placeholder for Head.js content
+        window.ChatHeader = function ChatHeader({ stickyDate }) {
+            return (
+                <div className="fixed top-0 left-0 right-0 z-50 shadow-md p-4 flex items-center justify-between"
+                     style={{ height: '80px', backgroundColor: '#5d7d99', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
+                    <div className="flex items-center">
+                        <i className="fa-solid fa-arrow-left text-white text-xl mr-3"></i>
+                        <div className="text-white font-semibold text-lg">Daddy Steve</div>
+                    </div>
+                    {stickyDate && (
+                        <div className="absolute top-[80px] left-0 right-0 h-8 flex items-center justify-center bg-gray-200/90 backdrop-blur-sm shadow-sm z-50">
+                            <span className="text-gray-600 text-xs font-medium">{stickyDate}</span>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+    </script>
 </head>
 <body class="bg-gray-50">
     <div id="root"></div>
 
-    <!-- Header Component -->
-    <script type="text/babel" src="Head.js"></script>
-
-    <!-- Main Chat UI -->
     <script type="text/babel">
         const { useEffect, useRef, useState, useLayoutEffect } = React;
         const { ChatHeader } = window;
@@ -265,6 +278,8 @@
             const scrollTimeout = useRef(null);
             const lastScrollHeight = useRef(0);
             const isInputFocused = useRef(false);
+            // NEW STATE FOR EMOJI PICKER FIX
+            const [isFirstEmojiToggle, setIsFirstEmojiToggle] = useState(true);
 
             const scrollToBottom = (smooth = true) => {
                 if (!scrollRef.current) return;
@@ -285,26 +300,29 @@
                 setReplyingTo(null);
             };
 
-            /* ---- INITIAL LOAD ---- */
+            /* ---- INITIAL LOAD (Scroll to bottom instantly) ---- */
             useEffect(() => scrollToBottom(false), []);
 
-            /* ---- NEW MESSAGE ---- */
+            /* ---- NEW MESSAGE (Scroll to bottom smoothly) ---- */
             useEffect(() => scrollToBottom(true), [messages]);
 
-            /* ---- EMOJI PICKER OPEN / CLOSE ---- */
+            /* ---- EMOJI PICKER OPEN / CLOSE (FIXED SCROLL LOGIC) ---- */
             useLayoutEffect(() => {
-    if (!showEmojiPicker) {
-        // Closing - scroll immediately
-        scrollToBottom(true);
-    } else {
-        // Opening - wait for transform animation to complete
-        // The transform takes 300ms, so wait slightly longer
-        const timer = setTimeout(() => {
-            scrollToBottom(false); // Use instant scroll since we already waited
-        }, 350);
-        return () => clearTimeout(timer);
-    }
-}, [showEmojiPicker]);
+                // Prevent this from running on the initial component mount
+                if (isFirstEmojiToggle) {
+                    setIsFirstEmojiToggle(false);
+                    return;
+                }
+                
+                // Schedule the scroll to run after the CSS transition (300ms + buffer)
+                const timer = setTimeout(() => {
+                    // Scroll instantly when the input/picker area changes height
+                    scrollToBottom(false); 
+                }, 320); 
+
+                return () => clearTimeout(timer);
+            }, [showEmojiPicker, isFirstEmojiToggle]);
+
 
             /* ---- KEYBOARD RESIZE ---- */
             useLayoutEffect(() => {
@@ -346,6 +364,7 @@
                     const totalInput = contH + 16;
                     const pickerH = showEmojiPicker ? 280 : 0;
                     const replyH = replyingTo ? 60 : 0;
+                    // Adjust chat padding dynamically based on all bottom UI elements
                     chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`;
 
                     if (chat.scrollHeight > lastScrollHeight.current) scrollToBottom();
@@ -488,8 +507,8 @@
                             <button className="flex-shrink-0 flex items-center justify-center shadow-sm transition-all duration-200 rounded-full"
                                     style={{
                                         width:'48px',height:'48px',
-                                        backgroundColor:'var(--btn-bg-active)',
-                                        color:'var(--btn-icon-active)',
+                                        backgroundColor:'#5d7d99', // Custom var was here, replaced with a hardcode for simplicity
+                                        color:'white',
                                         opacity:1,cursor:'pointer'
                                     }}
                                     onMouseDown={block} onTouchStart={block}
@@ -515,3 +534,4 @@
     </script>
 </body>
 </html>
+
