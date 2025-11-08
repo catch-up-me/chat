@@ -241,7 +241,7 @@
             return tall;
         };
 
-        /* ---------- MAIN CHAT (WITH FIX) ---------- */
+        /* ---------- MAIN CHAT (FINAL FIX) ---------- */
         function ChatLayout() {
             const scrollRef = useRef(null);
             const inputRef = useRef(null);
@@ -286,9 +286,6 @@
             /* ---- NEW MESSAGE ---- */
             useEffect(() => scrollToBottom(true), [messages]);
 
-            // NOTE: The previous useLayoutEffect for scroll is removed. 
-            // The scroll logic is moved into the Input Height useEffect to ensure correct timing.
-
             /* ---- KEYBOARD RESIZE ---- */
             useLayoutEffect(() => {
                 const onResize = () => {
@@ -308,7 +305,7 @@
                 return () => window.removeEventListener('resize', onResize);
             }, []);
 
-            /* ---- INPUT HEIGHT & PADDING (FIX APPLIED HERE) ---- */
+            /* ---- INPUT HEIGHT & PADDING ---- */
             useEffect(() => {
                 const input = inputRef.current;
                 const container = inputContainerRef.current;
@@ -334,11 +331,11 @@
                     const replyH = replyingTo ? 60 : 0;
                     
                     // Set the required padding for the chat content area
-                    chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`;
+                    chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`; 
 
-                    // 4. SCROLL FIX: Scroll to the bottom immediately after padding update
-                    // when the picker state or replying state changes.
-                    if (showEmojiPicker || replyingTo) {
+                    // 4. Scroll Logic (Only for Reply UI or Text expansion)
+                    if (replyingTo) { 
+                        // Scroll instantly for reply state changes
                         scrollToBottom(false); 
                     } else if (chat.scrollHeight > lastScrollHeight.current) {
                         // Regular scroll for text expansion
@@ -380,7 +377,16 @@
             const toggleEmojiPicker = () => {
                 const willOpen = !showEmojiPicker;
                 setShowEmojiPicker(willOpen);
-                if (willOpen && inputRef.current) inputRef.current.blur();
+                
+                if (willOpen && inputRef.current) {
+                    inputRef.current.blur();
+                    
+                    // FIX: Scroll to bottom after the 300ms transition is complete, 
+                    // emulating the native keyboard push effect.
+                    setTimeout(() => {
+                        scrollToBottom(false); 
+                    }, 300);
+                }
             };
             const closeEmojiPicker = () => setShowEmojiPicker(false);
 
@@ -512,4 +518,5 @@
     </script>
 </body>
 </html>
+
 
