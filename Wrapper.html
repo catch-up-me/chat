@@ -260,6 +260,8 @@
             const scrollTimeout = useRef(null);
             const lastScrollHeight = useRef(0);
             const isInputFocused = useRef(false);
+            // NEW REF: Track if the picker has been opened/scrolled once
+            const hasScrolledAfterPickerOpen = useRef(false);
 
             const scrollToBottom = (smooth = true) => {
                 if (!scrollRef.current) return;
@@ -349,7 +351,7 @@
                 input.addEventListener('paste', () => setTimeout(handle,0));
                 
                 return () => input.removeEventListener('input', handle);
-            }, [showEmojiPicker, replyingTo]); // Recalculates on picker/reply change
+            }, [showEmojiPicker, replyingTo]); 
 
             /* ---- STICKY DATE ---- */
             useEffect(() => {
@@ -381,11 +383,14 @@
                 if (willOpen && inputRef.current) {
                     inputRef.current.blur();
                     
-                    // FIX: Scroll to bottom after the 300ms transition is complete, 
-                    // emulating the native keyboard push effect.
+                    // FIX: Use a slightly longer delay (400ms) on first open
+                    // to ensure all viewport metrics and padding are finalized.
+                    const delay = hasScrolledAfterPickerOpen.current ? 300 : 400; 
+
                     setTimeout(() => {
                         scrollToBottom(false); 
-                    }, 300);
+                        hasScrolledAfterPickerOpen.current = true; // Mark as done
+                    }, delay);
                 }
             };
             const closeEmojiPicker = () => setShowEmojiPicker(false);
