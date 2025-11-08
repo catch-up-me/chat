@@ -174,10 +174,10 @@
                     <path d="M13 9C13 9.55228 12.5523 10 12 10C11.4477 10 11 9.55228 11 9C11 8.44772 11.4477 8 12 8C12.5523 8 13 8.44772 13 9Z" fill="#6b7280"></path>
                     <path d="M13 12C13 12.5523 12.5523 13 12 13C11.4477 13 11 12.5523 11 12C11 11.4477 11.4477 11 12 11C12.5523 11 13 11.4477 13 12Z" fill="#6b7280"></path>
                     <path d="M16 9C16 9.55228 15.5523 10 15 10C14.4477 10 14 9.55228 14 9C14 8.44772 14.4477 8 15 8C15.5523 8 16 8.44772 16 9Z" fill="#6b7280"></path>
-                    <path d="M16 12C16 12 12.5523 15.5523 13 15 13C14.4477 13 14 12.5523 14 12C14 11.4477 14.4477 11 15 11C15.5523 11 16 11.4477 16 12Z" fill="#6b7280"></path>
+                    <path d="M16 12C16 12.5523 15.5523 13 15 13C14.4477 13 14 12.5523 14 12C14 11.4477 14.4477 11 15 11C15.5523 11 16 11.4477 16 12Z" fill="#6b7280"></path>
                     <path d="M19 9C19 9.55228 18.5523 10 18 10C17.4477 10 17 9.55228 17 9C17 8.44772 17.4477 8 18 8C18.5523 8 19 8.44772 19 9Z" fill="#6b7280"></path>
                     <path d="M19 12C19 12.5523 18.5523 13 18 13C17.4477 13 17 12.5523 17 12C17 11.4477 17.4477 11 18 11C18.5523 11 19 11.4477 19 12Z" fill="#6b7280"></path>
-                    <path d="M2 11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5H16C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V 11Z" stroke="#6b7280" strokeWidth="1.5"></path>
+                    <path d="M2 11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5H16C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V11Z" stroke="#6b7280" strokeWidth="1.5"></path>
                     <path d="M7 16H17" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round"></path>
                 </g>
             </svg>
@@ -245,22 +245,12 @@
                     const text = input.textContent || '';
                     setHasText(text.trim().length > 0);
 
-                    // Reset to measure
                     input.style.height = 'auto';
-                    const scrollHeight = input.scrollHeight;
-
-                    // Clamp input height
-                    const clampedHeight = Math.min(Math.max(scrollHeight, 24), 100);
-                    input.style.height = `${clampedHeight}px`;
-
-                    // Container: input height + padding (16px top + 16px bottom)
-                    const containerHeight = clampedHeight + 32;
-                    container.style.height = `${containerHeight}px`;
-
-                    // Adjust chat padding to prevent content from being hidden
-                    const basePadding = 61;
-                    const extraHeight = containerHeight - 48; // 48 is default container height
-                    const bottomPadding = basePadding + extraHeight + (showEmojiPicker ? 280 : 0);
+                    const newHeight = Math.min(input.scrollHeight, 100);
+                    input.style.height = `${newHeight}px`;
+                    container.style.height = `${newHeight + 24}px`;
+                    
+                    const bottomPadding = 61 + (showEmojiPicker ? 280 : 0);
                     chat.style.paddingBottom = `${bottomPadding}px`;
                 };
 
@@ -313,7 +303,7 @@
                 const willOpen = !showEmojiPicker;
                 setShowEmojiPicker(willOpen);
                 if (inputRef.current) inputRef.current.blur();
-                setTimeout(() => inputRef.current?.focus(), 100);
+                setTimeout(() => inputRef.current?.blur(), 100);
             };
 
             const closeEmojiPicker = () => setShowEmojiPicker(false);
@@ -334,15 +324,10 @@
                 setMessages(prev => [...prev, newMsg]);
                 inputRef.current.textContent = '';
                 setHasText(false);
-
-                // Reset heights
-                inputRef.current.style.height = 'auto';
-                inputContainerRef.current.style.height = '48px';
-
-                // Trigger reflow
-                setTimeout(() => {
-                    if (inputRef.current) inputRef.current.style.height = '24px';
-                }, 0);
+                if (inputRef.current) {
+                    inputRef.current.style.height = 'auto';
+                    inputContainerRef.current.style.height = '48px';
+                }
             };
 
             const handleMouseDown = (e) => e.preventDefault();
@@ -432,18 +417,21 @@
                          }}>
                         <div className="mx-3 flex items-end gap-2">
                             <div ref={inputContainerRef}
-                                 className="bg-white shadow-sm flex items-end px-3 py-3 transition-all duration-100 flex-1"
+                                 className="bg-white shadow-sm flex px-3 py-3 transition-all duration-100 flex-1"
                                  style={{
                                      borderRadius:'13px',
                                      minHeight:'48px',
                                      height:'48px',
-                                     overflow:'hidden',
-                                     paddingTop: '8px',
-                                     paddingBottom: '16px'  // Increased to push icons down
+                                     overflow:'hidden'
                                  }}>
                                 <button 
                                     className="text-gray-400 hover:text-gray-600 transition-colors mr-3 p-1"
-                                    style={{ flexShrink: 0 }}
+                                    style={{ 
+                                        flexShrink: 0,
+                                        alignSelf: 'center',
+                                        position: 'relative',
+                                        top: 0
+                                    }}
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}
                                     onClick={toggleEmojiPicker}>
@@ -466,13 +454,17 @@
                                         overflowY:'auto',
                                         resize:'none',
                                         lineHeight:'1.5',
-                                        paddingTop: '6px',
-                                        paddingBottom: '6px'
+                                        alignSelf: 'center'
                                     }}>
                                 </div>
                                 <button 
                                     className="text-gray-400 hover:text-gray-600 transition-colors ml-3"
-                                    style={{ flexShrink: 0 }}
+                                    style={{ 
+                                        flexShrink: 0,
+                                        alignSelf: 'center',
+                                        position: 'relative',
+                                        top: 0
+                                    }}
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}>
                                     <i className="fa-solid fa-paperclip" style={{ fontSize: '24px' }}></i>
