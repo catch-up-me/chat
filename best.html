@@ -94,7 +94,7 @@
 
         .multi-line .message-metadata {
             align-self: flex-end;
-            margin-top: -2px; /* TIGHT — NO GAP */
+            margin-top: -2px;
         }
 
         /* Single-line: inline timestamp */
@@ -210,7 +210,7 @@
                             <span className="text-white text-xs font-medium" style={{ lineHeight: '1' }}>{stickyDate || 'June 6'}</span>
                         </div>
                     </div>
-                </div>
+>                </div>
             );
         }
 
@@ -246,11 +246,17 @@
                     setHasText(text.trim().length > 0);
 
                     input.style.height = 'auto';
-                    const newHeight = Math.min(input.scrollHeight, 100);
-                    input.style.height = `${newHeight}px`;
-                    container.style.height = `${newHeight + 24}px`;
-                    
-                    const bottomPadding = 61 + (showEmojiPicker ? 280 : 0);
+                    const scrollHeight = input.scrollHeight;
+
+                    const clampedHeight = Math.min(Math.max(scrollHeight, 24), 100);
+                    input.style.height = `${clampedHeight}px`;
+
+                    const newContainerHeight = clampedHeight + 16; // 8px top + 8px bottom padding
+                    container.style.height = `${Math.max(newContainerHeight, 48)}px`;
+
+                    const basePadding = 61;
+                    const extra = Math.max(newContainerHeight, 48) - 48;
+                    const bottomPadding = basePadding + extra + (showEmojiPicker ? 280 : 0);
                     chat.style.paddingBottom = `${bottomPadding}px`;
                 };
 
@@ -258,9 +264,7 @@
                 input.addEventListener('paste', () => setTimeout(handleInput, 0));
                 handleInput();
 
-                return () => {
-                    input.removeEventListener('input', handleInput);
-                };
+                return () => input.removeEventListener('input', handleInput);
             }, [showEmojiPicker]);
 
             useEffect(() => {
@@ -300,10 +304,8 @@
             }, []);
 
             const toggleEmojiPicker = () => {
-                const willOpen = !showEmojiPicker;
-                setShowEmojiPicker(willOpen);
-                if (inputRef.current) inputRef.current.blur();
-                setTimeout(() => inputRef.current?.blur(), 100);
+                setShowEmojiPicker(prev => !prev);
+                setTimeout(() => inputRef.current?.focus(), 100);
             };
 
             const closeEmojiPicker = () => setShowEmojiPicker(false);
@@ -314,20 +316,19 @@
 
             const sendMessage = () => {
                 const text = inputRef.current?.textContent?.trim();
-                if (!text || text.length === 0) return;
+                if (!text) return;
 
                 const newMsg = {
-                    text: text,
+                    text,
                     time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
                     incoming: false
                 };
                 setMessages(prev => [...prev, newMsg]);
                 inputRef.current.textContent = '';
                 setHasText(false);
-                if (inputRef.current) {
-                    inputRef.current.style.height = 'auto';
-                    inputContainerRef.current.style.height = '48px';
-                }
+                inputRef.current.style.height = 'auto';
+                inputContainerRef.current.style.height = '48px';
+                setTimeout(() => inputRef.current && (inputRef.current.style.height = '24px'), 0);
             };
 
             const handleMouseDown = (e) => e.preventDefault();
@@ -405,80 +406,70 @@
                     </div>
 
                     {/* Bottom Input + Send Button */}
-                    <div className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)] transition-transform duration-300"
+                    <div className="fixed bottom-0 left-0 right-0 z-40 pb-[env(safe-area-inset-bottom)]"
                          style={{
                              backgroundImage:'url(https://i.ibb.co/hxsGq3LC/Screenshot-20251105-115744.jpg)',
                              backgroundSize:'cover',
                              backgroundPosition:'center',
                              backgroundRepeat:'no-repeat',
-                             paddingTop:'8px',
-                             paddingBottom:'8px',
-                             transform: showEmojiPicker ? 'translateY(-280px)' : 'translateY(0)',
+                             padding: '8px',
                          }}>
                         <div className="mx-3 flex items-end gap-2">
+                            {/* Input Container - Fixed Height */}
                             <div ref={inputContainerRef}
-                                 className="bg-white shadow-sm flex px-3 py-3 transition-all duration-100 flex-1"
+                                 className="bg-white shadow-sm flex-1 relative overflow-hidden"
                                  style={{
-                                     borderRadius:'13px',
-                                     minHeight:'48px',
-                                     height:'48px',
-                                     overflow:'hidden'
+                                     borderRadius: '13px',
+                                     minHeight: '48px',
+                                     height: '48px',
                                  }}>
+                                {/* Smile / Keyboard Button */}
                                 <button 
-                                    className="text-gray-400 hover:text-gray-600 transition-colors mr-3 p-1"
-                                    style={{ 
-                                        flexShrink: 0,
-                                        alignSelf: 'center',
-                                        position: 'relative',
-                                        top: 0
-                                    }}
+                                    className="absolute left-3 bottom-2 text-gray-400 hover:text-gray-600 transition-colors z-10"
+                                    style={{ fontSize: '24px' }}
                                     onMouseDown={handleMouseDown}
                                     onTouchStart={handleMouseDown}
                                     onClick={toggleEmojiPicker}>
-                                    {showEmojiPicker ? (
-                                        <KeyboardIcon />
-                                    ) : (
-                                        <i className="fa-regular fa-face-smile" style={{ fontSize: '24px' }}></i>
-                                    )}
+                                    {showEmojiPicker ? <KeyboardIcon /> : <i className="fa-regular fa-face-smile"></i>}
                                 </button>
+
+                                {/* Paperclip Button */}
+                                <button 
+                                    className="absolute right-3 bottom-2 text-gray-400 hover:text-gray-600 transition-colors z-10"
+                                    style={{ fontSize: '24px' }}
+                                    onMouseDown={handleMouseDown}
+                                    onTouchStart={handleMouseDown}>
+                                    <i className="fa-solid fa-paperclip"></i>
+                                </button>
+
+                                {/* ContentEditable Input */}
                                 <div 
                                     ref={inputRef}
                                     contentEditable="true"
                                     placeholder="Message"
-                                    className="flex-1 outline-none text-gray-900 text-base"
+                                    className="outline-none text-gray-900 text-base px-12 py-3"
                                     onClick={handleInputClick}
                                     onFocus={handleInputClick}
                                     style={{
-                                        minHeight:'24px',
-                                        maxHeight:'100px',
-                                        overflowY:'auto',
-                                        resize:'none',
-                                        lineHeight:'1.5',
-                                        alignSelf: 'center'
+                                        minHeight: '24px',
+                                        maxHeight: '100px',
+                                        overflowY: 'auto',
+                                        resize: 'none',
+                                        lineHeight: '1.5',
+                                        paddingTop: '8px',
+                                        paddingBottom: '8px',
                                     }}>
                                 </div>
-                                <button 
-                                    className="text-gray-400 hover:text-gray-600 transition-colors ml-3"
-                                    style={{ 
-                                        flexShrink: 0,
-                                        alignSelf: 'center',
-                                        position: 'relative',
-                                        top: 0
-                                    }}
-                                    onMouseDown={handleMouseDown}
-                                    onTouchStart={handleMouseDown}>
-                                    <i className="fa-solid fa-paperclip" style={{ fontSize: '24px' }}></i>
-                                </button>
                             </div>
+
+                            {/* Send / Mic Button */}
                             <button 
                                 className="flex-shrink-0 flex items-center justify-center shadow-sm transition-all duration-200 rounded-full" 
                                 style={{
                                     width: '48px',
                                     height: '48px',
-                                    backgroundColor: hasText ? 'var(--btn-bg-active)' : 'var(--btn-bg-active)',
-                                    color: hasText ? 'var(--btn-icon-active)' : 'var(--btn-icon-active)',
-                                    opacity: 1,
-                                    cursor: 'pointer'
+                                    backgroundColor: 'var(--btn-bg-active)',
+                                    color: 'var(--btn-icon-active)',
                                 }}
                                 onMouseDown={handleMouseDown}
                                 onTouchStart={handleMouseDown}
@@ -499,7 +490,7 @@
                             backgroundColor: '#ffffff',
                         }}>
                         <div className="h-full flex items-center justify-center text-gray-400 text-sm">
-                            {/* Placeholder */}
+                            Emoji Picker Here
                         </div>
                     </div>
                 </div>
