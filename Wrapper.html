@@ -6,39 +6,101 @@
     <title>Chat Interface</title>
 
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="main.css">
+    
+    <script type="text/babel">
+        // Mock ChatHeader since Head.js isn't included in this single file
+        window.ChatHeader = function ChatHeader({ stickyDate }) {
+            return (
+                <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md p-4 pt-10" style={{ height: '80px' }}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <i className="fa-solid fa-arrow-left text-gray-700"></i>
+                            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                <i className="fa-solid fa-user text-gray-500"></i>
+                            </div>
+                            <div>
+                                <h1 className="text-lg font-semibold text-gray-900 leading-none">Daddy Steve</h1>
+                                <p className="text-xs text-green-500 leading-none">Online</p>
+                            </div>
+                        </div>
+                        <div className="text-gray-700 flex gap-4">
+                            <i className="fa-solid fa-video"></i>
+                            <i className="fa-solid fa-phone"></i>
+                            <i className="fa-solid fa-ellipsis-v"></i>
+                        </div>
+                    </div>
+                    {stickyDate && (
+                         <div className="absolute left-1/2 -translate-x-1/2 bottom-0.5 transform">
+                            <div className="px-4 py-1 rounded-full flex items-center shadow-sm chat-date"
+                                 style={{backgroundColor:'#749cbf',minHeight:'24px'}}>
+                                <span className="text-white text-xs font-medium" style={{lineHeight:'1'}}>{stickyDate}</span>
+                            </div>
+                        </div>
+                    )}
+                </header>
+            );
+        };
+    </script>
 </head>
 <body class="bg-gray-50">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useEffect, useRef, useState, useLayoutEffect } = React;
+        const { ChatHeader } = window;
 
-        // Mock Header (Since it wasn't provided)
-        const ChatHeader = ({ stickyDate }) => (
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md p-4 pt-[env(safe-area-inset-top)]" style={{height:'80px'}}>
-                <div className="text-center font-bold text-lg">Chat Title</div>
-                {stickyDate && <div className="absolute bottom-1 right-2 text-xs text-gray-500">Date: {stickyDate}</div>}
-            </div>
+        /* ---------- ICONS ---------- */
+        const MicrophoneIcon = () => (
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'24px',height:'24px',flexShrink:0}}>
+                <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+                <g id="SVGRepo_iconCarrier">
+                    <path d="M7.25 7C7.25 4.37665 9.37665 2.25 12 2.25C14.6234 2.25 16.75 4.37665 16.75 7V11C16.75 13.6234 14.6234 15.75 12 15.75C9.37665 15.75 7.25 13.6234 7.25 11V7Z" fill="#ffffff"></path>
+                    <path d="M5.75 10C5.75 9.58579 5.41421 9.25 5 9.25C4.58579 9.25 4.25 9.58579 4.25 10V11C4.25 15.0272 7.3217 18.3369 11.25 18.7142V21C11.25 21.4142 11.5858 21.75 12 21.75C12.4142 21.75 12.75 21.4142 12.75 21V18.7142C16.6783 18.3369 19.75 15.0272 19.75 11V10C19.75 9.58579 19.4142 9.25 19 9.25C18.5858 9.25 18.25 9.58579 18.25 10V11C18.25 14.4518 15.4518 17.25 12 17.25C8.54822 17.25 5.75 14.4518 5.75 11V10Z" fill="#ffffff"></path>
+                </g>
+            </svg>
         );
 
+        const SendArrowIcon = () => (
+            <svg viewBox="0 -0.5 21 21" style={{width:'24px',height:'24px',flexShrink:0}}>
+                <path d="M2.61258 9L0.05132 1.31623C-0.22718 0.48074 0.63218 -0.28074 1.42809 0.09626L20.4281 9.0963C21.1906 9.4575 21.1906 10.5425 20.4281 10.9037L1.42809 19.9037C0.63218 20.2807 -0.22718 19.5193 0.05132 18.6838L2.61258 11H8.9873C9.5396 11 9.9873 10.5523 9.9873 10C9.9873 9.4477 9.5396 9 8.9873 9H2.61258z" fill="#fff" fillRule="evenodd" clipRule="evenodd"></path>
+            </svg>
+        );
 
-        /* ---------- ICONS (Simplified) ---------- */
+        const KeyboardIcon = ({style}) => (
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'24px',height:'24px',flexShrink:0,...style}}>
+                <g id="SVGRepo_bgCarrier" strokeWidth="0" />
+                <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round" />
+                <g id="SVGRepo_iconCarrier">
+                    <path d="M7 9C7 9.55228 6.55228 10 6 10C5.44772 10 5 9.55228 5 9C5 8.44772 5.44772 8 6 8C6.55228 8 7 8.44772 7 9Z" fill="#6b7280"/>
+                    <path d="M7 12C7 12.5523 6.55228 13 6 13C5.44772 13 5 12.5523 5 12C5 11.4477 5.44772 11 6 11C6.55228 11 7 11.4477 7 12Z" fill="#6b7280"/>
+                    <path d="M10 12C10 12.5523 9.55228 13 9 13C8.44772 13 8 12.5523 8 12C8 11.4477 8.44772 11 9 11C9.55228 11 10 11.4477 10 12Z" fill="#6b7280"/>
+                    <path d="M10 9C10 9.55228 9.55228 10 9 10C8.44772 10 8 9.55228 8 9C8 8.44772 8.44772 8 9 8C9.55228 8 10 8.44772 10 9Z" fill="#6b7280"/>
+                    <path d="M13 9C13 9.55228 12.5523 10 12 10C11.4477 10 11 9.55228 11 9C11 8.44772 11.4477 8 12 8C12.5523 8 13 8.44772 13 9Z" fill="#6b7280"/>
+                    <path d="M13 12C13 12.5523 12.5523 13 12 13C11.4477 13 11 12.5523 11 12C11 11.4477 11.4477 11 12 11C12.5523 11 13 11.4477 13 12Z" fill="#6b7280"/>
+                    <path d="M16 9C16 9.55228 15.5523 10 15 10C14.4477 10 14 9.55228 14 9C14 8.44772 14.4477 8 15 8C15.5523 8 16 8.44772 16 9Z" fill="#6b7280"/>
+                    <path d="M16 12C16 12.5523 15.5523 13 15 13C14.4477 13 14 12.5523 14 12C14 11.4477 14.4477 11 15 11C15.5523 11 16 11.4477 16 12Z" fill="#6b7280"/>
+                    <path d="M19 9C19 9.55228 18.5523 10 18 10C17.4477 10 17 9.55228 17 9C17 8.44772 17.4477 8 18 8C18.5523 8 19 8.44772 19 9Z" fill="#6b7280"/>
+                    <path d="M19 12C19 12.5523 18.5523 13 18 13C17.4477 13 17 12.5523 17 12C17 11.4477 17.4477 11 18 11C18.5523 11 19 11.4477 19 12Z" fill="#6b7280"/>
+                    <path d="M2 11C2 8.17157 2 6.75736 2.87868 5.87868C3.75736 5 5.17157 5 8 5H16C18.8284 5 20.2426 5 21.1213 5.87868C22 6.75736 22 8.17157 22 11V13C22 15.8284 22 17.2426 21.1213 18.1213C20.2426 19 18.8284 19 16 19H8C5.17157 19 3.75736 19 2.87868 18.1213C2 17.2426 2 15.8284 2 13V11Z" stroke="#6b7280" strokeWidth="1.5"/>
+                    <path d="M7 16H17" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round"/>
+                </g>
+            </svg>
+        );
+
         const CloseIcon = () => (
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
         );
-        const KeyboardIcon = ({style}) => (<i className="fa-solid fa-keyboard" style={{fontSize:'24px', ...style}}></i>);
-        const MicrophoneIcon = () => (<i className="fa-solid fa-microphone text-white" style={{fontSize:'24px'}}></i>);
-        const SendArrowIcon = () => (<i className="fa-solid fa-arrow-up text-white" style={{fontSize:'20px'}}></i>);
-        // Assuming other icons are correctly defined or replaced with FontAwesome above
 
         /* ---------- SWIPEABLE MESSAGE ---------- */
         function SwipeableMessage({ message, index, incoming, onReply }) {
@@ -64,23 +126,24 @@
                 
                 // Determine if this is a horizontal or vertical swipe
                 if (!isDragging.current && !isHorizontalSwipe.current) {
+                    // Only commit to horizontal swipe if horizontal movement is significantly more than vertical
                     if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
                         isHorizontalSwipe.current = true;
                         isDragging.current = true;
                     } else if (Math.abs(diffY) > 10) {
-                        return; // Vertical scroll, allow it
+                        // This is a vertical scroll, don't interfere
+                        return;
                     } else {
+                        // Not enough movement yet
                         return;
                     }
                 }
-                
-                // If a horizontal swipe is committed, prevent default immediately
-                if (isHorizontalSwipe.current) {
-                    e.preventDefault(); 
-                }
-                
+
                 if (!isHorizontalSwipe.current) return;
 
+                // Prevent scrolling when horizontal swipe is detected
+                e.preventDefault();
+                
                 // Incoming messages: swipe right (positive), Outgoing: swipe left (negative)
                 if (incoming && diffX > 0 && diffX <= 80) {
                     setOffset(diffX);
@@ -102,12 +165,12 @@
                     onReply(message);
                 }
                 
+                // Bounce back animation
                 setOffset(0);
                 isDragging.current = false;
                 isHorizontalSwipe.current = false;
             };
 
-            const isMultiLine = (txt) => { /* simplified check */ return txt.length > 50; };
             const ml = isMultiLine(message.text);
 
             return (
@@ -118,10 +181,10 @@
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
                     style={{
-                        // Hardware Acceleration applied to the transforming element
+                        // FIX: Add hardware acceleration for smoother swipe on long messages
                         transform: `translateX(${offset}px) translateZ(0)`, 
                         transition: isDragging.current ? 'none' : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                        willChange: 'transform' 
+                        willChange: 'transform'
                     }}
                 >
                     <div className={`rounded-2xl ${incoming ? 'rounded-bl-md bg-white' : 'rounded-br-md'} 
@@ -133,6 +196,15 @@
                             <span className="message-text">{message.text}</span>
                             <div className="message-metadata">
                                 <span>{message.time}</span>
+                                {!incoming && (
+                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4">
+                                        <g clipPath="url(#clip0_949_23339)">
+                                            <path d="M17.5821 6.95711C17.9726 6.56658 17.9726 5.93342 17.5821 5.54289C17.1916 5.15237 16.5584 5.15237 16.1679 5.54289L5.54545 16.1653L1.70711 12.327C1.31658 11.9365 0.683417 11.9365 0.292893 12.327C-0.0976311 12.7175 -0.0976310 13.3507 0.292893 13.7412L4.83835 18.2866C5.22887 18.6772 5.86204 18.6772 6.25256 18.2866L17.5821 6.95711Z" fill="#9ebad2"/>
+                                            <path d="M23.5821 6.95711C23.9726 6.56658 23.9726 5.93342 23.5821 5.54289C23.1915 5.15237 22.5584 5.15237 22.1678 5.54289L10.8383 16.8724C10.4478 17.263 10.4478 17.8961 10.8383 18.2866C11.2288 18.6772 11.8620 18.6772 12.2525 18.2866L23.5821 6.95711Z" fill="#9ebad2"/>
+                                        </g>
+                                        <defs><clipPath id="clip0_949_23339"><rect width="24" height="24" fill="white"/></clipPath></defs>
+                                    </svg>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -140,22 +212,71 @@
             );
         }
 
-        /* ---------- REPLY UI COMPONENT (Simplified) ---------- */
+        /* ---------- REPLY UI COMPONENT ---------- */
         function ReplyUI({ replyingTo, onCancel }) {
             if (!replyingTo) return null;
-            const handleClose = (e) => { e.preventDefault(); onCancel(); };
+
+            const handleClose = (e) => {
+                e.preventDefault();
+                onCancel();
+            };
+
             return (
-                <div className="px-3 py-2 flex items-center gap-2" style={{ borderLeft: '3px solid #5d7d99', backgroundColor: '#f3f4f6', borderRadius: '8px', marginLeft: '12px', marginRight: '12px', marginBottom: '8px', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
+                <div className="px-3 py-2 flex items-center gap-2" style={{ 
+                    borderLeft: '3px solid #5d7d99',
+                    backgroundColor: '#f3f4f6',
+                    borderRadius: '8px',
+                    marginLeft: '12px',
+                    marginRight: '12px',
+                    marginBottom: '8px',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)'
+                }}>
                     <div className="flex-1 min-w-0">
-                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#5d7d99', marginBottom: '2px' }}>{replyingTo.incoming ? 'Daddy Steve' : 'You'}</div>
-                        <div style={{ fontSize: '14px', color: '#6b7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{replyingTo.text}</div>
+                        <div style={{ 
+                            fontSize: '13px', 
+                            fontWeight: '600', 
+                            color: '#5d7d99',
+                            marginBottom: '2px'
+                        }}>
+                            {replyingTo.incoming ? 'Daddy Steve' : 'You'}
+                        </div>
+                        <div style={{ 
+                            fontSize: '14px', 
+                            color: '#6b7280',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                        }}>
+                            {replyingTo.text}
+                        </div>
                     </div>
-                    <button onMouseDown={handleClose} className="text-gray-500 hover:text-gray-700 p-1" style={{ flexShrink: 0 }}><CloseIcon /></button>
+                    <button 
+                        onMouseDown={handleClose}
+                        className="text-gray-500 hover:text-gray-700 p-1"
+                        style={{ flexShrink: 0 }}
+                    >
+                        <CloseIcon />
+                    </button>
                 </div>
             );
         }
 
-        /* ---------- MAIN CHAT ---------- */
+        const isMultiLine = txt => {
+            const s = document.createElement('span');
+            s.style.font = '16px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif';
+            s.style.whiteSpace = 'pre-wrap';
+            s.style.wordBreak = 'break-word';
+            s.style.visibility = 'hidden';
+            s.style.position = 'absolute';
+            s.style.maxWidth = '260px';
+            s.textContent = txt;
+            document.body.appendChild(s);
+            const tall = s.offsetHeight > 28;
+            document.body.removeChild(s);
+            return tall;
+        };
+
+        /* ---------- MAIN CHAT (FINAL FIX) ---------- */
         function ChatLayout() {
             const scrollRef = useRef(null);
             const inputRef = useRef(null);
@@ -165,13 +286,16 @@
             const [showEmojiPicker, setShowEmojiPicker] = useState(false);
             const [hasText, setHasText] = useState(false);
             const [replyingTo, setReplyingTo] = useState(null);
+            const [userScrolledUp, setUserScrolledUp] = useState(false); // NEW STATE for scroll detection
+            const isUserScrolling = useRef(false); // REF to check if the current scroll is user-initiated
             const [messages, setMessages] = useState([
-                {text:'Bro this is a very, very long message that wraps multiple times and takes up significant viewport space.',time:'1:38 PM',incoming:true},
+                {text:'Bro this is a very very very very very very very long message that wraps to multiple lines and keeps going even more until the line is completely full before wrapping and taking up significant viewport space.',time:'1:38 PM',incoming:true},
                 {text:'Hey this is a very long outgoing message that wraps multiple times and fills the line completely with no early breaks or gaps',time:'1:39 PM',incoming:false},
                 {text:'Short',time:'1:40 PM',incoming:true},
                 {text:'Okay',time:'1:41 PM',incoming:false}
             ]);
             const scrollTimeout = useRef(null);
+            const scrollDetectionTimeout = useRef(null); // NEW REF for scroll debounce
             const lastScrollHeight = useRef(0);
             const isInputFocused = useRef(false);
             const hasScrolledAfterPickerOpen = useRef(false);
@@ -194,14 +318,67 @@
             const cancelReply = () => {
                 setReplyingTo(null);
             };
+            
+            /* ---- SCROLL DETECTION LOGIC (UPDATED) ---- */
+            const handleScroll = () => {
+                const chat = scrollRef.current;
+                if (!chat) return;
 
-            /* ---- INITIAL LOAD ---- */
-            useEffect(() => scrollToBottom(false), []);
+                // Debounce scroll to distinguish user scroll from programmatic scroll
+                isUserScrolling.current = true;
+                clearTimeout(scrollDetectionTimeout.current);
+                scrollDetectionTimeout.current = setTimeout(() => {
+                    isUserScrolling.current = false;
+                }, 150);
 
-            /* ---- NEW MESSAGE (Fixes 1 & 3: Force padding recalculation) ---- */
-            useEffect(() => {
-                scrollToBottom(true);
+                // Determine if the user is at the bottom (within a small threshold)
+                const isAtBottom = chat.scrollHeight - chat.scrollTop <= chat.clientHeight + 1; 
                 
+                if (isAtBottom) {
+                    setUserScrolledUp(false);
+                } 
+                // If user is clearly not at the bottom, set the scroll-up flag
+                else if (chat.scrollHeight - chat.scrollTop > chat.clientHeight + 5) { 
+                    setUserScrolledUp(true);
+                }
+                
+                // Sticky date logic
+                const badges = chat.querySelectorAll('.chat-date');
+                const headerH = 80;
+                let cur = stickyDate;
+                setIsScrolling(true);
+                clearTimeout(scrollTimeout.current);
+                let newest = null;
+                badges.forEach(b => {
+                    const r = b.getBoundingClientRect();
+                    if (r.top <= headerH + 10 && r.top + r.height > headerH - 20) newest = b.textContent.trim();
+                });
+                if (newest !== cur) { setStickyDate(newest); cur = newest; }
+                scrollTimeout.current = setTimeout(() => { setIsScrolling(false); setStickyDate(null); }, 800);
+            };
+
+            /* ---- INITIAL LOAD & SCROLL LISTENER SETUP (UPDATED) ---- */
+            useEffect(() => {
+                scrollToBottom(false);
+                const chat = scrollRef.current;
+                if (chat) {
+                    chat.addEventListener('scroll', handleScroll);
+                    return () => {
+                        chat.removeEventListener('scroll', handleScroll);
+                        clearTimeout(scrollDetectionTimeout.current);
+                        clearTimeout(scrollTimeout.current);
+                    };
+                }
+            }, []);
+
+            /* ---- NEW MESSAGE (FIX 1: Force padding recalculation) (UPDATED) ---- */
+            useEffect(() => {
+                if (!userScrolledUp) { // CONDITION ADDED
+                    scrollToBottom(true);
+                }
+                
+                // FIX 1: Force the input bar/chat padding to be recalculated 
+                // immediately after a message renders.
                 const input = inputRef.current;
                 const container = inputContainerRef.current;
                 const chat = scrollRef.current;
@@ -212,12 +389,33 @@
                     const pickerH = showEmojiPicker ? 280 : 0;
                     const replyH = replyingTo ? 60 : 0;
                     const totalInput = contH + 16; 
+                    // Update chat padding based on new message height
                     chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`;
                 }
 
-            }, [messages]);
+            }, [messages, userScrolledUp]); // Added userScrolledUp to dependencies
 
-            /* ---- INPUT HEIGHT & PADDING (Typing logic) ---- */
+            /* ---- KEYBOARD RESIZE (UPDATED) ---- */
+            useLayoutEffect(() => {
+                const onResize = () => {
+                    // Only scroll to bottom if input is focused AND user isn't scrolled up
+                    if (isInputFocused.current && scrollRef.current && !userScrolledUp) { // CONDITION ADDED
+                        scrollRef.current.scrollTo({
+                            top: scrollRef.current.scrollHeight,
+                            behavior: 'instant'
+                        });
+                    }
+                };
+                const vv = window.visualViewport;
+                if (vv) {
+                    vv.addEventListener('resize', onResize);
+                    return () => vv.removeEventListener('resize', onResize);
+                }
+                window.addEventListener('resize', onResize);
+                return () => window.removeEventListener('resize', onResize);
+            }, [userScrolledUp]); // Added userScrolledUp to dependencies
+
+            /* ---- INPUT HEIGHT & PADDING (UPDATED) ---- */
             useEffect(() => {
                 const input = inputRef.current;
                 const container = inputContainerRef.current;
@@ -242,13 +440,18 @@
                     const pickerH = showEmojiPicker ? 280 : 0;
                     const replyH = replyingTo ? 60 : 0;
                     
+                    // Set the required padding for the chat content area
                     chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`; 
 
-                    // 4. Scroll Logic
-                    if (replyingTo) { 
-                        scrollToBottom(false); 
-                    } else if (chat.scrollHeight > lastScrollHeight.current) {
+                    // 4. Scroll Logic (Only for Reply UI or when not scrolled up)
+                    if (replyingTo || !userScrolledUp) { // CONDITION MODIFIED
                         scrollToBottom();
+                    } else if (chat.scrollHeight > lastScrollHeight.current) {
+                        // If content height increased (e.g., text expansion) but user is scrolled up,
+                        // only scroll if the content increase is very small (to account for minor rendering shifts)
+                        if (chat.scrollHeight - lastScrollHeight.current < 50) {
+                             scrollToBottom();
+                        }
                     }
                     lastScrollHeight.current = chat.scrollHeight;
                 };
@@ -258,20 +461,11 @@
                 input.addEventListener('paste', () => setTimeout(handle,0));
                 
                 return () => input.removeEventListener('input', handle);
-            }, [showEmojiPicker, replyingTo]); 
+            }, [showEmojiPicker, replyingTo, userScrolledUp]); // Added userScrolledUp
 
-            /* ---- STICKY DATE (Simplified) ---- */
+            // Empty sticky date effect is kept for completeness, scroll logic is in handleScroll
             useEffect(() => {
-                const chat = scrollRef.current;
-                if (!chat) return;
-                const check = () => {
-                    setIsScrolling(true);
-                    clearTimeout(scrollTimeout.current);
-                    // Simplified sticky logic...
-                    scrollTimeout.current = setTimeout(() => { setIsScrolling(false); setStickyDate(null); }, 800);
-                };
-                chat.addEventListener('scroll', check);
-                return () => chat.removeEventListener('scroll', check);
+                return () => clearTimeout(scrollTimeout.current);
             }, []);
 
             const toggleEmojiPicker = () => {
@@ -281,12 +475,14 @@
                 if (willOpen && inputRef.current) {
                     inputRef.current.blur();
                     
-                    const delay = hasScrolledAfterPickerOpen.current ? 300 : 400; 
-
-                    setTimeout(() => {
-                        scrollToBottom(false); 
-                        hasScrolledAfterPickerOpen.current = true;
-                    }, delay);
+                    // Only scroll if the user is not scrolled up
+                    if (!userScrolledUp) { // CONDITION ADDED
+                         const delay = hasScrolledAfterPickerOpen.current ? 300 : 400; 
+                         setTimeout(() => {
+                            scrollToBottom(false); 
+                            hasScrolledAfterPickerOpen.current = true;
+                         }, delay);
+                    }
                 }
             };
             const closeEmojiPicker = () => setShowEmojiPicker(false);
@@ -294,7 +490,10 @@
             const handleInputFocus = () => {
                 isInputFocused.current = true;
                 if (showEmojiPicker) closeEmojiPicker();
-                setTimeout(() => scrollToBottom(), 50);
+                // Only scroll if the user is not scrolled up
+                if (!userScrolledUp) { // CONDITION ADDED
+                    setTimeout(() => scrollToBottom(), 50);
+                }
             };
             const handleInputBlur = () => { isInputFocused.current = false; };
 
@@ -306,6 +505,7 @@
                 inputRef.current.textContent = '';
                 setHasText(false);
                 setReplyingTo(null);
+                // Reset input height state
                 inputRef.current.style.height = 'auto';
                 inputContainerRef.current.style.height = '48px';
             };
@@ -397,25 +597,5 @@
                                     }}
                                     onMouseDown={block} onTouchStart={block}
                                     onClick={hasText?sendMessage:null}>
-                                {hasText ? <SendArrowIcon/> : <MicrophoneIcon/>}
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* EMOJI PICKER */}
-                    <div className={`fixed bottom-0 left-0 right-0 bg-white z-30 transition-transform duration-300 ease-out ${showEmojiPicker?'translate-y-0':'translate-y-full'}`}
-                         style={{height:'280px',boxShadow:'0 -2px 10px rgba(0,0,0,0.1)',backgroundColor:'#fff'}}>
-                        <div className="h-full flex items-center justify-center text-gray-400 text-sm">
-                            Emoji Picker Placeholder
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<ChatLayout/>);
-    </script>
-</body>
-</html>
+                                {hasText ? <SendArrowIcon/> : 
 
