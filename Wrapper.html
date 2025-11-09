@@ -549,5 +549,67 @@
                              paddingBottom:'8px',
                              transform: showEmojiPicker ? 'translateY(-280px)' : 'translateY(0)'
                          }}>
-                        {replyingTo && <ReplyUI
+                        {replyingTo && <ReplyUI replyingTo={replyingTo} onCancel={cancelReply} />}
+                        
+                        <div className="mx-3 flex items-end gap-2">
+                            <div ref={inputContainerRef}
+                                 className="bg-white shadow-sm flex items-center px-3 py-3 transition-all duration-100 flex-1"
+                                 style={{borderRadius:'13px',minHeight:'48px',height:'48px',overflow:'hidden'}}>
+                                <button className="text-gray-400 hover:text-gray-600 transition-colors mr-3 p-1"
+                                        style={{flexShrink:0,alignSelf:'flex-end'}}
+                                        onMouseDown={block} onTouchStart={block}
+                                        onClick={toggleEmojiPicker}>
+                                    {showEmojiPicker ?
+                                        <KeyboardIcon style={{transform:'translateY(5px)'}}/> :
+                                        <i className="fa-regular fa-face-smile" style={{fontSize:'24px',display:'block',transform:'translateY(3px)'}}></i>
+                                    }
+                                </button>
+
+                                <div ref={inputRef}
+                                     contentEditable="true"
+                                     placeholder="Message"
+                                     className="flex-1 outline-none text-gray-900 text-base"
+                                     onFocus={handleInputFocus}
+                                     onBlur={handleInputBlur}
+                                     onClick={handleInputFocus}
+                                     style={{minHeight:'24px',maxHeight:'100px',overflowY:'auto',resize:'none',lineHeight:'1.5'}}>
+                                </div>
+
+                                <button className="text-gray-400 hover:text-gray-600 transition-colors ml-3"
+                                        style={{flexShrink:0,alignSelf:'flex-end',transform:'translateY(3px)'}}
+                                        onMouseDown={block} onTouchStart={block}>
+                                    <i className="fa-solid fa-paperclip" style={{fontSize:'24px'}}></i>
+                                </button>
+                            </div>
+
+                            <button className="flex-shrink-0 flex items-center justify-center shadow-sm transition-all duration-200 rounded-full"
+                                    style={{
+                                        width:'48px',height:'48px',
+                                        backgroundColor:'var(--btn-bg-active)',
+                                        color:'var(--btn-icon-active)',
+                                        opacity:1,cursor:'pointer'
+                                    }}
+                                    onMouseDown={block} onTouchStart={block}
+                            onClick={hasText?sendMessage:null}>
+                                {hasText ? <SendArrowIcon/> : <MicrophoneIcon/>}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* EMOJI PICKER */}
+                    <div className={`fixed bottom-0 left-0 right-0 bg-white z-30 transition-transform duration-300 ease-out ${showEmojiPicker?'translate-y-0':'translate-y-full'}`}
+                         style={{height:'280px',boxShadow:'0 -2px 10px rgba(0,0,0,0.1)',backgroundColor:'#fff'}}>
+                        <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                            Emoji Picker Placeholder
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ChatLayout/>);
+    </script>
+</body>
+</html>
 
