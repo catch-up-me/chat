@@ -34,7 +34,7 @@ function ChatHeader({stickyDate}) {
             <div className={`absolute left-1/2 transform -translate-x-1/2 transition-opacity duration-200 pointer-events-none ${stickyDate?'opacity-100':'opacity-0'}`}
                  style={{bottom:'-32px'}}>
                 <div className="px-4 rounded-full flex items-center shadow-sm" style={{backgroundColor:'#749cbf',minHeight:'26px',height:'26px'}}>
-                    <span className="text-white text-xs font-medium" style={{lineHeight:'1'}}>{stickyDate||'June 6'}</span>
+                    <span className="text-white text-xs font-medium" style={{lineHeight:'1'}}>{stickyDate||''}</span>
                 </div>
             </div>
         </div>
@@ -42,3 +42,4 @@ function ChatHeader({stickyDate}) {
 }
 
 window.ChatHeader = ChatHeader;
+
