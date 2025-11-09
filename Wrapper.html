@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,44 +13,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <link rel="stylesheet" href="main.css">
-    
-    <script type="text/babel">
-        // Mock ChatHeader since Head.js isn't included in this single file
-        window.ChatHeader = function ChatHeader({ stickyDate }) {
-            return (
-                <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md p-4 pt-10" style={{ height: '80px' }}>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <i className="fa-solid fa-arrow-left text-gray-700"></i>
-                            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                <i className="fa-solid fa-user text-gray-500"></i>
-                            </div>
-                            <div>
-                                <h1 className="text-lg font-semibold text-gray-900 leading-none">Daddy Steve</h1>
-                                <p className="text-xs text-green-500 leading-none">Online</p>
-                            </div>
-                        </div>
-                        <div className="text-gray-700 flex gap-4">
-                            <i className="fa-solid fa-video"></i>
-                            <i className="fa-solid fa-phone"></i>
-                            <i className="fa-solid fa-ellipsis-v"></i>
-                        </div>
-                    </div>
-                    {stickyDate && (
-                         <div className="absolute left-1/2 -translate-x-1/2 bottom-0.5 transform">
-                            <div className="px-4 py-1 rounded-full flex items-center shadow-sm chat-date"
-                                 style={{backgroundColor:'#749cbf',minHeight:'24px'}}>
-                                <span className="text-white text-xs font-medium" style={{lineHeight:'1'}}>{stickyDate}</span>
-                            </div>
-                        </div>
-                    )}
-                </header>
-            );
-        };
-    </script>
 </head>
 <body class="bg-gray-50">
     <div id="root"></div>
+
+    <script type="text/babel" src="Head.js"></script>
 
     <script type="text/babel">
         const { useEffect, useRef, useState, useLayoutEffect } = React;
@@ -277,7 +243,7 @@
             return tall;
         };
 
-        /* ---------- MAIN CHAT (FINAL FIX) ---------- */
+        /* ---------- MAIN CHAT (SCROLL DETECTION ADDED) ---------- */
         function ChatLayout() {
             const scrollRef = useRef(null);
             const inputRef = useRef(null);
@@ -288,7 +254,7 @@
             const [hasText, setHasText] = useState(false);
             const [replyingTo, setReplyingTo] = useState(null);
             const [userScrolledUp, setUserScrolledUp] = useState(false); // NEW STATE for scroll detection
-            const isUserScrolling = useRef(false); // REF to check if the current scroll is user-initiated
+            const isUserScrolling = useRef(false);
             const [messages, setMessages] = useState([
                 {text:'Bro this is a very very very very very very very long message that wraps to multiple lines and keeps going even more until the line is completely full before wrapping and taking up significant viewport space.',time:'1:38 PM',incoming:true},
                 {text:'Hey this is a very long outgoing message that wraps multiple times and fills the line completely with no early breaks or gaps',time:'1:39 PM',incoming:false},
@@ -296,7 +262,7 @@
                 {text:'Okay',time:'1:41 PM',incoming:false}
             ]);
             const scrollTimeout = useRef(null);
-            const scrollDetectionTimeout = useRef(null); // NEW REF for scroll debounce
+            const scrollDetectionTimeout = useRef(null); 
             const lastScrollHeight = useRef(0);
             const isInputFocused = useRef(false);
             const hasScrolledAfterPickerOpen = useRef(false);
@@ -320,7 +286,7 @@
                 setReplyingTo(null);
             };
             
-            /* ---- SCROLL DETECTION LOGIC (UPDATED) ---- */
+            /* ---- SCROLL DETECTION LOGIC ---- */
             const handleScroll = () => {
                 const chat = scrollRef.current;
                 if (!chat) return;
@@ -358,7 +324,7 @@
                 scrollTimeout.current = setTimeout(() => { setIsScrolling(false); setStickyDate(null); }, 800);
             };
 
-            /* ---- INITIAL LOAD & SCROLL LISTENER SETUP (UPDATED) ---- */
+            /* ---- INITIAL LOAD & SCROLL LISTENER SETUP ---- */
             useEffect(() => {
                 scrollToBottom(false);
                 const chat = scrollRef.current;
@@ -372,14 +338,12 @@
                 }
             }, []);
 
-            /* ---- NEW MESSAGE (FIX 1: Force padding recalculation) (UPDATED) ---- */
+            /* ---- NEW MESSAGE (Scroll only if user is NOT scrolled up) ---- */
             useEffect(() => {
-                if (!userScrolledUp) { // CONDITION ADDED
+                if (!userScrolledUp) { 
                     scrollToBottom(true);
                 }
                 
-                // FIX 1: Force the input bar/chat padding to be recalculated 
-                // immediately after a message renders.
                 const input = inputRef.current;
                 const container = inputContainerRef.current;
                 const chat = scrollRef.current;
@@ -390,17 +354,15 @@
                     const pickerH = showEmojiPicker ? 280 : 0;
                     const replyH = replyingTo ? 60 : 0;
                     const totalInput = contH + 16; 
-                    // Update chat padding based on new message height
                     chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`;
                 }
 
-            }, [messages, userScrolledUp]); // Added userScrolledUp to dependencies
+            }, [messages, userScrolledUp]); 
 
-            /* ---- KEYBOARD RESIZE (UPDATED) ---- */
+            /* ---- KEYBOARD RESIZE ---- */
             useLayoutEffect(() => {
                 const onResize = () => {
-                    // Only scroll to bottom if input is focused AND user isn't scrolled up
-                    if (isInputFocused.current && scrollRef.current && !userScrolledUp) { // CONDITION ADDED
+                    if (isInputFocused.current && scrollRef.current && !userScrolledUp) { 
                         scrollRef.current.scrollTo({
                             top: scrollRef.current.scrollHeight,
                             behavior: 'instant'
@@ -414,9 +376,9 @@
                 }
                 window.addEventListener('resize', onResize);
                 return () => window.removeEventListener('resize', onResize);
-            }, [userScrolledUp]); // Added userScrolledUp to dependencies
+            }, [userScrolledUp]); 
 
-            /* ---- INPUT HEIGHT & PADDING (UPDATED) ---- */
+            /* ---- INPUT HEIGHT & PADDING ---- */
             useEffect(() => {
                 const input = inputRef.current;
                 const container = inputContainerRef.current;
@@ -441,15 +403,12 @@
                     const pickerH = showEmojiPicker ? 280 : 0;
                     const replyH = replyingTo ? 60 : 0;
                     
-                    // Set the required padding for the chat content area
                     chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`; 
 
-                    // 4. Scroll Logic (Only for Reply UI or when not scrolled up)
-                    if (replyingTo || !userScrolledUp) { // CONDITION MODIFIED
+                    // 4. Scroll Logic
+                    if (replyingTo || !userScrolledUp) { 
                         scrollToBottom();
                     } else if (chat.scrollHeight > lastScrollHeight.current) {
-                        // If content height increased (e.g., text expansion) but user is scrolled up,
-                        // only scroll if the content increase is very small (to account for minor rendering shifts)
                         if (chat.scrollHeight - lastScrollHeight.current < 50) {
                              scrollToBottom();
                         }
@@ -462,7 +421,7 @@
                 input.addEventListener('paste', () => setTimeout(handle,0));
                 
                 return () => input.removeEventListener('input', handle);
-            }, [showEmojiPicker, replyingTo, userScrolledUp]); // Added userScrolledUp
+            }, [showEmojiPicker, replyingTo, userScrolledUp]); 
 
             // Empty sticky date effect is kept for completeness, scroll logic is in handleScroll
             useEffect(() => {
@@ -477,7 +436,7 @@
                     inputRef.current.blur();
                     
                     // Only scroll if the user is not scrolled up
-                    if (!userScrolledUp) { // CONDITION ADDED
+                    if (!userScrolledUp) { 
                          const delay = hasScrolledAfterPickerOpen.current ? 300 : 400; 
                          setTimeout(() => {
                             scrollToBottom(false); 
@@ -492,7 +451,7 @@
                 isInputFocused.current = true;
                 if (showEmojiPicker) closeEmojiPicker();
                 // Only scroll if the user is not scrolled up
-                if (!userScrolledUp) { // CONDITION ADDED
+                if (!userScrolledUp) { 
                     setTimeout(() => scrollToBottom(), 50);
                 }
             };
@@ -597,7 +556,7 @@
                                         opacity:1,cursor:'pointer'
                                     }}
                                     onMouseDown={block} onTouchStart={block}
-                                    onClick={hasText?sendMessage:null}>
+                            onClick={hasText?sendMessage:null}>
                                 {hasText ? <SendArrowIcon/> : <MicrophoneIcon/>}
                             </button>
                         </div>
@@ -619,5 +578,4 @@
     </script>
 </body>
 </html>
-
 
