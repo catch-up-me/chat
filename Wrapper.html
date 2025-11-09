@@ -23,7 +23,7 @@
         const { useEffect, useRef, useState, useLayoutEffect } = React;
         const { ChatHeader } = window; // Assumes ChatHeader is defined in Head.js
 
-        /* ---------- ICONS (MicrophoneIcon, SendArrowIcon, KeyboardIcon, CloseIcon, isMultiLine) ---------- */
+        /* ---------- ICONS ---------- */
         const MicrophoneIcon = () => (
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{width:'24px',height:'24px',flexShrink:0}}>
                 <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
@@ -236,7 +236,7 @@
             );
         }
 
-        /* ---------- MAIN CHAT LAYOUT (With Session Storage Scroll Persistence) ---------- */
+        /* ---------- MAIN CHAT LAYOUT (With Scroll Persistence Fix) ---------- */
         function ChatLayout() {
             const scrollRef = useRef(null);
             const inputRef = useRef(null);
@@ -260,7 +260,7 @@
             const isInputFocused = useRef(false);
             const hasScrolledAfterPickerOpen = useRef(false);
             
-            const SCROLL_KEY = 'chatScrollPosition'; // Define the storage key
+            const SCROLL_KEY = 'chatScrollPosition';
 
             const scrollToBottom = (smooth = true) => {
                 if (!scrollRef.current) return;
@@ -281,6 +281,31 @@
                 setReplyingTo(null);
             };
             
+            // NEW: Helper function to calculate heights and padding consistently
+            const calculateHeightsAndPadding = () => {
+                const input = inputRef.current;
+                const container = inputContainerRef.current;
+                const chat = scrollRef.current;
+                if (!input || !container || !chat) return;
+
+                // 1. Calculate and set Input height
+                input.style.height = 'auto';
+                const h = Math.min(input.scrollHeight, 100);
+                input.style.height = `${h}px`;
+
+                // 2. Calculate and set Input Container height
+                const contH = h + 24; 
+                container.style.height = `${contH}px`;
+
+                // 3. Calculate and set Chat content padding
+                const totalInput = contH + 16; 
+                const pickerH = showEmojiPicker ? 280 : 0;
+                const replyH = replyingTo ? 60 : 0;
+                
+                // This ensures correct padding before scroll restoration or render updates
+                chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`; 
+            };
+            
             /* ---- SCROLL DETECTION AND PERSISTENCE SAVE ---- */
             const handleScroll = () => {
                 const chat = scrollRef.current;
@@ -291,7 +316,6 @@
                     sessionStorage.setItem(SCROLL_KEY, chat.scrollTop.toString());
                 }
 
-                // Debounce scroll
                 isUserScrolling.current = true;
                 clearTimeout(scrollDetectionTimeout.current);
                 scrollDetectionTimeout.current = setTimeout(() => {
@@ -308,7 +332,7 @@
                     setUserScrolledUp(true);
                 }
                 
-                // Sticky date logic
+                // Sticky date logic...
                 const badges = chat.querySelectorAll('.chat-date');
                 const headerH = 80;
                 let cur = stickyDate;
@@ -323,45 +347,25 @@
                 scrollTimeout.current = setTimeout(() => { setIsScrolling(false); setStickyDate(null); }, 800);
             };
 
-            /* ---- INITIAL SCROLL LISTENER SETUP (Runs once on mount) ---- */
-            useEffect(() => {
-                const chat = scrollRef.current;
-                
-                // Set initial padding
-                if (chat && inputRef.current) {
-                     const input = inputRef.current;
-                     const h = Math.min(input.scrollHeight, 100) || 24; // Use 24px as a safe minimum
-                     const contH = h + 24; 
-                     chat.style.paddingBottom = `${contH + 16}px`; 
-                }
-
-                // Add scroll listener
-                if (chat) {
-                    chat.addEventListener('scroll', handleScroll);
-                    return () => {
-                        chat.removeEventListener('scroll', handleScroll);
-                        clearTimeout(scrollDetectionTimeout.current);
-                        clearTimeout(scrollTimeout.current);
-                    };
-                }
-            }, []);
-            
-            /* ---- SCROLL RESTORATION AND UNLOAD SAVING (useLayoutEffect for instant restore) ---- */
+            /* ---- SCROLL RESTORATION AND UNLOAD SAVING (useLayoutEffect) ---- */
             useLayoutEffect(() => {
                 const savedScroll = sessionStorage.getItem(SCROLL_KEY);
                 const chat = scrollRef.current;
                 
+                // 1. FIX: Calculate initial padding immediately
+                calculateHeightsAndPadding(); 
+
                 if (savedScroll && chat) {
-                    // Restore position instantly
+                    // 2. Restore position instantly
                     chat.scrollTop = parseInt(savedScroll, 10);
                     
-                    // Update userScrolledUp state based on restored position
+                    // 3. Update userScrolledUp state based on restored position
                     const isAtBottom = chat.scrollHeight - chat.scrollTop <= chat.clientHeight + 1;
                     if (!isAtBottom) {
                         setUserScrolledUp(true);
                     }
                 } else {
-                    // If no saved scroll (first load), scroll to the very bottom
+                    // If no saved scroll, scroll to the very bottom
                     scrollToBottom(false);
                 }
                 
@@ -375,27 +379,56 @@
                 window.addEventListener('beforeunload', saveScrollOnUnload);
                 return () => window.removeEventListener('beforeunload', saveScrollOnUnload);
 
-            }, []); // Run only on mount
+            }, []); 
+
+            /* ---- SCROLL LISTENER SETUP (Runs once on mount) ---- */
+            useEffect(() => {
+                const chat = scrollRef.current;
+                if (chat) {
+                    chat.addEventListener('scroll', handleScroll);
+                    return () => {
+                        chat.removeEventListener('scroll', handleScroll);
+                        clearTimeout(scrollDetectionTimeout.current);
+                        clearTimeout(scrollTimeout.current);
+                    };
+                }
+            }, []);
+            
+            /* ---- INPUT CHANGE LISTENER ---- */
+            useEffect(() => {
+                const input = inputRef.current;
+                if (!input) return;
+
+                const handleInput = () => {
+                    calculateHeightsAndPadding();
+                    const currentText = input.textContent || '';
+                    setHasText(currentText.trim().length > 0);
+                    
+                    // Scroll logic after input change
+                    if (replyingTo || !userScrolledUp) { 
+                        scrollToBottom();
+                    } else if (scrollRef.current && scrollRef.current.scrollHeight > lastScrollHeight.current) {
+                        if (scrollRef.current.scrollHeight - lastScrollHeight.current < 50) {
+                             scrollToBottom();
+                        }
+                    }
+                    if(scrollRef.current) lastScrollHeight.current = scrollRef.current.scrollHeight;
+                };
+
+                handleInput(); // Initial call
+                input.addEventListener('input', handleInput);
+                input.addEventListener('paste', () => setTimeout(handleInput,0));
+                
+                return () => input.removeEventListener('input', handleInput);
+            }, [showEmojiPicker, replyingTo, userScrolledUp]); // Dependencies trigger recalculation
 
             /* ---- NEW MESSAGE (Scroll only if user is NOT scrolled up) ---- */
             useEffect(() => {
                 if (!userScrolledUp) { 
                     scrollToBottom(true);
                 }
-                
-                // Recalculate padding when content height changes (new message/reply/picker)
-                const input = inputRef.current;
-                const container = inputContainerRef.current;
-                const chat = scrollRef.current;
-
-                if (input && container && chat) {
-                    const h = Math.min(input.scrollHeight, 100);
-                    const contH = h + 24; 
-                    const pickerH = showEmojiPicker ? 280 : 0;
-                    const replyH = replyingTo ? 60 : 0;
-                    const totalInput = contH + 16; 
-                    chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`;
-                }
+                // Ensure padding is correct after a new message renders
+                calculateHeightsAndPadding(); 
 
             }, [messages, userScrolledUp]); 
 
@@ -417,53 +450,6 @@
                 window.addEventListener('resize', onResize);
                 return () => window.removeEventListener('resize', onResize);
             }, [userScrolledUp]); 
-
-            /* ---- INPUT HEIGHT & PADDING ---- */
-            useEffect(() => {
-                const input = inputRef.current;
-                const container = inputContainerRef.current;
-                const chat = scrollRef.current;
-                if (!input || !container || !chat) return;
-
-                const handle = () => {
-                    const txt = input.textContent || '';
-                    setHasText(txt.trim().length > 0);
-
-                    // 1. Calculate and set Input height
-                    input.style.height = 'auto';
-                    const h = Math.min(input.scrollHeight, 100);
-                    input.style.height = `${h}px`;
-
-                    // 2. Calculate and set Input Container height
-                    const contH = h + 24; 
-                    container.style.height = `${contH}px`;
-
-                    // 3. Calculate and set Chat content padding
-                    const totalInput = contH + 16; 
-                    const pickerH = showEmojiPicker ? 280 : 0;
-                    const replyH = replyingTo ? 60 : 0;
-                    
-                    chat.style.paddingBottom = `${totalInput + pickerH + replyH}px`; 
-
-                    // 4. Scroll Logic (Scroll if replying or at the bottom)
-                    if (replyingTo || !userScrolledUp) { 
-                        scrollToBottom();
-                    } else if (chat.scrollHeight > lastScrollHeight.current) {
-                        // If content height increased (e.g., text expansion) but user is scrolled up,
-                        // only scroll if the content increase is very small
-                        if (chat.scrollHeight - lastScrollHeight.current < 50) {
-                             scrollToBottom();
-                        }
-                    }
-                    lastScrollHeight.current = chat.scrollHeight;
-                };
-
-                handle();
-                input.addEventListener('input', handle);
-                input.addEventListener('paste', () => setTimeout(handle,0));
-                
-                return () => input.removeEventListener('input', handle);
-            }, [showEmojiPicker, replyingTo, userScrolledUp]); 
 
             const toggleEmojiPicker = () => {
                 const willOpen = !showEmojiPicker;
@@ -500,7 +486,8 @@
                 inputRef.current.textContent = '';
                 setHasText(false);
                 setReplyingTo(null);
-                inputRef.current.style.height = 'auto';
+                // Reset input height state
+                inputRef.current.style.height = '24px'; 
                 inputContainerRef.current.style.height = '48px';
             };
 
@@ -612,4 +599,3 @@
     </script>
 </body>
 </html>
-
