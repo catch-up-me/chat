@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -597,5 +598,26 @@
                                     }}
                                     onMouseDown={block} onTouchStart={block}
                                     onClick={hasText?sendMessage:null}>
-                                {hasText ? <SendArrowIcon/> : 
+                                {hasText ? <SendArrowIcon/> : <MicrophoneIcon/>}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* EMOJI PICKER */}
+                    <div className={`fixed bottom-0 left-0 right-0 bg-white z-30 transition-transform duration-300 ease-out ${showEmojiPicker?'translate-y-0':'translate-y-full'}`}
+                         style={{height:'280px',boxShadow:'0 -2px 10px rgba(0,0,0,0.1)',backgroundColor:'#fff'}}>
+                        <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                            Emoji Picker Placeholder
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ChatLayout/>);
+    </script>
+</body>
+</html>
+
 
