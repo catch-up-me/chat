@@ -55,18 +55,10 @@
       display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:600; color:#fff; }
 
     /* ---------- Expanded Stories ---------- */
-    .stories-expanded { 
-      background:#fff; padding:16px 0; 
-      max-height:0; opacity:0; transform:scale(.95); transition:all .2s; 
-      overflow:hidden;
-    }
-    .stories-expanded.visible { 
-      max-height:120px; opacity:1; transform:scale(1); 
-    }
-    .stories-wrapper { 
-      display:flex; gap:16px; padding:0 16px; 
-      overflow:hidden;
-    }
+    .stories-expanded { background:#fff; padding:16px 0; overflow-x:auto; white-space:nowrap;
+      max-height:0; opacity:0; transform:scale(.95); transition:all .2s; }
+    .stories-expanded.visible { max-height:150px; opacity:1; transform:scale(1); }
+    .stories-wrapper { display:flex; gap:16px; padding:0 16px; }
     .story-item { display:flex; flex-direction:column; align-items:center; cursor:pointer; min-width:64px; }
     .story-ring { width:64px; height:64px; border-radius:50%; padding:1.5px;
       background:linear-gradient(45deg,rgb(240,148,51),rgb(230,104,60),rgb(220,39,67),rgb(204,35,102),rgb(188,24,136));
@@ -99,7 +91,7 @@
 
     .content-spacer { transition:height .2s; }
     .content-spacer.collapsed { height:80px; }
-    .content-spacer.expanded { height:120px; }
+    .content-spacer.expanded { height:180px; }
 
     .message-item { display:flex; align-items:center; padding:10px 16px; background:#fff;
       border-bottom:1px solid #f0f0f0; cursor:pointer; }
@@ -113,17 +105,17 @@
     .message-date { font-size:14px; color:#8e8e8e; }
     .message-preview { font-size:16px; color:#8e8e8e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    /* ---------- Blank Pop-up Screen (FIXED – NO VISUAL DRAG) ---------- */
+    /* ---------- Blank Pop-up Screen (FIXED POSITION – NO DRAG MOVEMENT) ---------- */
     .story-viewer-overlay {
       position:fixed; top:0; left:0; right:0; bottom:70px;
       background:#000; z-index:2000; display:flex; align-items:center; justify-content:center;
       overflow:hidden; transition:opacity .3s;
-      overscroll-behavior: none;
-      touch-action: none; /* Full control – no scroll, no reload */
+      touch-action: none;
+      /* Drag only affects dismissal, not visual movement */
     }
     .story-viewer-content { 
       width:100%; height:100%; position:relative; background:#000; 
-      touch-action: none;
+      /* Fixed in place – no transform applied */
     }
 
     /* ---------- Static Reply Bar – Instagram DM Style (FIXED) ---------- */
@@ -131,6 +123,7 @@
       position:fixed; left:0; right:0; bottom:0; height:70px; background:#000;
       display:flex; align-items:center; justify-content:center; z-index:2100;
       padding:0 16px; 
+      /* Never moves – even during drag */
     }
     .story-reply-box {
       width:100%; max-width:500px; padding:12px 20px; background:#171717;
@@ -148,15 +141,14 @@
 <div id="root"></div>
 
 <script type="text/babel">
-  const { useState, useEffect, useRef } = React;
+  const { useState, useEffect } = React;
 
   function NavigationBar() {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isScrolled, setIsScrolled] = useState(false);
     const [lastScrollY, setLastScrollY] = useState(0);
     const [showStoryViewer, setShowStoryViewer] = useState(false);
-    const dragStartY = useRef(0);
-    const isDragging = useRef(false);
+    const [isDragging, setIsDragging] = useState(false);
 
     /* ---------- Scroll handling ---------- */
     useEffect(() => {
@@ -175,34 +167,31 @@
 
     const openStory = () => {
       setShowStoryViewer(true);
-      isDragging.current = false;
     };
 
     const touchStart = e => {
-      if (!showStoryViewer) return;
-      isDragging.current = true;
-      dragStartY.current = e.touches[0].clientY;
-      e.preventDefault(); // Block reload
+      setIsDragging(true);
+      // Prevent default to avoid scroll interference
+      e.preventDefault();
     };
 
     const touchMove = e => {
-      if (!isDragging.current || !showStoryViewer) return;
-      e.preventDefault(); // Block reload
-      const currentY = e.touches[0].clientY;
-      const deltaY = currentY - dragStartY.current;
-      if (deltaY > 100) {
-        closeStory();
+      if (!isDragging) return;
+      // Prevent default to stop pull-to-refresh
+      e.preventDefault();
+      // We don't apply transform – only track for dismissal
+      const y = e.touches[0].clientY;
+      if (y > 100) { // Threshold to trigger dismiss
+        setShowStoryViewer(false);
+        setIsDragging(false);
       }
     };
 
     const touchEnd = () => {
-      isDragging.current = false;
+      setIsDragging(false);
     };
 
-    const closeStory = () => {
-      setShowStoryViewer(false);
-      isDragging.current = false;
-    };
+    const closeStory = () => setShowStoryViewer(false);
 
     return (
       <>
@@ -233,7 +222,7 @@
             <div className="add-button"><i className="fas fa-search"></i></div>
           </div>
 
-          {/* Expanded Stories – NO SCROLL */}
+          {/* Expanded Stories */}
           <div className={`stories-expanded ${isScrolled ? 'visible' : ''}`}>
             <div className="stories-wrapper">
               <div className="story-item" onClick={openStory}>
@@ -261,7 +250,7 @@
               <div className="message-content"><div className="message-header"><div className="message-name">Daddy Steve</div><div className="message-date">Oct 27</div></div><div className="message-preview">How are you doing</div></div>
             </div>
             <div className="message-item">
-              <div class=>"message-avatar"><img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}}/></div>
+              <div className="message-avatar"><img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}}/></div>
               <div className="message-content"><div className="message-header"><div className="message-name">VaVia</div><div className="message-date">Oct 25</div></div><div className="message-preview">See you tomorrow!</div></div>
             </div>
           </div>
@@ -294,4 +283,3 @@
 </script>
 </body>
 </html>
-
