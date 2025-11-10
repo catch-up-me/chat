@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Instagram Messages Clone</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- React & Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#fff; min-height:200vh; overflow-x:hidden; }
+
+    /* Header & Stories */
+    .header-container { position:fixed; top:0; left:0; right:0; background:#fff; z-index:1000; transition:all .3s; }
+    .top-navbar { background:#fff; padding:16px 20px 19px; text-align:center; position:relative; display:flex; justify-content:center; align-items:center; transition:all .3s; overflow:visible; }
+    .messages-icon { position:absolute; left:20px; width:24px; height:24px; top:50%; transform:translateY(-45%); z-index:10; }
+    .add-button { position:absolute; right:20px; cursor:pointer; z-index:10; }
+    .add-button:hover { opacity:.7; }
+    .add-button i { color:#666; font-size:20px; }
+
+    .top-navbar h1 { font-size:18px; font-weight:500; color:#333; margin:0; opacity:0; transition:opacity .3s; position:absolute; }
+    .top-navbar h1.visible { opacity:1; }
+
+    .stories-collapsed { display:inline-flex; align-items:center; justify-content:center; transition:all .2s; position:absolute; transform:translateY(6px) scale(1); opacity:1; pointer-events:auto; z-index:5; gap:0; cursor:pointer; }
+    .stories-collapsed.moved { opacity:0; pointer-events:none; }
+
+    .story-item-collapsed { display:flex; flex-direction:column; align-items:center; cursor:pointer; min-width:40px; margin:0 -4px; position:relative; }
+    .story-item-collapsed:first-child { margin-left:0; }
+    .story-item-collapsed:last-child { margin-right:0; }
+
+    .story-ring-collapsed { width:40px; height:40px; border-radius:50%; padding:1.5px;
+      background:linear-gradient(45deg,rgb(240,148,51),rgb(230,104,60),rgb(220,39,67),rgb(204,35,102),rgb(188,24,136));
+      display:flex; align-items:center; justify-content:center; position:relative; }
+    .story-ring-collapsed::after { content:''; position:absolute; top:50%; width:3px; height:30px; background:#fff; z-index:1; border-radius:50%; display:none; }
+    .story-item-collapsed:not(:last-child) .story-ring-collapsed::after { display:block; right:-1.5px; transform:translate(-50%,-50%); }
+    .story-ring-inner-collapsed { width:100%; height:100%; border-radius:50%; background:#fff; padding:1.5px; display:flex; align-items:center; justify-content:center; z-index:2; }
+    .story-avatar-collapsed { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+    .story-avatar-text-collapsed { width:100%; height:100%; border-radius:50%; background:#ff8c42; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:600; color:#fff; }
+
+    .stories-expanded { background:#fff; padding:16px 0; overflow-x:auto; white-space:nowrap; max-height:0; opacity:0; transform:scale(.95); transition:all .2s; }
+    .stories-expanded.visible { max-height:150px; opacity:1; padding:16px 0; transform:scale(1); }
+    .stories-wrapper { display:flex; gap:16px; padding:0 16px; }
+    .story-item { display:flex; flex-direction:column; align-items:center; cursor:pointer; min-width:64px; }
+    .story-ring { width:64px; height:64px; border-radius:50%; padding:1.5px;
+      background:linear-gradient(45deg,rgb(240,148,51),rgb(230,104,60),rgb(220,39,67),rgb(204,35,102),rgb(188,24,136));
+      display:flex; align-items:center; justify-content:center; }
+    .story-ring.multi-story { background:conic-gradient(from 0deg,rgb(240,148,51) 0deg,rgb(230,104,60) 45deg,rgb(220,39,67) 90deg,rgb(204,35,102) 135deg,rgb(188,24,136) 175deg,#dbdbdb 177deg,#dbdbdb 183deg,rgb(240,148,51) 185deg,rgb(230,104,60) 230deg,rgb(220,39,67) 270deg,rgb(204,35,102) 315deg,rgb(188,24,136) 355deg,#dbdbdb 357deg,#dbdbdb 360deg); }
+    .story-ring-inner { width:100%; height:100%; border-radius:50%; background:#fff; padding:1.5px; display:flex; align-items:center; justify-content:center; }
+    .story-avatar { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+    .story-avatar-text { width:100%; height:100%; border-radius:50%; background:#ff8c42; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:600; color:#fff; }
+    .story-label { margin-top:8px; font-size:12px; color:#262626; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:64px; }
+
+    /* Navigation & Messages */
+    .nav-container { background:#fff; }
+    .nav-bar { display:flex; justify-content:space-around; align-items:center; padding:10px 0; max-width:400px; margin:0 auto; position:relative; }
+    .nav-item { flex:1; display:flex; justify-content:center; align-items:center; cursor:pointer; padding:8px; transition:all .3s; }
+    .nav-item i { font-size:20px; color:#666; transition:color .3s; }
+    .nav-item:hover i { color:#333; }
+    .nav-item.active i { color:#749cbf; }
+    .bottom-border { height:3px; background:#e0e0e0; position:relative; }
+    .active-indicator { position:absolute; height:100%; width:33.333%; background:#749cbf; transition:left .3s; left:0; }
+
+    .content-spacer { transition:height .2s; }
+    .content-spacer.collapsed { height:80px; }
+    .content-spacer.expanded { height:180px; }
+
+    .message-item { display:flex; align-items:center; padding:10px 16px; background:#fff; border-bottom:1px solid #f0f0f0; cursor:pointer; }
+    .message-item:hover { background:#f8f8f8; }
+    .message-avatar { width:56px; height:56px; border-radius:50%; background:#ff9d5c; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600; color:#fff; margin-right:12px; flex-shrink:0; }
+    .message-content { flex:1; min-width:0; }
+    .message-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
+    .message-name { font-size:17px; font-weight:500; color:#262626; }
+    .message-date { font-size:14px; color:#8e8e8e; }
+    .message-preview { font-size:16px; color:#8e8e8e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Load Story Popup Module -->
+  <script type="module">
+    import { StoryPopup } from './story-popup.js';
+
+    const { useState, useEffect } = React;
+
+    function NavigationBar() {
+      const [activeIndex, setActiveIndex] = useState(0);
+      const [isScrolled, setIsScrolled] = useState(false);
+      const [lastScrollY, setLastScrollY] = useState(0);
+      const [showViewer, setShowViewer] = useState(false);
+
+      useEffect(() => {
+        const onScroll = () => {
+          const cur = window.scrollY;
+          if (cur > lastScrollY && cur > 5) setIsScrolled(true);
+          else if (cur < lastScrollY && cur < 5) setIsScrolled(false);
+          setLastScrollY(cur);
+        };
+        window.addEventListener('scroll', onScroll);
+        return () => window.removeEventListener('scroll', onScroll);
+      }, [lastScrollY]);
+
+      const openViewer = () => setShowViewer(true);
+      const closeViewer = () => setShowViewer(false);
+
+      return (
+        <>
+          <div className="header-container">
+            <div className="top-navbar">
+              <svg className="icon messages-icon" viewBox="0 0 24 24" fill="#749cbf">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+
+              <h1 className={isScrolled ? 'visible' : ''}>Messages</h1>
+
+              <div className={`stories-collapsed ${isScrolled?'moved':''}`} onClick={() => setIsScrolled(true)}>
+                <div className="story-item-collapsed"><div className="story-ring-collapsed"><div className="story-ring-inner-collapsed"><div className="story-avatar-text-collapsed">M</div></div></div></div>
+                <div className="story-item-collapsed"><div className="story-ring-collapsed"><div className="story-ring-inner-collapsed"><img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" className="story-avatar-collapsed"/></div></div></div>
+              </div>
+
+              <div className="add-button"><i className="fas fa-search"></i></div>
+            </div>
+
+            <div className={`stories-expanded ${isScrolled?'visible':''}`}>
+              <div className="stories-wrapper">
+                <div className="story-item" onClick={openViewer}>
+                  <div className="story-ring"><div className="story-ring-inner"><div className="story-avatar-text">M</div></div></div>
+                  <div className="story-label">My story</div>
+                </div>
+                <div className="story-item" onClick={openViewer}>
+                  <div className="story-ring multi-story"><div className="story-ring-inner"><img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" className="story-avatar"/></div></div>
+                  <div className="story-label">VaVia</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="nav-container">
+              <div className="nav-bar">
+                <div className={`nav-item ${activeIndex===0?'active':''}`} onClick={()=>setActiveIndex(0)}><i className="far fa-clock"></i></div>
+                <div className={`nav-item ${activeIndex===1?'active':''}`} onClick={()=>setActiveIndex(1)}><i className="fas fa-user-friends"></i></div>
+                <div className={`nav-item ${activeIndex===2?'active':''}`} onClick={()=>setActiveIndex(2)}><i className="fas fa-list"></i></div>
+              </div>
+              <div className="bottom-border"><div className="active-indicator" style={{left:`${activeIndex*33.333}%`}}></div></div>
+
+              <div className="message-item">
+                <div className="message-avatar">DS</div>
+                <div className="message-content">
+                  <div className="message-header"><div className="message-name">Daddy Steve</div><div className="message-date">Oct 27</div></div>
+                  <div className="message-preview">How are you doing</div>
+                </div>
+              </div>
+
+              <div className="message-item">
+                <div className="message-avatar"><img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}}/></div>
+                <div className="message-content">
+                  <div className="message-header"><div className="message-name">VaVia</div><div className="message-date">Oct 25</div></div>
+                  <div className="message-preview">See you tomorrow!</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={`content-spacer ${isScrolled?'expanded':'collapsed'}`}></div>
+
+          {/* Render Story Popup */}
+          {showViewer && <StoryPopup onClose={closeViewer} />}
+        </>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<NavigationBar />);
+  </script>
+</body>
+</html>
