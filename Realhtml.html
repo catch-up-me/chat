@@ -109,7 +109,7 @@
     .story-viewer-overlay {
       position:fixed; top:0; left:0; right:0; bottom:70px;
       background:#000; z-index:2000; display:flex; align-items:center; justify-content:center;
-      overflow:hidden; transition:opacity .3s;
+      overflow:hidden;
       touch-action: none;
       overscroll-behavior: none;
       /* Drag only affects dismissal, not visual movement */
@@ -206,8 +206,8 @@
       currentYRef.current = e.touches[0].clientY;
       const diff = currentYRef.current - startYRef.current;
       
-      // Dismiss if dragged down far enough
-      if (diff > 150) {
+      // Dismiss instantly when dragged down just 80px (reduced from 150px)
+      if (diff > 80) {
         setShowStoryViewer(false);
         startYRef.current = 0;
         currentYRef.current = 0;
@@ -321,3 +321,4 @@
 </script>
 </body>
 </html>
+
