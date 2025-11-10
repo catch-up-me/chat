@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Instagram Messages – Fixed Stories & Static Reply</title>
+  <title>Instagram DM – Final Fixed</title>
 
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-  <!-- React + Babel (no build tools) -->
+  <!-- React & Babel -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -17,7 +17,7 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#fff; min-height:200vh; overflow-x:hidden; }
 
-    /* ================== HEADER ================== */
+    /* Header */
     .header-container { position:fixed; top:0; left:0; right:0; background:#fff; z-index:1000; transition:all .3s; }
     .top-navbar { background:#fff; padding:16px 20px 19px; display:flex; justify-content:center; align-items:center; position:relative; overflow:visible; }
     .messages-icon { position:absolute; left:20px; width:24px; height:24px; top:50%; transform:translateY(-45%); fill:#749cbf; }
@@ -26,7 +26,7 @@
     .top-navbar h1 { font-size:18px; font-weight:500; color:#333; opacity:0; transition:opacity .3s; position:absolute; }
     .top-navbar h1.visible { opacity:1; }
 
-    /* ---------- Collapsed Stories (FIXED) ---------- */
+    /* Collapsed Stories – centered, fixed */
     .stories-collapsed {
       position:absolute; left:50%; transform:translateX(-50%) translateY(6px);
       display:inline-flex; align-items:center; gap:0; transition:all .2s ease;
@@ -54,7 +54,7 @@
     .story-avatar-text-collapsed { width:100%; height:100%; border-radius:50%; background:#ff8c42;
       display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:600; color:#fff; }
 
-    /* ---------- Expanded Stories ---------- */
+    /* Expanded Stories */
     .stories-expanded { background:#fff; padding:16px 0; overflow-x:auto; white-space:nowrap;
       max-height:0; opacity:0; transform:scale(.95); transition:all .2s; }
     .stories-expanded.visible { max-height:150px; opacity:1; transform:scale(1); }
@@ -77,7 +77,7 @@
     .story-label { margin-top:8px; font-size:12px; color:#262626; text-align:center;
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:64px; }
 
-    /* ---------- Nav & Messages ---------- */
+    /* Nav & Messages */
     .nav-container { background:#fff; }
     .nav-bar { display:flex; justify-content:space-around; align-items:center; padding:10px 0;
       max-width:400px; margin:0 auto; position:relative; }
@@ -105,15 +105,19 @@
     .message-date { font-size:14px; color:#8e8e8e; }
     .message-preview { font-size:16px; color:#8e8e8e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    /* ---------- Story Viewer (leaves 70 px for reply) ---------- */
+    /* Story Viewer – top-rounded only */
     .story-viewer-overlay {
       position:fixed; top:0; left:0; right:0; bottom:70px;
       background:#000; z-index:2000; display:flex; align-items:center; justify-content:center;
       overflow:hidden; transition:opacity .3s;
     }
     .story-viewer-content { width:100%; height:100%; position:relative; }
-    .story-viewer-background { width:100%; height:100%; background:#000;
-      display:flex; align-items:center; justify-content:center; border-radius:15px 15px 0 0; overflow:hidden; }
+    .story-viewer-background {
+      width:100%; height:100%; background:#000;
+      display:flex; align-items:center; justify-content:center;
+      border-radius:15px 15px 0 0;  /* Only top corners */
+      overflow:hidden;
+    }
     .story-viewer-header { position:absolute; top:0; left:0; right:0; padding:16px;
       background:linear-gradient(180deg,rgba(0,0,0,.4),rgba(0,0,0,.2) 50%,transparent); z-index:10; }
     .story-progress-container { display:flex; gap:4px; margin-bottom:12px; }
@@ -135,16 +139,23 @@
       z-index:10; pointer-events:none; }
     .story-caption { font-size:18px; font-weight:500; color:#fff; text-align:left; line-height:1.4; }
 
-    /* ---------- Static Reply Bar (div only) ---------- */
+    /* Reply Bar – #000 background, left-aligned text */
     .story-reply-bar {
-      position:fixed; left:0; right:0; bottom:0; height:70px; background:rgba(0,0,0,.85);
-      display:flex; align-items:center; justify-content:center; z-index:2100;
-      padding:0 20px; backdrop-filter:blur(10px);
+      position:fixed; left:0; right:0; bottom:0; height:70px;
+      background:#000;  /* Solid black */
+      display:flex; align-items:center; justify-content:center;
+      z-index:2100; padding:0 20px;
+      backdrop-filter:blur(10px);
     }
     .story-reply-box {
-      width:100%; max-width:500px; padding:12px 20px; background:rgba(60,60,60,.95);
-      border:1px solid rgba(255,255,255,.1); border-radius:50px;
-      color:rgba(255,255,255,.5); font-size:15px; text-align:center;
+      width:100%; max-width:500px;
+      padding:12px 20px;  /* Consistent with input */
+      background:rgba(60,60,60,.95);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:50px;
+      color:rgba(255,255,255,.5);
+      font-size:15px;
+      text-align:left;  /* Left-aligned */
       pointer-events:none; user-select:none;
     }
     .story-reply-bar.hidden { display:none; }
@@ -166,7 +177,6 @@
     const [isDragging, setIsDragging] = useState(false);
     const [currentStory, setCurrentStory] = useState(null);
 
-    /* ---------- Scroll handling ---------- */
     useEffect(() => {
       const onScroll = () => {
         const cur = window.scrollY;
@@ -212,13 +222,12 @@
 
     return (
       <>
-        {/* ---------- Header ---------- */}
+        {/* Header */}
         <div className="header-container">
           <div className="top-navbar">
             <svg className="messages-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="#749cbf"/></svg>
             <h1 className={isScrolled ? 'visible' : ''}>Messages</h1>
 
-            {/* Collapsed Stories – centered & fixed */}
             <div className={`stories-collapsed ${isScrolled ? 'moved' : ''}`} onClick={handleCollapsedStoryClick}>
               <div className="story-item-collapsed">
                 <div className="story-ring-collapsed">
@@ -239,7 +248,6 @@
             <div className="add-button"><i className="fas fa-search"></i></div>
           </div>
 
-          {/* Expanded Stories */}
           <div className={`stories-expanded ${isScrolled ? 'visible' : ''}`}>
             <div className="stories-wrapper">
               <div className="story-item" onClick={handleMyStoryClick}>
@@ -253,7 +261,6 @@
             </div>
           </div>
 
-          {/* Nav + Messages */}
           <div className="nav-container">
             <div className="nav-bar">
               <div className={`nav-item ${activeIndex===0?'active':''}`} onClick={()=>handleNavClick(0)}><i className="far fa-clock"></i></div>
@@ -275,7 +282,7 @@
 
         <div className={`content-spacer ${isScrolled?'expanded':'collapsed'}`}></div>
 
-        {/* ---------- Story Viewer (bottom-cropped) ---------- */}
+        {/* Story Viewer */}
         {showStoryViewer && currentStory && (
           <div className={`story-viewer-overlay ${isDragging?'dragging':''}`}
                style={{transform:isDragging?`translateY(${storyDragY}px)`:'translateY(0)'}}
@@ -314,7 +321,7 @@
           </div>
         )}
 
-        {/* ---------- Static Reply Bar (div only) ---------- */}
+        {/* Static Reply Bar – #000 bg, left text */}
         <div className={`story-reply-bar ${showStoryViewer?'':'hidden'}`}>
           <div className="story-reply-box">Reply privately...</div>
         </div>
@@ -327,4 +334,3 @@
 </script>
 </body>
 </html>
-
