@@ -119,11 +119,11 @@
       background:#000; z-index:2000; display:flex; align-items:center; justify-content:center;
       overflow:hidden; transition:opacity .3s;
       overscroll-behavior: none;
-      touch-action: pan-y; /* Allow vertical scroll when not dragging */
+      touch-action: none; /* Full control – no scroll, no reload */
     }
     .story-viewer-content { 
       width:100%; height:100%; position:relative; background:#000; 
-      touch-action: pan-y;
+      touch-action: none;
     }
 
     /* ---------- Static Reply Bar – Instagram DM Style (FIXED) ---------- */
@@ -141,9 +141,6 @@
       line-height:1.4;
     }
     .story-reply-bar.hidden { display:none; }
-
-    /* Global overscroll prevention only when needed */
-    html.story-viewer-open { overscroll-behavior-y: none; }
   </style>
 </head>
 <body>
@@ -158,7 +155,7 @@
     const [isScrolled, setIsScrolled] = useState(false);
     const [lastScrollY, setLastScrollY] = useState(0);
     const [showStoryViewer, setShowStoryViewer] = useState(false);
-    const [dragStartY, setDragStartY] = useState(0);
+    const dragStartY = useRef(0);
     const isDragging = useRef(false);
 
     /* ---------- Scroll handling ---------- */
@@ -173,35 +170,26 @@
       return () => window.removeEventListener('scroll', onScroll);
     }, [lastScrollY]);
 
-    /* ---------- Overscroll prevention only when viewer is open ---------- */
-    useEffect(() => {
-      if (showStoryViewer) {
-        document.documentElement.classList.add('story-viewer-open');
-      } else {
-        document.documentElement.classList.remove('story-viewer-open');
-      }
-      return () => document.documentElement.classList.remove('story-viewer-open');
-    }, [showStoryViewer]);
-
     const handleNavClick = i => setActiveIndex(i);
     const handleCollapsedStoryClick = () => setIsScrolled(true);
 
     const openStory = () => {
       setShowStoryViewer(true);
-      isDragging.current = false; // Reset on open
+      isDragging.current = false;
     };
 
     const touchStart = e => {
       if (!showStoryViewer) return;
       isDragging.current = true;
-      setDragStartY(e.touches[0].clientY);
-      e.stopPropagation();
+      dragStartY.current = e.touches[0].clientY;
+      e.preventDefault(); // Block reload
     };
 
     const touchMove = e => {
       if (!isDragging.current || !showStoryViewer) return;
+      e.preventDefault(); // Block reload
       const currentY = e.touches[0].clientY;
-      const deltaY = currentY - dragStartY;
+      const deltaY = currentY - dragStartY.current;
       if (deltaY > 100) {
         closeStory();
       }
@@ -245,7 +233,7 @@
             <div className="add-button"><i className="fas fa-search"></i></div>
           </div>
 
-          {/* Expanded Stories – LIMITED HEIGHT */}
+          {/* Expanded Stories – NO SCROLL */}
           <div className={`stories-expanded ${isScrolled ? 'visible' : ''}`}>
             <div className="stories-wrapper">
               <div className="story-item" onClick={openStory}>
@@ -273,7 +261,7 @@
               <div className="message-content"><div className="message-header"><div className="message-name">Daddy Steve</div><div className="message-date">Oct 27</div></div><div className="message-preview">How are you doing</div></div>
             </div>
             <div className="message-item">
-              <div className="message-avatar"><img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}}/></div>
+              <div class=>"message-avatar"><img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}}/></div>
               <div className="message-content"><div className="message-header"><div className="message-name">VaVia</div><div className="message-date">Oct 25</div></div><div className="message-preview">See you tomorrow!</div></div>
             </div>
           </div>
@@ -306,3 +294,4 @@
 </script>
 </body>
 </html>
+
