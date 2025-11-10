@@ -8,7 +8,7 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-  <!-- React & Babel -->
+  <!-- React & Babel (for JSX) -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -79,17 +79,70 @@
     .message-name { font-size:17px; font-weight:500; color:#262626; }
     .message-date { font-size:14px; color:#8e8e8e; }
     .message-preview { font-size:16px; color:#8e8e8e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    /* Story Popup (Empty) */
+    .story-viewer-overlay {
+      position:fixed; top:0; left:0; right:0; bottom:0; background:#000; z-index:2000;
+      display:flex; align-items:center; justify-content:center; transition:transform .3s ease;
+    }
+    .story-viewer-content { width:100%; height:100%; position:relative; }
+    .story-viewer-header {
+      position:absolute; top:0; left:0; right:0; padding:16px;
+      background:linear-gradient(180deg,rgba(0,0,0,.4),rgba(0,0,0,.2) 50%,transparent);
+      z-index:10; display:flex; justify-content:flex-end;
+    }
+    .close-btn { background:none; border:none; color:#fff; font-size:24px; cursor:pointer; }
+    .close-btn:hover { opacity:.7; }
   </style>
 </head>
 <body>
   <div id="root"></div>
 
-  <!-- Load Story Popup Module -->
-  <script type="module">
-    import { StoryPopup } from './story-popup.js';
-
+  <script type="text/babel">
     const { useState, useEffect } = React;
 
+    // === STORY POPUP COMPONENT (MOVED INLINE) ===
+    function StoryPopup({ onClose }) {
+      const [dragY, setDragY] = useState(0);
+      const [isDragging, setIsDragging] = useState(false);
+
+      const start = () => setIsDragging(true);
+      const move = (e) => {
+        if (isDragging && e.touches) {
+          const y = e.touches[0].clientY;
+          if (y > 0) setDragY(y);
+        }
+      };
+      const end = () => {
+        if (dragY > 80) onClose();
+        else setDragY(0);
+        setIsDragging(false);
+      };
+
+      return (
+        <div
+          className="story-viewer-overlay"
+          style={{
+            transform: isDragging ? `translateY(${dragY}px)` : 'translateY(0)',
+            transition: isDragging ? 'none' : 'transform 0.3s ease'
+          }}
+          onTouchStart={start}
+          onTouchMove={move}
+          onTouchEnd={end}
+        >
+          <div className="story-viewer-content">
+            <div className="story-viewer-header">
+              <button className="close-btn" onClick={onClose}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            {/* Empty black screen */}
+          </div>
+        </div>
+      );
+    }
+
+    // === MAIN APP ===
     function NavigationBar() {
       const [activeIndex, setActiveIndex] = useState(0);
       const [isScrolled, setIsScrolled] = useState(false);
@@ -169,7 +222,6 @@
 
           <div className={`content-spacer ${isScrolled?'expanded':'collapsed'}`}></div>
 
-          {/* Render Story Popup */}
           {showViewer && <StoryPopup onClose={closeViewer} />}
         </>
       );
@@ -180,3 +232,4 @@
   </script>
 </body>
 </html>
+
