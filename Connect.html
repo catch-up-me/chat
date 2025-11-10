@@ -137,9 +137,10 @@
       background:none; border:none; color:#fff; cursor:pointer;
       font-size:20px; padding:4px; pointer-events:auto !important;
     }
-    .story-action-dots {
-      color: #fff; font-size: 20px; font-weight: 300;
-      letter-spacing: 1px; margin-left: 8px; pointer-events: none;
+    .story-menu-icon {
+      margin-left: 8px;
+      pointer-events: none;
+      display: block;
     }
 
     .story-viewer-footer { position:absolute; bottom:0; left:0; right:0; padding:20px;
@@ -170,7 +171,7 @@
   function NavigationBar() {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isScrolled, setIsScrolled] = useState(false);
-    const const [lastScrollY, setLastScrollY] = useState(0);
+    const [lastScrollY, setLastScrollY] = useState(0);
     const [showStoryViewer, setShowStoryViewer] = useState(false);
     const [touchStartY, setTouchStartY] = useState(null);
     const [currentStory, setCurrentStory] = useState(null);
@@ -338,8 +339,20 @@
                       </div>
                     </div>
                     <div className="story-actions">
-                      <button className="story-action-btn" onClick={closeStory}><i className="fas fa-times"></i></button>
-                      <span className="story-action-dots">...</span>
+                      <button className="story-action-btn" onClick={closeStory}>
+                        <i className="fas fa-times"></i>
+                      </button>
+                      <svg 
+                        viewBox="0 0 32 32" 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className="story-menu-icon"
+                        width="20" height="20"
+                      >
+                        <path 
+                          d="M19 16a3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3zm0 13a3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3zm0-26a3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3z" 
+                          fill="#ffffff"
+                        />
+                      </svg>
                     </div>
                   </div>
                 </div>
