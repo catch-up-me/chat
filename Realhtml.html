@@ -105,19 +105,24 @@
     .message-date { font-size:14px; color:#8e8e8e; }
     .message-preview { font-size:16px; color:#8e8e8e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    /* ---------- Blank Pop-up Screen (only overlay + drag to dismiss) ---------- */
+    /* ---------- Blank Pop-up Screen (FIXED POSITION – NO DRAG MOVEMENT) ---------- */
     .story-viewer-overlay {
       position:fixed; top:0; left:0; right:0; bottom:70px;
       background:#000; z-index:2000; display:flex; align-items:center; justify-content:center;
       overflow:hidden; transition:opacity .3s;
+      /* Drag only affects dismissal, not visual movement */
     }
-    .story-viewer-content { width:100%; height:100%; position:relative; background:#000; }
+    .story-viewer-content { 
+      width:100%; height:100%; position:relative; background:#000; 
+      /* Fixed in place – no transform applied */
+    }
 
-    /* ---------- Static Reply Bar – Instagram DM Style ---------- */
+    /* ---------- Static Reply Bar – Instagram DM Style (FIXED) ---------- */
     .story-reply-bar {
       position:fixed; left:0; right:0; bottom:0; height:70px; background:#000;
       display:flex; align-items:center; justify-content:center; z-index:2100;
       padding:0 16px; 
+      /* Never moves – even during drag */
     }
     .story-reply-box {
       width:100%; max-width:500px; padding:12px 20px; background:#171717;
@@ -142,7 +147,6 @@
     const [isScrolled, setIsScrolled] = useState(false);
     const [lastScrollY, setLastScrollY] = useState(0);
     const [showStoryViewer, setShowStoryViewer] = useState(false);
-    const [storyDragY, setStoryDragY] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
 
     /* ---------- Scroll handling ---------- */
@@ -164,16 +168,26 @@
       setShowStoryViewer(true);
     };
 
-    const touchStart = e => setIsDragging(true);
+    const touchStart = e => {
+      setIsDragging(true);
+      // Prevent default to avoid scroll interference
+      e.preventDefault();
+    };
+
     const touchMove = e => {
       if (!isDragging) return;
+      // We don't apply transform – only track for dismissal
       const y = e.touches[0].clientY;
-      if (y > 0) setStoryDragY(y);
+      if (y > 100) { // Threshold to trigger dismiss
+        setShowStoryViewer(false);
+        setIsDragging(false);
+      }
     };
+
     const touchEnd = () => {
-      if (storyDragY > 30) setShowStoryViewer(false);
-      setStoryDragY(0); setIsDragging(false);
+      setIsDragging(false);
     };
+
     const closeStory = () => setShowStoryViewer(false);
 
     return (
@@ -241,16 +255,19 @@
 
         <div className={`content-spacer ${isScrolled?'expanded':'collapsed'}`}></div>
 
-        {/* ---------- Blank Pop-up Screen (only overlay + drag to dismiss) ---------- */}
+        {/* ---------- Blank Pop-up Screen (FIXED – NO VISUAL DRAG) ---------- */}
         {showStoryViewer && (
-          <div className={`story-viewer-overlay ${isDragging?'dragging':''}`}
-               style={{transform:isDragging?`translateY(${storyDragY}px)`:'translateY(0)'}}
-               onTouchStart={touchStart} onTouchMove={touchMove} onTouchEnd={touchEnd}>
+          <div 
+            className="story-viewer-overlay"
+            onTouchStart={touchStart}
+            onTouchMove={touchMove}
+            onTouchEnd={touchEnd}
+          >
             <div className="story-viewer-content"></div>
           </div>
         )}
 
-        {/* ---------- Static Reply Bar – Instagram DM Style ---------- */}
+        {/* ---------- Static Reply Bar – Instagram DM Style (FIXED) ---------- */}
         <div className={`story-reply-bar ${showStoryViewer?'':'hidden'}`}>
           <div className="story-reply-box">Reply privately...</div>
         </div>
