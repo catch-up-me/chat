@@ -15,7 +15,7 @@
 
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#fff; overflow-x:hidden; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#fff; min-height:100vh; overflow-x:hidden; }
 
     /* Hide scrollbar */
     body::-webkit-scrollbar { display: none; }
@@ -156,26 +156,32 @@
     const startYRef = useRef(0);
     const currentYRef = useRef(0);
     const hasMoved = useRef(false);
-    const maxScrollY = useRef(0);
 
     /* ---------- Scroll handling with limit ---------- */
     useEffect(() => {
       const onScroll = () => {
         const cur = window.scrollY;
         
-        // Calculate max scroll (stop at VaVia message - approximately 100px from collapsed state)
-        const maxScroll = 100;
+        // Set max scroll limit (stop after VaVia message is visible)
+        const maxScroll = 120;
         
-        // Prevent scrolling beyond maxScroll
+        // If scrolled beyond max, snap back to max
         if (cur > maxScroll) {
           window.scrollTo(0, maxScroll);
+          setLastScrollY(maxScroll);
           return;
         }
         
-        if (cur > lastScrollY && cur > 5) setIsScrolled(true);
-        else if (cur < lastScrollY && cur < 5) setIsScrolled(false);
+        // Normal scroll behavior for expanding/collapsing
+        if (cur > lastScrollY && cur > 5) {
+          setIsScrolled(true);
+        } else if (cur < lastScrollY && cur < 5) {
+          setIsScrolled(false);
+        }
+        
         setLastScrollY(cur);
       };
+      
       window.addEventListener('scroll', onScroll);
       return () => window.removeEventListener('scroll', onScroll);
     }, [lastScrollY]);
