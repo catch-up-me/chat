@@ -55,10 +55,18 @@
       display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:600; color:#fff; }
 
     /* ---------- Expanded Stories ---------- */
-    .stories-expanded { background:#fff; padding:16px 0; overflow-x:auto; white-space:nowrap;
-      max-height:0; opacity:0; transform:scale(.95); transition:all .2s; }
-    .stories-expanded.visible { max-height:150px; opacity:1; transform:scale(1); }
-    .stories-wrapper { display:flex; gap:16px; padding:0 16px; }
+    .stories-expanded { 
+      background:#fff; padding:16px 0; 
+      max-height:0; opacity:0; transform:scale(.95); transition:all .2s; 
+      overflow:hidden;
+    }
+    .stories-expanded.visible { 
+      max-height:120px; opacity:1; transform:scale(1); 
+    }
+    .stories-wrapper { 
+      display:flex; gap:16px; padding:0 16px; 
+      overflow:hidden;
+    }
     .story-item { display:flex; flex-direction:column; align-items:center; cursor:pointer; min-width:64px; }
     .story-ring { width:64px; height:64px; border-radius:50%; padding:1.5px;
       background:linear-gradient(45deg,rgb(240,148,51),rgb(230,104,60),rgb(220,39,67),rgb(204,35,102),rgb(188,24,136));
@@ -91,7 +99,7 @@
 
     .content-spacer { transition:height .2s; }
     .content-spacer.collapsed { height:80px; }
-    .content-spacer.expanded { height:180px; }
+    .content-spacer.expanded { height:120px; }
 
     .message-item { display:flex; align-items:center; padding:10px 16px; background:#fff;
       border-bottom:1px solid #f0f0f0; cursor:pointer; }
@@ -110,13 +118,11 @@
       position:fixed; top:0; left:0; right:0; bottom:70px;
       background:#000; z-index:2000; display:flex; align-items:center; justify-content:center;
       overflow:hidden; transition:opacity .3s;
-      /* Prevent pull-to-refresh during swipe */
       overscroll-behavior: none;
       touch-action: none;
     }
     .story-viewer-content { 
       width:100%; height:100%; position:relative; background:#000; 
-      /* Fixed in place – no transform applied */
     }
 
     /* ---------- Static Reply Bar – Instagram DM Style (FIXED) ---------- */
@@ -124,7 +130,6 @@
       position:fixed; left:0; right:0; bottom:0; height:70px; background:#000;
       display:flex; align-items:center; justify-content:center; z-index:2100;
       padding:0 16px; 
-      /* Never moves – even during drag */
     }
     .story-reply-box {
       width:100%; max-width:500px; padding:12px 20px; background:#171717;
@@ -136,7 +141,7 @@
     }
     .story-reply-bar.hidden { display:none; }
 
-    /* Global overscroll prevention for safety */
+    /* Global overscroll prevention */
     html { overscroll-behavior-y: none; }
   </style>
 </head>
@@ -175,24 +180,27 @@
     };
 
     const touchStart = e => {
+      if (!showStoryViewer) return;
       setIsDragging(true);
       setStartY(e.touches[0].clientY);
       e.preventDefault();
     };
 
     const touchMove = e => {
-      if (!isDragging) return;
-      e.preventDefault(); // Block pull-to-refresh
+      if (!isDragging || !showStoryViewer) return;
+      e.preventDefault();
       const currentY = e.touches[0].clientY;
       const deltaY = currentY - startY;
-      if (deltaY > 100) { // Threshold for dismiss
+      if (deltaY > 100) {
         setShowStoryViewer(false);
         setIsDragging(false);
       }
     };
 
     const touchEnd = () => {
-      setIsDragging(false);
+      if (isDragging) {
+        setIsDragging(false);
+      }
     };
 
     const closeStory = () => setShowStoryViewer(false);
@@ -226,7 +234,7 @@
             <div className="add-button"><i className="fas fa-search"></i></div>
           </div>
 
-          {/* Expanded Stories */}
+          {/* Expanded Stories – LIMITED HEIGHT */}
           <div className={`stories-expanded ${isScrolled ? 'visible' : ''}`}>
             <div className="stories-wrapper">
               <div className="story-item" onClick={openStory}>
