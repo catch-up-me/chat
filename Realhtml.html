@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Instagram Messages – Fixed Black Popup (Drag-to-Close)</title>
+  <title>Instagram Messages – Fixed Stories & Static Reply</title>
 
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-  <!-- React + Babel -->
+  <!-- React + Babel (no build tools) -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -26,7 +26,7 @@
     .top-navbar h1 { font-size:18px; font-weight:500; color:#333; opacity:0; transition:opacity .3s; position:absolute; }
     .top-navbar h1.visible { opacity:1; }
 
-    /* ---------- Collapsed Stories ---------- */
+    /* ---------- Collapsed Stories (FIXED) ---------- */
     .stories-collapsed {
       position:absolute; left:50%; transform:translateX(-50%) translateY(6px);
       display:inline-flex; align-items:center; gap:0; transition:all .2s ease;
@@ -40,7 +40,7 @@
     .story-ring-collapsed {
       width:40px; height:40px; border-radius:50%; padding:1.5px;
       background:linear-gradient(45deg,rgb(240,148,51),rgb(230,104,60),rgb(220,39,67),rgb(204,35,102),rgb(188,24,136));
-      display:flex; align-items:center; justify-content:center;
+      display:flex; align-items:center; justify-content:center; position:relative;
     }
     .story-ring-collapsed::after {
       content:''; position:absolute; top:50%; right:-1.5px; width:3px; height:30px;
@@ -49,7 +49,7 @@
     .story-item-collapsed:not(:last-child) .story-ring-collapsed::after { display:block; }
 
     .story-ring-inner-collapsed { width:100%; height:100%; border-radius:50%; background:#fff; padding:1.5px;
-      display:flex; align-items:center; justify-content:center; }
+      display:flex; align-items:center; justify-content:center; z-index:2; }
     .story-avatar-collapsed { width:100%; height:100%; border-radius:50%; object-fit:cover; }
     .story-avatar-text-collapsed { width:100%; height:100%; border-radius:50%; background:#ff8c42;
       display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:600; color:#fff; }
@@ -105,21 +105,49 @@
     .message-date { font-size:14px; color:#8e8e8e; }
     .message-preview { font-size:16px; color:#8e8e8e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    /* ---------- FIXED BLACK POPUP (NO MOVEMENT) ---------- */
-    .fixed-story-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: #000;
-      z-index: 2000;
-      overscroll-behavior: none;
-      touch-action: pan-y;
-      transition: opacity 0.3s ease;
-      opacity: 1;
+    /* ---------- Story Viewer (leaves 70 px for reply) ---------- */
+    .story-viewer-overlay {
+      position:fixed; top:0; left:0; right:0; bottom:70px;
+      background:#000; z-index:2000; display:flex; align-items:center; justify-content:center;
+      overflow:hidden; transition:opacity .3s;
     }
-    .fixed-story-overlay.closing {
-      opacity: 0;
-      transition: opacity 0.3s ease;
+    .story-viewer-content { width:100%; height:100%; position:relative; }
+    .story-viewer-background { width:100%; height:100%; background:#000;
+      display:flex; align-items:center; justify-content:center; border-radius:15px 15px 0 0; overflow:hidden; }
+    .story-viewer-header { position:absolute; top:0; left:0; right:0; padding:16px;
+      background:linear-gradient(180deg,rgba(0,0,0,.4),rgba(0,0,0,.2) 50%,transparent); z-index:10; }
+    .story-progress-container { display:flex; gap:4px; margin-bottom:12px; }
+    .story-progress-bar { flex:1; height:2px; background:rgba(255,255,255,.3); border-radius:2px; overflow:hidden; }
+    .story-progress-fill { height:100%; background:#fff; width:100%; }
+    .story-user-info { display:flex; align-items:center; justify-content:space-between; }
+    .story-user-left { display:flex; align-items:center; gap:8px; }
+    .story-user-avatar { width:32px; height:32px; border-radius:50%; border:2px solid #fff;
+      background:#ff8c42; display:flex; align-items:center; justify-content:center;
+      font-size:14px; font-weight:600; color:#fff; }
+    .story-user-details { display:flex; flex-direction:column; }
+    .story-username { font-size:14px; font-weight:600; color:#fff; }
+    .story-time { font-size:12px; color:rgba(255,255,255,.7); }
+    .story-actions { display:flex; gap:16px; }
+    .story-action-btn { background:none; border:none; color:#fff; cursor:pointer; font-size:20px; padding:4px; }
+
+    .story-viewer-footer { position:absolute; bottom:0; left:0; right:0; padding:20px;
+      background:linear-gradient(0deg,rgba(0,0,0,.3),rgba(0,0,0,.1) 50%,transparent);
+      z-index:10; pointer-events:none; }
+    .story-caption { font-size:18px; font-weight:500; color:#fff; text-align:left; line-height:1.4; }
+
+    /* ---------- Static Reply Bar (div only) ---------- */
+    .story-reply-bar {
+      position:fixed; left:0; right:0; bottom:0; height:70px; background:rgba(0,0,0,.85);
+      display:flex; align-items:center; justify-content:center; z-index:2100;
+      padding:0 20px; backdrop-filter:blur(10px);
     }
+    .story-reply-box {
+      width:100%; max-width:500px; padding:12px 20px; background:rgba(60,60,60,.95);
+      border:1px solid rgba(255,255,255,.1); border-radius:50px;
+      color:rgba(255,255,255,.5); font-size:15px; text-align:center;
+      pointer-events:none; user-select:none;
+    }
+    .story-reply-bar.hidden { display:none; }
   </style>
 </head>
 <body>
@@ -127,18 +155,18 @@
 <div id="root"></div>
 
 <script type="text/babel">
-  const { useState, useEffect, useRef } = React;
+  const { useState, useEffect } = React;
 
   function NavigationBar() {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isScrolled, setIsScrolled] = useState(false);
     const [lastScrollY, setLastScrollY] = useState(0);
-    const [showStory, setShowStory] = useState(false);
+    const [showStoryViewer, setShowStoryViewer] = useState(false);
+    const [storyDragY, setStoryDragY] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
-    const [dragDistance, setDragDistance] = useState(0);
-    const [startY, setStartY] = useState(0);
-    const isClosing = useRef(false);
+    const [currentStory, setCurrentStory] = useState(null);
 
+    /* ---------- Scroll handling ---------- */
     useEffect(() => {
       const onScroll = () => {
         const cur = window.scrollY;
@@ -150,71 +178,56 @@
       return () => window.removeEventListener('scroll', onScroll);
     }, [lastScrollY]);
 
-    const openStory = () => {
-      setShowStory(true);
-      isClosing.current = false;
-      setDragDistance(0);
-      setIsDragging(false);
+    const handleNavClick = i => setActiveIndex(i);
+    const handleCollapsedStoryClick = () => setIsScrolled(true);
+
+    const openStory = s => {
+      setCurrentStory(s);
+      setShowStoryViewer(true);
     };
 
-    const closeStory = () => {
-      if (isClosing.current) return;
-      isClosing.current = true;
-      setShowStory(false);
-      setTimeout(() => {
-        isClosing.current = false;
-      }, 300);
-    };
+    const handleMyStoryClick = () => openStory({
+      username:'My story', time:'3m', avatar:'M', progressBars:1,
+      background:'#000000', caption:''
+    });
 
-    const handleTouchStart = (e) => {
-      if (!showStory) return;
-      setIsDragging(true);
-      setStartY(e.touches[0].clientY);
-      setDragDistance(0);
-    };
+    const handleVaViaStoryClick = () => openStory({
+      username:'VaVia', time:'5m',
+      avatar:'https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg',
+      progressBars:2,
+      background:'linear-gradient(135deg,#ff9a56,#ff6a00,#ff4500)', caption:'Guess the Animal'
+    });
 
-    const handleTouchMove = (e) => {
-      if (!isDragging || !showStory) return;
-      e.preventDefault(); // Prevent pull-to-refresh
-      const currentY = e.touches[0].clientY;
-      const distance = currentY - startY;
-      if (distance > 0) {
-        setDragDistance(distance);
-      }
+    const touchStart = e => setIsDragging(true);
+    const touchMove = e => {
+      if (!isDragging) return;
+      const y = e.touches[0].clientY;
+      if (y > 0) setStoryDragY(y);
     };
-
-    const handleTouchEnd = () => {
-      if (!isDragging || !showStory) return;
-
-      if (dragDistance > 150) {
-        closeStory();
-      } else {
-        setDragDistance(0);
-      }
-      setIsDragging(false);
+    const touchEnd = () => {
+      if (storyDragY > 30) setShowStoryViewer(false);
+      setStoryDragY(0); setIsDragging(false);
     };
-
-    const preventTap = (e) => {
-      e.stopPropagation();
-    };
+    const closeStory = () => setShowStoryViewer(false);
 
     return (
       <>
-        {/* Header */}
+        {/* ---------- Header ---------- */}
         <div className="header-container">
           <div className="top-navbar">
             <svg className="messages-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="#749cbf"/></svg>
             <h1 className={isScrolled ? 'visible' : ''}>Messages</h1>
 
-            <div className={`stories-collapsed ${isScrolled ? 'moved' : ''}`}>
-              <div className="story-item-collapsed" onClick={openStory}>
+            {/* Collapsed Stories – centered & fixed */}
+            <div className={`stories-collapsed ${isScrolled ? 'moved' : ''}`} onClick={handleCollapsedStoryClick}>
+              <div className="story-item-collapsed">
                 <div className="story-ring-collapsed">
                   <div className="story-ring-inner-collapsed">
                     <div className="story-avatar-text-collapsed">M</div>
                   </div>
                 </div>
               </div>
-              <div className="story-item-collapsed" onClick={openStory}>
+              <div className="story-item-collapsed">
                 <div className="story-ring-collapsed">
                   <div className="story-ring-inner-collapsed">
                     <img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" className="story-avatar-collapsed"/>
@@ -229,11 +242,11 @@
           {/* Expanded Stories */}
           <div className={`stories-expanded ${isScrolled ? 'visible' : ''}`}>
             <div className="stories-wrapper">
-              <div className="story-item" onClick={openStory}>
+              <div className="story-item" onClick={handleMyStoryClick}>
                 <div className="story-ring"><div className="story-ring-inner"><div className="story-avatar-text">M</div></div></div>
                 <div className="story-label">My story</div>
               </div>
-              <div className="story-item" onClick={openStory}>
+              <div className="story-item" onClick={handleVaViaStoryClick}>
                 <div className="story-ring multi-story"><div className="story-ring-inner"><img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" className="story-avatar"/></div></div>
                 <div className="story-label">VaVia</div>
               </div>
@@ -243,9 +256,9 @@
           {/* Nav + Messages */}
           <div className="nav-container">
             <div className="nav-bar">
-              <div className={`nav-item ${activeIndex===0?'active':''}`} onClick={()=>setActiveIndex(0)}><i className="far fa-clock"></i></div>
-              <div className={`nav-item ${activeIndex===1?'active':''}`} onClick={()=>setActiveIndex(1)}><i className="fas fa-user-friends"></i></div>
-              <div className={`nav-item ${activeIndex===2?'active':''}`} onClick={()=>setActiveIndex(2)}><i className="fas fa-list"></i></div>
+              <div className={`nav-item ${activeIndex===0?'active':''}`} onClick={()=>handleNavClick(0)}><i className="far fa-clock"></i></div>
+              <div className={`nav-item ${activeIndex===1?'active':''}`} onClick={()=>handleNavClick(1)}><i className="fas fa-user-friends"></i></div>
+              <div className={`nav-item ${activeIndex===2?'active':''}`} onClick={()=>handleNavClick(2)}><i className="fas fa-list"></i></div>
             </div>
             <div className="bottom-border"><div className="active-indicator" style={{left:`${activeIndex*33.333}%`}}></div></div>
 
@@ -262,18 +275,49 @@
 
         <div className={`content-spacer ${isScrolled?'expanded':'collapsed'}`}></div>
 
-        {/* FIXED BLACK POPUP – NO MOVEMENT */}
-        {showStory && (
-          <div
-            className={`fixed-story-overlay ${isClosing.current ? 'closing' : ''}`}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            onClick={preventTap}
-          >
-            {/* Future content goes here – will stay fixed */}
+        {/* ---------- Story Viewer (bottom-cropped) ---------- */}
+        {showStoryViewer && currentStory && (
+          <div className={`story-viewer-overlay ${isDragging?'dragging':''}`}
+               style={{transform:isDragging?`translateY(${storyDragY}px)`:'translateY(0)'}}
+               onTouchStart={touchStart} onTouchMove={touchMove} onTouchEnd={touchEnd}>
+            <div className="story-viewer-content">
+              <div className="story-viewer-background" style={{background:currentStory.background}}></div>
+
+              <div className="story-viewer-header">
+                <div className="story-progress-container">
+                  {[...Array(currentStory.progressBars)].map((_,i)=>
+                    <div key={i} className="story-progress-bar"><div className="story-progress-fill"></div></div>
+                  )}
+                </div>
+                <div className="story-user-info">
+                  <div className="story-user-left">
+                    <div className="story-user-avatar">
+                      {typeof currentStory.avatar==='string' && currentStory.avatar.startsWith('http')?
+                        <img src={currentStory.avatar} alt={currentStory.username} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}}/>:
+                        currentStory.avatar}
+                    </div>
+                    <div className="story-user-details">
+                      <div className="story-username">{currentStory.username}</div>
+                      <div className="story-time">{currentStory.time}</div>
+                    </div>
+                  </div>
+                  <div className="story-actions">
+                    <button className="story-action-btn" onClick={closeStory}><i className="fas fa-times"></i></button>
+                  </div>
+                </div>
+              </div>
+
+              {currentStory.caption && (
+                <div className="story-viewer-footer"><div className="story-caption">{currentStory.caption}</div></div>
+              )}
+            </div>
           </div>
         )}
+
+        {/* ---------- Static Reply Bar (div only) ---------- */}
+        <div className={`story-reply-bar ${showStoryViewer?'':'hidden'}`}>
+          <div className="story-reply-box">Reply privately...</div>
+        </div>
       </>
     );
   }
