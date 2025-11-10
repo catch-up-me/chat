@@ -105,35 +105,13 @@
     .message-date { font-size:14px; color:#8e8e8e; }
     .message-preview { font-size:16px; color:#8e8e8e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    /* ---------- Story Viewer (leaves 70 px for reply) ---------- */
+    /* ---------- Blank Pop-up Screen (only overlay + drag to dismiss) ---------- */
     .story-viewer-overlay {
       position:fixed; top:0; left:0; right:0; bottom:70px;
       background:#000; z-index:2000; display:flex; align-items:center; justify-content:center;
       overflow:hidden; transition:opacity .3s;
     }
-    .story-viewer-content { width:100%; height:100%; position:relative; }
-    .story-viewer-background { width:100%; height:100%; background:#000;
-      display:flex; align-items:center; justify-content:center; border-radius:15px 15px 0 0; overflow:hidden; }
-    .story-viewer-header { position:absolute; top:0; left:0; right:0; padding:16px;
-      background:linear-gradient(180deg,rgba(0,0,0,.4),rgba(0,0,0,.2) 50%,transparent); z-index:10; }
-    .story-progress-container { display:flex; gap:4px; margin-bottom:12px; }
-    .story-progress-bar { flex:1; height:2px; background:rgba(255,255,255,.3); border-radius:2px; overflow:hidden; }
-    .story-progress-fill { height:100%; background:#fff; width:100%; }
-    .story-user-info { display:flex; align-items:center; justify-content:space-between; }
-    .story-user-left { display:flex; align-items:center; gap:8px; }
-    .story-user-avatar { width:32px; height:32px; border-radius:50%; border:2px solid #fff;
-      background:#ff8c42; display:flex; align-items:center; justify-content:center;
-      font-size:14px; font-weight:600; color:#fff; }
-    .story-user-details { display:flex; flex-direction:column; }
-    .story-username { font-size:14px; font-weight:600; color:#fff; }
-    .story-time { font-size:12px; color:rgba(255,255,255,.7); }
-    .story-actions { display:flex; gap:16px; }
-    .story-action-btn { background:none; border:none; color:#fff; cursor:pointer; font-size:20px; padding:4px; }
-
-    .story-viewer-footer { position:absolute; bottom:0; left:0; right:0; padding:20px;
-      background:linear-gradient(0deg,rgba(0,0,0,.3),rgba(0,0,0,.1) 50%,transparent);
-      z-index:10; pointer-events:none; }
-    .story-caption { font-size:18px; font-weight:500; color:#fff; text-align:left; line-height:1.4; }
+    .story-viewer-content { width:100%; height:100%; position:relative; background:#000; }
 
     /* ---------- Static Reply Bar (div only) ---------- */
     .story-reply-bar {
@@ -164,7 +142,6 @@
     const [showStoryViewer, setShowStoryViewer] = useState(false);
     const [storyDragY, setStoryDragY] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
-    const [currentStory, setCurrentStory] = useState(null);
 
     /* ---------- Scroll handling ---------- */
     useEffect(() => {
@@ -181,22 +158,9 @@
     const handleNavClick = i => setActiveIndex(i);
     const handleCollapsedStoryClick = () => setIsScrolled(true);
 
-    const openStory = s => {
-      setCurrentStory(s);
+    const openStory = () => {
       setShowStoryViewer(true);
     };
-
-    const handleMyStoryClick = () => openStory({
-      username:'My story', time:'3m', avatar:'M', progressBars:1,
-      background:'#000000', caption:''
-    });
-
-    const handleVaViaStoryClick = () => openStory({
-      username:'VaVia', time:'5m',
-      avatar:'https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg',
-      progressBars:2,
-      background:'linear-gradient(135deg,#ff9a56,#ff6a00,#ff4500)', caption:'Guess the Animal'
-    });
 
     const touchStart = e => setIsDragging(true);
     const touchMove = e => {
@@ -242,11 +206,11 @@
           {/* Expanded Stories */}
           <div className={`stories-expanded ${isScrolled ? 'visible' : ''}`}>
             <div className="stories-wrapper">
-              <div className="story-item" onClick={handleMyStoryClick}>
+              <div className="story-item" onClick={openStory}>
                 <div className="story-ring"><div className="story-ring-inner"><div className="story-avatar-text">M</div></div></div>
                 <div className="story-label">My story</div>
               </div>
-              <div className="story-item" onClick={handleVaViaStoryClick}>
+              <div className="story-item" onClick={openStory}>
                 <div className="story-ring multi-story"><div className="story-ring-inner"><img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" className="story-avatar"/></div></div>
                 <div className="story-label">VaVia</div>
               </div>
@@ -275,42 +239,12 @@
 
         <div className={`content-spacer ${isScrolled?'expanded':'collapsed'}`}></div>
 
-        {/* ---------- Story Viewer (bottom-cropped) ---------- */}
-        {showStoryViewer && currentStory && (
+        {/* ---------- Blank Pop-up Screen (only overlay + drag to dismiss) ---------- */}
+        {showStoryViewer && (
           <div className={`story-viewer-overlay ${isDragging?'dragging':''}`}
                style={{transform:isDragging?`translateY(${storyDragY}px)`:'translateY(0)'}}
                onTouchStart={touchStart} onTouchMove={touchMove} onTouchEnd={touchEnd}>
-            <div className="story-viewer-content">
-              <div className="story-viewer-background" style={{background:currentStory.background}}></div>
-
-              <div className="story-viewer-header">
-                <div className="story-progress-container">
-                  {[...Array(currentStory.progressBars)].map((_,i)=>
-                    <div key={i} className="story-progress-bar"><div className="story-progress-fill"></div></div>
-                  )}
-                </div>
-                <div className="story-user-info">
-                  <div className="story-user-left">
-                    <div className="story-user-avatar">
-                      {typeof currentStory.avatar==='string' && currentStory.avatar.startsWith('http')?
-                        <img src={currentStory.avatar} alt={currentStory.username} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}}/>:
-                        currentStory.avatar}
-                    </div>
-                    <div className="story-user-details">
-                      <div className="story-username">{currentStory.username}</div>
-                      <div className="story-time">{currentStory.time}</div>
-                    </div>
-                  </div>
-                  <div className="story-actions">
-                    <button className="story-action-btn" onClick={closeStory}><i className="fas fa-times"></i></button>
-                  </div>
-                </div>
-              </div>
-
-              {currentStory.caption && (
-                <div className="story-viewer-footer"><div className="story-caption">{currentStory.caption}</div></div>
-              )}
-            </div>
+            <div className="story-viewer-content"></div>
           </div>
         )}
 
