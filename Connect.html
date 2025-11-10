@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html langua="en">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -97,12 +97,13 @@
     .message-date { font-size:14px; color:#8e8e8e; }
     .message-preview { font-size:16px; color:#8e8e8e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    /* STORY VIEWER – Gradient top edge starts 20px down */
+    /* STORY VIEWER – FULL TOP EDGE, NO ROUNDED CORNERS */
     .story-viewer-overlay {
       position:fixed; top:0; left:0; right:0; bottom:70px;
       background:#000; z-index:2000;
       display:flex; align-items:center; justify-content:center;
       overflow:hidden; transition:opacity .3s;
+      border-radius: 0 !important;
     }
     .story-viewer-content {
       width:100%; height:100%; position:relative;
@@ -110,16 +111,17 @@
     }
     .story-viewer-background {
       width:100%; 
-      height: calc(100% - 17px); /* ← Adjust for 17px top offset */
-      position: relative;
-      top: 17px;                 /* ← Orange gradient starts 17px down */
+      height: 100%;
+      position: static;
+      top: 0;
       background: #000;
       display:flex; align-items:center; justify-content:center;
-      border-radius:15px 15px 0 0; overflow:hidden;
+      border-radius: 0;
+      overflow:hidden;
     }
     .story-viewer-header {
       position:absolute; 
-      top: 20px; left:0; right:0;
+      top: 0; left:0; right:0;
       padding: 0 12px 16px;
       background:linear-gradient(180deg,rgba(0,0,0,.4),rgba(0,0,0,.2) 50%,transparent);
       z-index:10;
@@ -177,8 +179,6 @@
     const [isScrolled, setIsScrolled] = useState(false);
     const [lastScrollY, setLastScrollY] = useState(0);
     const [showStoryViewer, setShowStoryViewer] = useState(false);
-    const [storyDragY, setStoryDragY] = useState(0);
-    const [isDragging, setIsDragging] = useState(false);
     const [touchStartY, setTouchStartY] = useState(null);
     const [currentStory, setCurrentStory] = useState(null);
 
@@ -214,26 +214,20 @@
     });
 
     const touchStart = e => {
-      setIsDragging(true);
       setTouchStartY(e.touches[0].clientY);
-      setStoryDragY(0);
     };
 
     const touchMove = e => {
-      if (!isDragging || !touchStartY) return;
+      if (!touchStartY) return;
       const currentY = e.touches[0].clientY;
       const deltaY = currentY - touchStartY;
-      if (deltaY > 0) {
-        setStoryDragY(deltaY);
+      if (deltaY > 50) {
+        setShowStoryViewer(false);
+        setTouchStartY(null);
       }
     };
 
     const touchEnd = () => {
-      if (storyDragY > 30) {
-        setShowStoryViewer(false);
-      }
-      setStoryDragY(0);
-      setIsDragging(false);
       setTouchStartY(null);
     };
 
@@ -303,10 +297,7 @@
         {showStoryViewer && currentStory && (
           <div 
             className="story-viewer-overlay"
-            style={{
-              transform: isDragging && storyDragY > 0 ? `translateY(${storyDragY}px)` : 'translateY(0)',
-              transition: isDragging ? 'none' : 'transform 0.3s ease'
-            }}
+            style={{ transition: 'opacity 0.3s' }}
             onTouchStart={touchStart}
             onTouchMove={touchMove}
             onTouchEnd={touchEnd}
