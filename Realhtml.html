@@ -167,21 +167,19 @@
 
     const openStory = () => {
       setShowStoryViewer(true);
+      setIsDragging(false); // Reset dragging state when opening
     };
 
     const touchStart = e => {
       setIsDragging(true);
-      // Prevent default to avoid scroll interference
       e.preventDefault();
     };
 
     const touchMove = e => {
       if (!isDragging) return;
-      // Prevent default to stop pull-to-refresh
       e.preventDefault();
-      // We don't apply transform – only track for dismissal
       const y = e.touches[0].clientY;
-      if (y > 100) { // Threshold to trigger dismiss
+      if (y > 100) {
         setShowStoryViewer(false);
         setIsDragging(false);
       }
