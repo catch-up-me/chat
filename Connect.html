@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html langua="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -109,7 +109,11 @@
       pointer-events:none; user-select:none; -webkit-user-drag:none;
     }
     .story-viewer-background {
-      width:100%; height:100%; background:#000;
+      width:100%; 
+      height: calc(100% - 17px); /* ← Adjust for 17px top offset */
+      position: relative;
+      top: 17px;                 /* ← Orange gradient starts 17px down */
+      background: #000;
       display:flex; align-items:center; justify-content:center;
       border-radius:15px 15px 0 0; overflow:hidden;
     }
@@ -264,7 +268,7 @@
 
           <div className={`stories-expanded ${isScrolled ? 'visible' : ''}`}>
             <div className="stories-wrapper">
-005              <div className="story-item" onClick={handleMyStoryClick}>
+              <div className="story-item" onClick={handleMyStoryClick}>
                 <div className="story-ring"><div className="story-ring-inner"><div className="story-avatar-text">M</div></div></div>
                 <div className="story-label">My story</div>
               </div>
