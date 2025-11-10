@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Instagram DM – Final Edge Fix</title>
+  <title>Instagram DM – Final</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -14,78 +13,6 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#fff; min-height:200vh; overflow-x:hidden; }
 
-    /* [All previous styles unchanged until story viewer] */
-
-    /* STORY VIEWER – REDUCED EDGE PADDING */
-    .story-viewer-overlay {
-      position: fixed;
-      top: 16px;      /* ← Gap from top */
-      left: 20px;     /* ← Left margin */
-      right: 20px;    /* ← Right margin */
-      bottom: 70px;   /* ← Space for reply bar */
-      background: #000;
-      z-index: 2000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      border-radius: 15px 15px 0 0; /* Only top corners rounded */
-      transition: opacity .3s;
-    }
-
-    .story-viewer-content {
-      width: 100%; height: 100%; position: relative;
-      pointer-events: none; user-select: none; -webkit-user-drag: none;
-    }
-
-    .story-viewer-background {
-      width: 100%; height: 100%; background: #000;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 15px 15px 0 0;
-      overflow: hidden;
-    }
-
-    /* [Rest of styles unchanged: header, progress, caption, reply bar, etc.] */
-    .story-viewer-header { position:absolute; top:0; left:0; right:0; padding:16px;
-      background:linear-gradient(180deg,rgba(0,0,0,.4),rgba(0,0,0,.2) 50%,transparent); z-index:10; }
-    .story-progress-container { display:flex; gap:4px; margin-bottom:12px; }
-    .story-progress-bar { flex:1; height:2px; background:rgba(255,255,255,.3); border-radius:2px; overflow:hidden; }
-    .story-progress-fill { height:100%; background:#fff; width:100%; }
-    .story-user-info { display:flex; align-items:center; justify-content:space-between; }
-    .story-user-left { display:flex; align-items:center; gap:8px; }
-    .story-user-avatar { width:32px; height:32px; border-radius:50%; border:2px solid #fff;
-      background:#ff8c42; display:flex; align-items:center; justify-content:center;
-      font-size:14px; font-weight:600; color:#fff; }
-    .story-user-details { display:flex; flex-direction:column; }
-    .story-username { font-size:14px; font-weight:600; color:#fff; }
-    .story-time { font-size:12px; color:rgba(255,255,255,.7); }
-    .story-actions { display:flex; gap:16px; }
-    .story-action-btn {
-      background:none; border:none; color:#fff; cursor:pointer;
-      font-size:20px; padding:4px; pointer-events:auto !important;
-    }
-
-    .story-viewer-footer { position:absolute; bottom:0; left:0; right:0; padding:20px;
-      background:linear-gradient(0deg,rgba(0,0,0,.3),rgba(0,0,0,.1) 50%,transparent);
-      z-index:10; pointer-events:none; }
-    .story-caption { font-size:18px; font-weight:500; color:#fff; text-align:left; line-height:1.4; }
-
-    /* REPLY BAR – #171717 pill */
-    .story-reply-bar {
-      position:fixed; left:0; right:0; bottom:0; height:70px;
-      background:#000; display:flex; align-items:center; justify-content:center;
-      z-index:2100; padding:0 20px; backdrop-filter:blur(10px);
-    }
-    .story-reply-box {
-      width:100%; max-width:500px; padding:12px 20px;
-      background:#171717;
-      border:1px solid rgba(255,255,255,.1);
-      border-radius:50px; color:rgba(255,255,255,.5); font-size:15px;
-      text-align:left; pointer-events:none; user-select:none;
-    }
-    .story-reply-bar.hidden { display:none; }
-
-    /* [Keep all other styles: header, stories, nav, messages, etc.] */
     .header-container { position:fixed; top:0; left:0; right:0; background:#fff; z-index:1000; transition:all .3s; }
     .top-navbar { background:#fff; padding:16px 20px 19px; display:flex; justify-content:center; align-items:center; position:relative; overflow:visible; }
     .messages-icon { position:absolute; left:20px; width:24px; height:24px; top:50%; transform:translateY(-45%); fill:#749cbf; }
@@ -169,6 +96,64 @@
     .message-name { font-size:17px; font-weight:500; color:#262626; }
     .message-date { font-size:14px; color:#8e8e8e; }
     .message-preview { font-size:16px; color:#8e8e8e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    /* STORY VIEWER – Tighter padding */
+    .story-viewer-overlay {
+      position:fixed; top:0; left:0; right:0; bottom:70px;
+      background:#000; z-index:2000;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden; transition:opacity .3s;
+    }
+    .story-viewer-content {
+      width:100%; height:100%; position:relative;
+      pointer-events:none; user-select:none; -webkit-user-drag:none;
+    }
+    .story-viewer-background {
+      width:100%; height:100%; background:#000;
+      display:flex; align-items:center; justify-content:center;
+      border-radius:15px 15px 0 0; overflow:hidden;
+    }
+    .story-viewer-header {
+      position:absolute; top:0; left:0; right:0;
+      padding: 5px 12px 16px;  /* ← Top: 5px | L/R: 12px | Bottom: 16px */
+      background:linear-gradient(180deg,rgba(0,0,0,.4),rgba(0,0,0,.2) 50%,transparent);
+      z-index:10;
+    }
+    .story-progress-container { display:flex; gap:4px; margin-bottom:12px; }
+    .story-progress-bar { flex:1; height:2px; background:rgba(255,255,255,.3); border-radius:2px; overflow:hidden; }
+    .story-progress-fill { height:100%; background:#fff; width:100%; }
+    .story-user-info { display:flex; align-items:center; justify-content:space-between; }
+    .story-user-left { display:flex; align-items:center; gap:8px; }
+    .story-user-avatar { width:32px; height:32px; border-radius:50%; border:2px solid #fff;
+      background:#ff8c42; display:flex; align-items:center; justify-content:center;
+      font-size:14px; font-weight:600; color:#fff; }
+    .story-user-details { display:flex; flex-direction:column; }
+    .story-username { font-size:14px; font-weight:600; color:#fff; }
+    .story-time { font-size:12px; color:rgba(255,255,255,.7); }
+    .story-actions { display:flex; gap:16px; }
+    .story-action-btn {
+      background:none; border:none; color:#fff; cursor:pointer;
+      font-size:20px; padding:4px; pointer-events:auto !important;
+    }
+
+    .story-viewer-footer { position:absolute; bottom:0; left:0; right:0; padding:20px;
+      background:linear-gradient(0deg,rgba(0,0,0,.3),rgba(0,0,0,.1) 50%,transparent);
+      z-index:10; pointer-events:none; }
+    .story-caption { font-size:18px; font-weight:500; color:#fff; text-align:left; line-height:1.4; }
+
+    /* REPLY BAR */
+    .story-reply-bar {
+      position:fixed; left:0; right:0; bottom:0; height:70px;
+      background:#000; display:flex; align-items:center; justify-content:center;
+      z-index:2100; padding:0 20px; backdrop-filter:blur(10px);
+    }
+    .story-reply-box {
+      width:100%; max-width:500px; padding:12px 20px;
+      background:#171717; border:1px solid rgba(255,255,255,.1);
+      border-radius:50px; color:rgba(255,255,255,.5); font-size:15px;
+      text-align:left; pointer-events:none; user-select:none;
+    }
+    .story-reply-bar.hidden { display:none; }
   </style>
 </head>
 <body>
@@ -231,7 +216,6 @@
 
     return (
       <>
-        {/* [Header, Stories, Nav – unchanged] */}
         <div className="header-container">
           <div className="top-navbar">
             <svg className="messages-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="#749cbf"/></svg>
@@ -291,7 +275,6 @@
 
         <div className={`content-spacer ${isScrolled?'expanded':'collapsed'}`}></div>
 
-        {/* STORY VIEWER – WITH EDGE PADDING */}
         {showStoryViewer && currentStory && (
           <div 
             className="story-viewer-overlay"
@@ -341,7 +324,6 @@
           </div>
         )}
 
-        {/* REPLY BAR */}
         <div className={`story-reply-bar ${showStoryViewer?'':'hidden'}`}>
           <div className="story-reply-box">Reply privately...</div>
         </div>
