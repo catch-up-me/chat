@@ -139,10 +139,11 @@
       background:none; border:none; color:#fff; cursor:pointer;
       font-size:20px; padding:4px; pointer-events:auto !important;
     }
-    .story-action-colon {
+    .story-action-dots {
       color: #fff;
       font-size: 20px;
       font-weight: 300;
+      letter-spacing: 1px;
       margin-left: 8px;
       pointer-events: none;
     }
@@ -263,7 +264,7 @@
               </div>
               <div className="story-item-collapsed">
                 <div className="story-ring-collapsed">
-                  <div class="story-ring-inner-collapsed">
+                  <div className="story-ring-inner-collapsed">
                     <img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" className="story-avatar-collapsed"/>
                   </div>
                 </div>
@@ -341,7 +342,7 @@
                       <button className="story-action-btn" onClick={closeStory}>
                         <i className="fas fa-times"></i>
                       </button>
-                      <span className="story-action-colon">:</span>
+                      <span className="story-action-dots">...</span>
                     </div>
                   </div>
                 </div>
@@ -368,4 +369,3 @@
 </script>
 </body>
 </html>
-
