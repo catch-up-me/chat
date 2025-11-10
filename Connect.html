@@ -97,7 +97,7 @@
     .message-date { font-size:14px; color:#8e8e8e; }
     .message-preview { font-size:16px; color:#8e8e8e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    /* STORY VIEWER – Gradient at 0px, Content at 7px */
+    /* STORY VIEWER */
     .story-viewer-overlay {
       position:fixed; top:0; left:0; right:0; bottom:70px;
       background:#000; z-index:2000;
@@ -120,9 +120,7 @@
       background:linear-gradient(180deg,rgba(0,0,0,.4),rgba(0,0,0,.2) 50%,transparent);
       z-index:10;
     }
-    .story-header-content {
-      padding-top: 7px;
-    }
+    .story-header-content { padding-top: 7px; }
     .story-progress-container { display:flex; gap:4px; margin-bottom:12px; }
     .story-progress-bar { flex:1; height:2px; background:rgba(255,255,255,.3); border-radius:2px; overflow:hidden; }
     .story-progress-fill { height:100%; background:#fff; width:100%; }
@@ -140,12 +138,8 @@
       font-size:20px; padding:4px; pointer-events:auto !important;
     }
     .story-action-dots {
-      color: #fff;
-      font-size: 20px;
-      font-weight: 300;
-      letter-spacing: 1px;
-      margin-left: 8px;
-      pointer-events: none;
+      color: #fff; font-size: 20px; font-weight: 300;
+      letter-spacing: 1px; margin-left: 8px; pointer-events: none;
     }
 
     .story-viewer-footer { position:absolute; bottom:0; left:0; right:0; padding:20px;
@@ -153,7 +147,6 @@
       z-index:10; pointer-events:none; }
     .story-caption { font-size:18px; font-weight:500; color:#fff; text-align:left; line-height:1.4; }
 
-    /* REPLY BAR – No border, pill shape */
     .story-reply-bar {
       position:fixed; left:0; right:0; bottom:0; height:70px;
       background:#000; display:flex; align-items:center; justify-content:center;
@@ -161,14 +154,9 @@
     }
     .story-reply-box {
       width:100%; max-width:500px; padding:12px 20px;
-      background:#171717;
-      border: none;
-      border-radius:50px;
-      color:rgba(255,255,255,.5); 
-      font-size:15px;
-      text-align:left; 
-      pointer-events:none; 
-      user-select:none;
+      background:#171717; border: none; border-radius:50px;
+      color:rgba(255,255,255,.5); font-size:15px; text-align:left;
+      pointer-events:none; user-select:none;
     }
     .story-reply-bar.hidden { display:none; }
   </style>
@@ -182,10 +170,11 @@
   function NavigationBar() {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isScrolled, setIsScrolled] = useState(false);
-    const [lastScrollY, setLastScrollY] = useState(0);
+    const const [lastScrollY, setLastScrollY] = useState(0);
     const [showStoryViewer, setShowStoryViewer] = useState(false);
     const [touchStartY, setTouchStartY] = useState(null);
     const [currentStory, setCurrentStory] = useState(null);
+    const [viewedStories, setViewedStories] = useState(new Set());
 
     const formatTime = () => {
       const now = new Date();
@@ -210,27 +199,35 @@
     const handleNavClick = i => setActiveIndex(i);
     const handleCollapsedStoryClick = () => setIsScrolled(true);
 
-    const openStory = s => {
-      setCurrentStory(s);
+    const openStory = (story) => {
+      setCurrentStory(story);
+      setViewedStories(prev => new Set(prev).add(story.id));
       setShowStoryViewer(true);
     };
 
     const handleMyStoryClick = () => openStory({
-      username:'My story', time: formatTime(), avatar:'M', progressBars:1,
-      background:'#000000', caption:''
+      id: 'my-story',
+      username: 'My story',
+      time: formatTime(),
+      avatar: 'M',
+      isText: true,
+      progressBars: 1,
+      background: '#000000',
+      caption: ''
     });
 
     const handleVaViaStoryClick = () => openStory({
-      username:'VaVia', time: formatTime(),
-      avatar:'https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg',
-      progressBars:2,
-      background:'linear-gradient(135deg,#ff9a56,#ff6a00,#ff4500)', caption:'Guess the Animal'
+      id: 'vavia',
+      username: 'VaVia',
+      time: formatTime(),
+      avatar: 'https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg',
+      isText: false,
+      progressBars: 2,
+      background: 'linear-gradient(135deg,#ff9a56,#ff6a00,#ff4500)',
+      caption: 'Guess the Animal'
     });
 
-    const touchStart = e => {
-      setTouchStartY(e.touches[0].clientY);
-    };
-
+    const touchStart = e => setTouchStartY(e.touches[0].clientY);
     const touchMove = e => {
       if (!touchStartY) return;
       const currentY = e.touches[0].clientY;
@@ -240,11 +237,7 @@
         setTouchStartY(null);
       }
     };
-
-    const touchEnd = () => {
-      setTouchStartY(null);
-    };
-
+    const touchEnd = () => setTouchStartY(null);
     const closeStory = () => setShowStoryViewer(false);
 
     return (
@@ -258,14 +251,18 @@
               <div className="story-item-collapsed">
                 <div className="story-ring-collapsed">
                   <div className="story-ring-inner-collapsed">
-                    <div className="story-avatar-text-collapsed">M</div>
+                    {viewedStories.has('my-story') ? null : (
+                      <div className="story-avatar-text-collapsed">M</div>
+                    )}
                   </div>
                 </div>
               </div>
               <div className="story-item-collapsed">
                 <div className="story-ring-collapsed">
                   <div className="story-ring-inner-collapsed">
-                    <img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" className="story-avatar-collapsed"/>
+                    {viewedStories.has('vavia') ? null : (
+                      <img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" className="story-avatar-collapsed"/>
+                    )}
                   </div>
                 </div>
               </div>
@@ -309,13 +306,7 @@
         <div className={`content-spacer ${isScrolled?'expanded':'collapsed'}`}></div>
 
         {showStoryViewer && currentStory && (
-          <div 
-            className="story-viewer-overlay"
-            style={{ transition: 'opacity 0.3s' }}
-            onTouchStart={touchStart}
-            onTouchMove={touchMove}
-            onTouchEnd={touchEnd}
-          >
+          <div className="story-viewer-overlay" style={{transition:'opacity .3s'}} onTouchStart={touchStart} onTouchMove={touchMove} onTouchEnd={touchEnd}>
             <div className="story-viewer-content">
               <div className="story-viewer-background" style={{background:currentStory.background}}></div>
 
@@ -329,9 +320,17 @@
                   <div className="story-user-info">
                     <div className="story-user-left">
                       <div className="story-user-avatar">
-                        {typeof currentStory.avatar==='string' && currentStory.avatar.startsWith('http')?
-                          <img src={currentStory.avatar} alt={currentStory.username} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}}/>:
-                          currentStory.avatar}
+                        {currentStory.isText ? (
+                          <div style={{
+                            width:'100%',height:'100%',borderRadius:'50%',
+                            background:'#ff8c42',display:'flex',alignItems:'center',
+                            justifyContent:'center',fontSize:'14px',fontWeight:600,color:'#fff'
+                          }}>{currentStory.avatar}</div>
+                        ) : (
+                          <img src={currentStory.avatar} alt={currentStory.username} style={{
+                            width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'
+                          }}/>
+                        )}
                       </div>
                       <div className="story-user-details">
                         <div className="story-username">{currentStory.username}</div>
@@ -339,9 +338,7 @@
                       </div>
                     </div>
                     <div className="story-actions">
-                      <button className="story-action-btn" onClick={closeStory}>
-                        <i className="fas fa-times"></i>
-                      </button>
+                      <button className="story-action-btn" onClick={closeStory}><i className="fas fa-times"></i></button>
                       <span className="story-action-dots">...</span>
                     </div>
                   </div>
