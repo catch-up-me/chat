@@ -119,10 +119,11 @@
       background:#000; z-index:2000; display:flex; align-items:center; justify-content:center;
       overflow:hidden; transition:opacity .3s;
       overscroll-behavior: none;
-      touch-action: none;
+      touch-action: pan-y; /* Allow vertical scroll when not dragging */
     }
     .story-viewer-content { 
       width:100%; height:100%; position:relative; background:#000; 
+      touch-action: pan-y;
     }
 
     /* ---------- Static Reply Bar – Instagram DM Style (FIXED) ---------- */
@@ -141,8 +142,8 @@
     }
     .story-reply-bar.hidden { display:none; }
 
-    /* Global overscroll prevention */
-    html { overscroll-behavior-y: none; }
+    /* Global overscroll prevention only when needed */
+    html.story-viewer-open { overscroll-behavior-y: none; }
   </style>
 </head>
 <body>
@@ -150,15 +151,15 @@
 <div id="root"></div>
 
 <script type="text/babel">
-  const { useState, useEffect } = React;
+  const { useState, useEffect, useRef } = React;
 
   function NavigationBar() {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isScrolled, setIsScrolled] = useState(false);
     const [lastScrollY, setLastScrollY] = useState(0);
     const [showStoryViewer, setShowStoryViewer] = useState(false);
-    const [startY, setStartY] = useState(0);
-    const [isDragging, setIsDragging] = useState(false);
+    const [dragStartY, setDragStartY] = useState(0);
+    const isDragging = useRef(false);
 
     /* ---------- Scroll handling ---------- */
     useEffect(() => {
@@ -172,38 +173,48 @@
       return () => window.removeEventListener('scroll', onScroll);
     }, [lastScrollY]);
 
+    /* ---------- Overscroll prevention only when viewer is open ---------- */
+    useEffect(() => {
+      if (showStoryViewer) {
+        document.documentElement.classList.add('story-viewer-open');
+      } else {
+        document.documentElement.classList.remove('story-viewer-open');
+      }
+      return () => document.documentElement.classList.remove('story-viewer-open');
+    }, [showStoryViewer]);
+
     const handleNavClick = i => setActiveIndex(i);
     const handleCollapsedStoryClick = () => setIsScrolled(true);
 
     const openStory = () => {
       setShowStoryViewer(true);
+      isDragging.current = false; // Reset on open
     };
 
     const touchStart = e => {
       if (!showStoryViewer) return;
-      setIsDragging(true);
-      setStartY(e.touches[0].clientY);
-      e.preventDefault();
+      isDragging.current = true;
+      setDragStartY(e.touches[0].clientY);
+      e.stopPropagation();
     };
 
     const touchMove = e => {
-      if (!isDragging || !showStoryViewer) return;
-      e.preventDefault();
+      if (!isDragging.current || !showStoryViewer) return;
       const currentY = e.touches[0].clientY;
-      const deltaY = currentY - startY;
+      const deltaY = currentY - dragStartY;
       if (deltaY > 100) {
-        setShowStoryViewer(false);
-        setIsDragging(false);
+        closeStory();
       }
     };
 
     const touchEnd = () => {
-      if (isDragging) {
-        setIsDragging(false);
-      }
+      isDragging.current = false;
     };
 
-    const closeStory = () => setShowStoryViewer(false);
+    const closeStory = () => {
+      setShowStoryViewer(false);
+      isDragging.current = false;
+    };
 
     return (
       <>
