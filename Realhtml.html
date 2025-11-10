@@ -105,12 +105,14 @@
     .message-date { font-size:14px; color:#8e8e8e; }
     .message-preview { font-size:16px; color:#8e8e8e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    /* ---------- Blank Pop-up Screen (FIXED POSITION – NO DRAG MOVEMENT) ---------- */
+    /* ---------- Blank Pop-up Screen (FIXED – NO VISUAL DRAG) ---------- */
     .story-viewer-overlay {
       position:fixed; top:0; left:0; right:0; bottom:70px;
       background:#000; z-index:2000; display:flex; align-items:center; justify-content:center;
       overflow:hidden; transition:opacity .3s;
-      /* Drag only affects dismissal, not visual movement */
+      /* Prevent pull-to-refresh during swipe */
+      overscroll-behavior: none;
+      touch-action: none;
     }
     .story-viewer-content { 
       width:100%; height:100%; position:relative; background:#000; 
@@ -133,6 +135,9 @@
       line-height:1.4;
     }
     .story-reply-bar.hidden { display:none; }
+
+    /* Global overscroll prevention for safety */
+    html { overscroll-behavior-y: none; }
   </style>
 </head>
 <body>
@@ -147,6 +152,7 @@
     const [isScrolled, setIsScrolled] = useState(false);
     const [lastScrollY, setLastScrollY] = useState(0);
     const [showStoryViewer, setShowStoryViewer] = useState(false);
+    const [startY, setStartY] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
 
     /* ---------- Scroll handling ---------- */
@@ -170,15 +176,16 @@
 
     const touchStart = e => {
       setIsDragging(true);
-      // Prevent default to avoid scroll interference
+      setStartY(e.touches[0].clientY);
       e.preventDefault();
     };
 
     const touchMove = e => {
       if (!isDragging) return;
-      // We don't apply transform – only track for dismissal
-      const y = e.touches[0].clientY;
-      if (y > 100) { // Threshold to trigger dismiss
+      e.preventDefault(); // Block pull-to-refresh
+      const currentY = e.touches[0].clientY;
+      const deltaY = currentY - startY;
+      if (deltaY > 100) { // Threshold for dismiss
         setShowStoryViewer(false);
         setIsDragging(false);
       }
