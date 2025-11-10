@@ -110,7 +110,8 @@
       position:fixed; top:0; left:0; right:0; bottom:70px;
       background:#000; z-index:2000; display:flex; align-items:center; justify-content:center;
       overflow:hidden; transition:opacity .3s;
-      touch-action: none;
+      touch-action: pan-y;
+      overscroll-behavior: contain;
       /* Drag only affects dismissal, not visual movement */
     }
     .story-viewer-content { 
@@ -141,14 +142,15 @@
 <div id="root"></div>
 
 <script type="text/babel">
-  const { useState, useEffect } = React;
+  const { useState, useEffect, useRef } = React;
 
   function NavigationBar() {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isScrolled, setIsScrolled] = useState(false);
     const [lastScrollY, setLastScrollY] = useState(0);
     const [showStoryViewer, setShowStoryViewer] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
+    const startYRef = useRef(0);
+    const isDraggingRef = useRef(false);
 
     /* ---------- Scroll handling ---------- */
     useEffect(() => {
@@ -167,26 +169,32 @@
 
     const openStory = () => {
       setShowStoryViewer(true);
-      setIsDragging(false); // Reset dragging state when opening
     };
 
     const touchStart = e => {
-      setIsDragging(true);
-      e.preventDefault();
+      startYRef.current = e.touches[0].clientY;
+      isDraggingRef.current = false;
     };
 
     const touchMove = e => {
-      if (!isDragging) return;
-      e.preventDefault();
-      const y = e.touches[0].clientY;
-      if (y > 100) {
-        setShowStoryViewer(false);
-        setIsDragging(false);
+      const currentY = e.touches[0].clientY;
+      const diff = currentY - startYRef.current;
+      
+      // Only prevent default and track as drag if moving down significantly
+      if (diff > 10) {
+        isDraggingRef.current = true;
+        e.preventDefault();
+        
+        // Dismiss if dragged down far enough
+        if (diff > 100) {
+          setShowStoryViewer(false);
+        }
       }
     };
 
     const touchEnd = () => {
-      setIsDragging(false);
+      startYRef.current = 0;
+      isDraggingRef.current = false;
     };
 
     const closeStory = () => setShowStoryViewer(false);
@@ -281,3 +289,7 @@
 </script>
 </body>
 </html>
+
+
+
+
