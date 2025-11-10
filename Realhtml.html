@@ -15,7 +15,11 @@
 
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#fff; min-height:200vh; overflow-x:hidden; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#fff; overflow-x:hidden; }
+
+    /* Hide scrollbar */
+    body::-webkit-scrollbar { display: none; }
+    body { -ms-overflow-style: none; scrollbar-width: none; }
 
     /* ================== HEADER ================== */
     .header-container { position:fixed; top:0; left:0; right:0; background:#fff; z-index:1000; transition:all .3s; }
@@ -152,11 +156,22 @@
     const startYRef = useRef(0);
     const currentYRef = useRef(0);
     const hasMoved = useRef(false);
+    const maxScrollY = useRef(0);
 
-    /* ---------- Scroll handling ---------- */
+    /* ---------- Scroll handling with limit ---------- */
     useEffect(() => {
       const onScroll = () => {
         const cur = window.scrollY;
+        
+        // Calculate max scroll (stop at VaVia message - approximately 100px from collapsed state)
+        const maxScroll = 100;
+        
+        // Prevent scrolling beyond maxScroll
+        if (cur > maxScroll) {
+          window.scrollTo(0, maxScroll);
+          return;
+        }
+        
         if (cur > lastScrollY && cur > 5) setIsScrolled(true);
         else if (cur < lastScrollY && cur < 5) setIsScrolled(false);
         setLastScrollY(cur);
@@ -321,4 +336,3 @@
 </script>
 </body>
 </html>
-
