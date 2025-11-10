@@ -151,6 +151,7 @@
     const [showStoryViewer, setShowStoryViewer] = useState(false);
     const startYRef = useRef(0);
     const currentYRef = useRef(0);
+    const hasMoved = useRef(false);
 
     /* ---------- Scroll handling ---------- */
     useEffect(() => {
@@ -171,12 +172,34 @@
       setShowStoryViewer(true);
     };
 
-    const touchStart = e => {
+    const storyTouchStart = e => {
+      startYRef.current = e.touches[0].clientY;
+      hasMoved.current = false;
+    };
+
+    const storyTouchEnd = e => {
+      // Only open if there was no significant movement (it was a tap, not a swipe)
+      if (!hasMoved.current) {
+        openStory();
+      }
+      startYRef.current = 0;
+      currentYRef.current = 0;
+      hasMoved.current = false;
+    };
+
+    const storyTouchMove = e => {
+      const diff = Math.abs(e.touches[0].clientY - startYRef.current);
+      if (diff > 10) {
+        hasMoved.current = true;
+      }
+    };
+
+    const viewerTouchStart = e => {
       startYRef.current = e.touches[0].clientY;
       currentYRef.current = e.touches[0].clientY;
     };
 
-    const touchMove = e => {
+    const viewerTouchMove = e => {
       e.preventDefault(); // Always prevent default to stop pull-to-refresh
       e.stopPropagation();
       
@@ -191,7 +214,7 @@
       }
     };
 
-    const touchEnd = () => {
+    const viewerTouchEnd = () => {
       startYRef.current = 0;
       currentYRef.current = 0;
     };
@@ -230,11 +253,21 @@
           {/* Expanded Stories */}
           <div className={`stories-expanded ${isScrolled ? 'visible' : ''}`}>
             <div className="stories-wrapper">
-              <div className="story-item" onClick={openStory}>
+              <div 
+                className="story-item" 
+                onTouchStart={storyTouchStart}
+                onTouchMove={storyTouchMove}
+                onTouchEnd={storyTouchEnd}
+              >
                 <div className="story-ring"><div className="story-ring-inner"><div className="story-avatar-text">M</div></div></div>
                 <div className="story-label">My story</div>
               </div>
-              <div className="story-item" onClick={openStory}>
+              <div 
+                className="story-item" 
+                onTouchStart={storyTouchStart}
+                onTouchMove={storyTouchMove}
+                onTouchEnd={storyTouchEnd}
+              >
                 <div className="story-ring multi-story"><div className="story-ring-inner"><img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" className="story-avatar"/></div></div>
                 <div className="story-label">VaVia</div>
               </div>
@@ -267,9 +300,9 @@
         {showStoryViewer && (
           <div 
             className="story-viewer-overlay"
-            onTouchStart={touchStart}
-            onTouchMove={touchMove}
-            onTouchEnd={touchEnd}
+            onTouchStart={viewerTouchStart}
+            onTouchMove={viewerTouchMove}
+            onTouchEnd={viewerTouchEnd}
           >
             <div className="story-viewer-content"></div>
           </div>
