@@ -110,8 +110,8 @@
       position:fixed; top:0; left:0; right:0; bottom:70px;
       background:#000; z-index:2000; display:flex; align-items:center; justify-content:center;
       overflow:hidden; transition:opacity .3s;
-      touch-action: pan-y;
-      overscroll-behavior: contain;
+      touch-action: none;
+      overscroll-behavior: none;
       /* Drag only affects dismissal, not visual movement */
     }
     .story-viewer-content { 
@@ -150,7 +150,7 @@
     const [lastScrollY, setLastScrollY] = useState(0);
     const [showStoryViewer, setShowStoryViewer] = useState(false);
     const startYRef = useRef(0);
-    const isDraggingRef = useRef(false);
+    const currentYRef = useRef(0);
 
     /* ---------- Scroll handling ---------- */
     useEffect(() => {
@@ -173,28 +173,27 @@
 
     const touchStart = e => {
       startYRef.current = e.touches[0].clientY;
-      isDraggingRef.current = false;
+      currentYRef.current = e.touches[0].clientY;
     };
 
     const touchMove = e => {
-      const currentY = e.touches[0].clientY;
-      const diff = currentY - startYRef.current;
+      e.preventDefault(); // Always prevent default to stop pull-to-refresh
+      e.stopPropagation();
       
-      // Only prevent default and track as drag if moving down significantly
-      if (diff > 10) {
-        isDraggingRef.current = true;
-        e.preventDefault();
-        
-        // Dismiss if dragged down far enough
-        if (diff > 100) {
-          setShowStoryViewer(false);
-        }
+      currentYRef.current = e.touches[0].clientY;
+      const diff = currentYRef.current - startYRef.current;
+      
+      // Dismiss if dragged down far enough
+      if (diff > 150) {
+        setShowStoryViewer(false);
+        startYRef.current = 0;
+        currentYRef.current = 0;
       }
     };
 
     const touchEnd = () => {
       startYRef.current = 0;
-      isDraggingRef.current = false;
+      currentYRef.current = 0;
     };
 
     const closeStory = () => setShowStoryViewer(false);
@@ -289,7 +288,3 @@
 </script>
 </body>
 </html>
-
-
-
-
