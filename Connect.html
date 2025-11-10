@@ -5,18 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Messages Navigation Bar – React Preview</title>
 
-  <!-- React + ReactDOM (production) -->
+  <!-- React + ReactDOM -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
-  <!-- Babel standalone (transpiles JSX in the browser) -->
+  <!-- Babel (transpiles JSX in browser) -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <!-- Font Awesome -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body>
   <div id="root"></div>
@@ -36,16 +33,13 @@
       useEffect(() => {
         const handleScroll = () => {
           const currentScrollY = window.scrollY;
-
           if (currentScrollY > lastScrollY && currentScrollY > 5) {
             setIsScrolled(true);
           } else if (currentScrollY < lastScrollY && currentScrollY < 5) {
             setIsScrolled(false);
           }
-
           setLastScrollY(currentScrollY);
         };
-
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
       }, [lastScrollY]);
@@ -165,8 +159,27 @@
             .story-action-btn:hover{opacity:.7}
             .story-viewer-footer{position:absolute;bottom:0;left:0;right:0;padding:20px;background:linear-gradient(0deg,rgba(0,0,0,.3) 0%,rgba(0,0,0,.1) 50%,rgba(0,0,0,0) 100%);z-index:10;pointer-events:none}
             .story-caption{font-size:18px;font-weight:500;color:#fff;text-align:left;line-height:1.4}
-            .story-reply-container{position:absolute;bottom:-70px;left:20px;right:20px;z-index:11;display:flex;justify-content:center}
-            .story-reply-box{width:100%;max-width:500px;padding:12px 20px;background:rgba(60,60,60,.95);border:1px solid rgba(255,255,255,.1);border-radius:50px;color:rgba(255,255,255,.5);font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;pointer-events:none}
+            .story-reply-container{
+              position:absolute;
+              bottom:-90px; /* CHANGED: was -70px → now 20px higher */
+              left:20px;
+              right:20px;
+              z-index:11;
+              display:flex;
+              justify-content:center;
+            }
+            .story-reply-box{
+              width:100%;
+              max-width:500px;
+              padding:12px 20px;
+              background-color:rgba(60,60,60,.95);
+              border:1px solid rgba(255,255,255,.1);
+              border-radius:50px;
+              color:rgba(255,255,255,.5);
+              font-size:15px;
+              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+              pointer-events:none;
+            }
           `}</style>
 
           <div className="header-container">
@@ -314,6 +327,11 @@
                     <div className="story-caption">{currentStory.caption}</div>
                   </div>
                 )}
+
+                <!-- Reply Box (now 20px higher) -->
+                <div className="story-reply-container">
+                  <div className="story-reply-box">Send a message...</div>
+                </div>
               </div>
             </div>
           )}
@@ -321,7 +339,6 @@
       );
     }
 
-    // Render the component
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<NavigationBar />);
   </script>
