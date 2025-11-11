@@ -16,38 +16,37 @@
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     
-    /* FORCE HIDE ALL SCROLLBARS */
-    html, body {
-      overflow-y: scroll;
-      scrollbar-width: none !important; /* Firefox */
-      -ms-overflow-style: none !important; /* IE and Edge */
-    }
-    
-    html::-webkit-scrollbar,
-    body::-webkit-scrollbar {
-      display: none !important;
-      width: 0 !important;
-      height: 0 !important;
-      background: transparent !important;
-    }
-    
-    /* Apply to all elements */
-    *::-webkit-scrollbar {
-      display: none !important;
-      width: 0 !important;
-      height: 0 !important;
-    }
-    
-    * {
-      scrollbar-width: none !important;
-      -ms-overflow-style: none !important;
+    /* Force hide scrollbar on HTML and BODY */
+    html {
+      overflow: hidden;
+      height: 100%;
     }
     
     body { 
       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; 
-      background:#fff; 
-      min-height:100vh; 
-      overflow-x:hidden;
+      background:#fff;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    /* Create scrollable wrapper that hides scrollbar */
+    #root {
+      height: 100vh;
+      overflow-y: scroll;
+      overflow-x: hidden;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    
+    #root::-webkit-scrollbar {
+      display: none;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    
+    .page-wrapper {
+      min-height: 100vh;
     }
 
     /* ================== HEADER ================== */
@@ -97,9 +96,11 @@
       opacity:0; 
       transform:scale(.95); 
       transition:all .2s;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
     .stories-expanded::-webkit-scrollbar {
-      display: none !important;
+      display: none;
     }
     .stories-expanded.visible { max-height:150px; opacity:1; transform:scale(1); }
     .stories-wrapper { display:flex; gap:16px; padding:0 16px; }
@@ -196,18 +197,21 @@
     const startYRef = useRef(0);
     const currentYRef = useRef(0);
     const hasMoved = useRef(false);
+    const rootRef = useRef(null);
 
     /* ---------- Scroll handling with limit ---------- */
     useEffect(() => {
+      const rootElement = document.getElementById('root');
+      
       const onScroll = () => {
-        const cur = window.scrollY;
+        const cur = rootElement.scrollTop;
         
         // Set max scroll limit (stop after VaVia message is visible)
         const maxScroll = 120;
         
         // If scrolled beyond max, snap back to max
         if (cur > maxScroll) {
-          window.scrollTo(0, maxScroll);
+          rootElement.scrollTo(0, maxScroll);
           setLastScrollY(maxScroll);
           return;
         }
@@ -222,8 +226,8 @@
         setLastScrollY(cur);
       };
       
-      window.addEventListener('scroll', onScroll);
-      return () => window.removeEventListener('scroll', onScroll);
+      rootElement.addEventListener('scroll', onScroll);
+      return () => rootElement.removeEventListener('scroll', onScroll);
     }, [lastScrollY]);
 
     const handleNavClick = i => setActiveIndex(i);
@@ -283,7 +287,7 @@
     const closeStory = () => setShowStoryViewer(false);
 
     return (
-      <>
+      <div className="page-wrapper">
         {/* ---------- Header ---------- */}
         <div className="header-container">
           <div className="top-navbar">
@@ -373,7 +377,7 @@
         <div className={`story-reply-bar ${showStoryViewer?'':'hidden'}`}>
           <div className="story-reply-box">Reply privately...</div>
         </div>
-      </>
+      </div>
     );
   }
 
