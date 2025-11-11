@@ -193,7 +193,6 @@
     const [activeIndex, setActiveIndex] = useState(0);
     const [isScrolled, setIsScrolled] = useState(false);
     const [showStoryViewer, setShowStoryViewer] = useState(false);
-    const lastScrollYRef = useRef(0);
     const startYRef = useRef(0);
     const currentYRef = useRef(0);
     const hasMoved = useRef(false);
@@ -201,6 +200,7 @@
     /* ---------- Scroll handling with limit ---------- */
     useEffect(() => {
       const rootElement = document.getElementById('root');
+      let lastScrollY = 0;
       
       const onScroll = () => {
         const cur = rootElement.scrollTop;
@@ -211,23 +211,23 @@
         // If scrolled beyond max, snap back to max
         if (cur > maxScroll) {
           rootElement.scrollTo(0, maxScroll);
-          lastScrollYRef.current = maxScroll;
+          lastScrollY = maxScroll;
           return;
         }
         
         // Normal scroll behavior for expanding/collapsing
-        if (cur > lastScrollYRef.current && cur > 5) {
+        if (cur > lastScrollY && cur > 5) {
           setIsScrolled(true);
-        } else if (cur < lastScrollYRef.current && cur < 5) {
+        } else if (cur < lastScrollY && cur < 5) {
           setIsScrolled(false);
         }
         
-        lastScrollYRef.current = cur;
+        lastScrollY = cur;
       };
       
       rootElement.addEventListener('scroll', onScroll);
       return () => rootElement.removeEventListener('scroll', onScroll);
-    }, []); // Empty dependency array - the key fix!
+    }, []); 
 
     const handleNavClick = i => setActiveIndex(i);
     const handleCollapsedStoryClick = () => setIsScrolled(true);
