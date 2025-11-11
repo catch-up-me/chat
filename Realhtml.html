@@ -100,6 +100,7 @@
     .stories-expanded::-webkit-scrollbar {
       display: none;
     }
+    /* This class makes the expanded stories visible when UNCOLLAPSED */
     .stories-expanded.visible { max-height:150px; opacity:1; transform:scale(1); }
     .stories-wrapper { display:flex; gap:16px; padding:0 16px; }
     .story-item { display:flex; flex-direction:column; align-items:center; cursor:pointer; min-width:64px; }
@@ -227,19 +228,7 @@
       const onScroll = () => {
         const cur = rootElement.scrollTop;
         
-        // --- PREVIOUS SCROLL LIMIT LOGIC REMOVED/COMMENTED OUT ---
-        /*
-        const maxScroll = 120;
-        if (cur > maxScroll) {
-          rootElement.scrollTo(0, maxScroll);
-          lastScrollY = maxScroll;
-          return;
-        }
-        */
-        // --------------------------------------------------------
-        
         // Normal scroll behavior for expanding/collapsing. 
-        // Increased threshold from 5 to 50 for smoother collapse feeling.
         const collapseThreshold = 50; 
 
         if (cur > lastScrollY && cur > collapseThreshold) {
@@ -315,9 +304,10 @@
         <div className="header-container">
           <div className="top-navbar">
             <svg className="messages-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="#749cbf"/></svg>
-            <h1 className={isScrolled ? 'visible' : ''}>Messages</h1>
+            {/* Top title is visible when COLLAPSED */}
+            <h1 className={isScrolled ? 'visible' : ''}>Messages</h1> 
 
-            {/* Collapsed Stories – centered & fixed */}
+            {/* Collapsed Stories – centered & fixed. Moved (hidden) when COLLAPSED */}
             <div className={`stories-collapsed ${isScrolled ? 'moved' : ''}`} onClick={handleCollapsedStoryClick}>
               <div className="story-item-collapsed">
                 <div className="story-ring-collapsed">
@@ -338,7 +328,7 @@
             <div className="add-button"><i className="fas fa-search"></i></div>
           </div>
 
-          {/* Expanded Stories */}
+          {/* Expanded Stories (FIXED: Visible when NOT scrolled) */}
           <div className={`stories-expanded ${!isScrolled ? 'visible' : ''}`}>
             <div className="stories-wrapper">
               <div 
@@ -372,6 +362,7 @@
         </div>
 
         {/* ---------- Content Spacer (Push content down) ---------- */}
+        {/* Expanded when NOT scrolled, collapsed when scrolled */}
         <div className={`content-spacer ${isScrolled?'collapsed':'expanded'}`}></div>
 
         {/* ---------- Message List (Scrollable Content) ---------- */}
@@ -432,3 +423,4 @@
 </script>
 </body>
 </html>
+
