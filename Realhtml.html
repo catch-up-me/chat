@@ -16,25 +16,31 @@
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     
-    /* Hide ALL scrollbars globally */
-    * {
-      scrollbar-width: none; /* Firefox */
-      -ms-overflow-style: none; /* IE and Edge */
-    }
-    *::-webkit-scrollbar {
-      display: none; /* Chrome, Safari, Opera */
-      width: 0;
-      height: 0;
+    /* FORCE HIDE ALL SCROLLBARS */
+    html, body {
+      overflow-y: scroll;
+      scrollbar-width: none !important; /* Firefox */
+      -ms-overflow-style: none !important; /* IE and Edge */
     }
     
-    html {
-      scrollbar-width: none;
-      -ms-overflow-style: none;
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      background: transparent !important;
     }
-    html::-webkit-scrollbar {
-      display: none;
-      width: 0;
-      height: 0;
+    
+    /* Apply to all elements */
+    *::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    
+    * {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
     }
     
     body { 
@@ -42,13 +48,6 @@
       background:#fff; 
       min-height:100vh; 
       overflow-x:hidden;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-    body::-webkit-scrollbar {
-      display: none;
-      width: 0;
-      height: 0;
     }
 
     /* ================== HEADER ================== */
@@ -98,13 +97,9 @@
       opacity:0; 
       transform:scale(.95); 
       transition:all .2s;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
     }
     .stories-expanded::-webkit-scrollbar {
-      display: none;
-      width: 0;
-      height: 0;
+      display: none !important;
     }
     .stories-expanded.visible { max-height:150px; opacity:1; transform:scale(1); }
     .stories-wrapper { display:flex; gap:16px; padding:0 16px; }
@@ -387,4 +382,3 @@
 </script>
 </body>
 </html>
-
