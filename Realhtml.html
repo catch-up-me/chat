@@ -31,7 +31,7 @@
     /* Create scrollable wrapper that hides scrollbar */
     #root {
       height: 100vh;
-      overflow-y: scroll; /* Allows scrolling */
+      overflow-y: scroll;
       overflow-x: hidden;
       scrollbar-width: none;
       -ms-overflow-style: none;
@@ -47,7 +47,7 @@
       min-height: 100vh;
     }
 
-    /* ================== HEADER ================== */
+    /* ================== HEADER (FIXED) ================== */
     /* This section remains fixed on top */
     .header-container { position:fixed; top:0; left:0; right:0; background:#fff; z-index:1000; transition:all .3s; }
     .top-navbar { background:#fff; padding:16px 20px 19px; display:flex; justify-content:center; align-items:center; position:relative; overflow:visible; }
@@ -121,7 +121,7 @@
     .story-label { margin-top:8px; font-size:12px; color:#262626; text-align:center;
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:64px; }
 
-    /* ---------- Nav (Inside fixed header) ---------- */
+    /* ---------- Nav & Messages ---------- */
     .nav-container { background:#fff; }
     .nav-bar { display:flex; justify-content:space-around; align-items:center; padding:10px 0;
       max-width:400px; margin:0 auto; position:relative; }
@@ -133,12 +133,11 @@
     .active-indicator { position:absolute; height:100%; width:33.333%; background:#749cbf;
       transition:left .3s; left:0; }
 
-    /* ---------- Spacer (Forces content below fixed header) ---------- */
+    /* The Spacer holds the place of the fixed header in the scrolling content */
     .content-spacer { transition:height .2s; }
-    .content-spacer.collapsed { height:80px; } /* Height when stories are collapsed */
-    .content-spacer.expanded { height:180px; } /* Height when stories are expanded */
+    .content-spacer.collapsed { height:80px; }
+    .content-spacer.expanded { height:180px; }
 
-    /* ---------- Messages (Now outside the fixed header) ---------- */
     .message-item { display:flex; align-items:center; padding:10px 16px; background:#fff;
       border-bottom:1px solid #f0f0f0; cursor:pointer; }
     .message-item:hover { background:#f8f8f8; }
@@ -159,11 +158,9 @@
       overflow:hidden;
       touch-action: none;
       overscroll-behavior: none;
-      /* Drag only affects dismissal, not visual movement */
     }
     .story-viewer-content { 
       width:100%; height:100%; position:relative; background:#000; 
-      /* Fixed in place – no transform applied */
     }
 
     /* ---------- Static Reply Bar – Instagram DM Style (FIXED) ---------- */
@@ -171,7 +168,6 @@
       position:fixed; left:0; right:0; bottom:0; height:70px; background:#000;
       display:flex; align-items:center; justify-content:center; z-index:2100;
       padding:0 16px; 
-      /* Never moves – even during drag */
     }
     .story-reply-box {
       width:100%; max-width:500px; padding:12px 20px; background:#171717;
@@ -210,6 +206,10 @@
     { name: "Marketing Team", initial: "MT", date: "Oct 12", preview: "Next meeting moved to 3 PM.", image: null },
     { name: "New Friend", initial: "NF", date: "Oct 11", preview: "Just saying hi!", image: null },
     { name: "Olivia", initial: "O", date: "Oct 10", preview: "Got the tickets!", image: null },
+    { name: "Peter", initial: "P", date: "Oct 9", preview: "Almost there!", image: null },
+    { name: "Queen Latifah", initial: "QL", date: "Oct 8", preview: "Call me when you land.", image: "https://picsum.photos/id/40/200/300" },
+    { name: "Robert", initial: "R", date: "Oct 7", preview: "Got the email, thanks.", image: null },
+    { name: "Stacy", initial: "S", date: "Oct 6", preview: "The meeting went great.", image: null },
   ];
 
   function MessageItem({ name, initial, date, preview, image }) {
@@ -237,7 +237,7 @@
     const currentYRef = useRef(0);
     const hasMoved = useRef(false);
 
-    /* ---------- Scroll handling (removed limit) ---------- */
+    /* ---------- Scroll handling (Restored to original intent) ---------- */
     useEffect(() => {
       const rootElement = document.getElementById('root');
       let lastScrollY = 0;
@@ -245,7 +245,8 @@
       const onScroll = () => {
         const cur = rootElement.scrollTop;
         
-        // This is the only logic needed for the collapse/expand behavior
+        // This logic determines the header's collapse/expand state
+        // (If scrolling down and past 5px, collapse; if scrolling up and near top, expand)
         if (cur > lastScrollY && cur > 5) {
           setIsScrolled(true);
         } else if (cur < lastScrollY && cur < 5) {
@@ -260,13 +261,9 @@
     }, []); 
 
     const handleNavClick = i => setActiveIndex(i);
-    // When the collapsed story bar is clicked, it now scrolls down enough to fully collapse the header.
-    const handleCollapsedStoryClick = () => {
-      const rootElement = document.getElementById('root');
-      // Scroll to the height of the fully collapsed header (80px),
-      // which triggers the header state to 'expanded'.
-      rootElement.scrollTo({ top: 80, behavior: 'smooth' });
-    };
+    
+    // Original Story Click Logic Restored (Only sets header to collapsed state)
+    const handleCollapsedStoryClick = () => setIsScrolled(true);
 
     const openStory = () => {
       setShowStoryViewer(true);
