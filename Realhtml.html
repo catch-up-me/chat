@@ -192,12 +192,11 @@
   function NavigationBar() {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isScrolled, setIsScrolled] = useState(false);
-    const [lastScrollY, setLastScrollY] = useState(0);
     const [showStoryViewer, setShowStoryViewer] = useState(false);
+    const lastScrollYRef = useRef(0);
     const startYRef = useRef(0);
     const currentYRef = useRef(0);
     const hasMoved = useRef(false);
-    const rootRef = useRef(null);
 
     /* ---------- Scroll handling with limit ---------- */
     useEffect(() => {
@@ -212,23 +211,23 @@
         // If scrolled beyond max, snap back to max
         if (cur > maxScroll) {
           rootElement.scrollTo(0, maxScroll);
-          setLastScrollY(maxScroll);
+          lastScrollYRef.current = maxScroll;
           return;
         }
         
         // Normal scroll behavior for expanding/collapsing
-        if (cur > lastScrollY && cur > 5) {
+        if (cur > lastScrollYRef.current && cur > 5) {
           setIsScrolled(true);
-        } else if (cur < lastScrollY && cur < 5) {
+        } else if (cur < lastScrollYRef.current && cur < 5) {
           setIsScrolled(false);
         }
         
-        setLastScrollY(cur);
+        lastScrollYRef.current = cur;
       };
       
       rootElement.addEventListener('scroll', onScroll);
       return () => rootElement.removeEventListener('scroll', onScroll);
-    }, [lastScrollY]);
+    }, []); // Empty dependency array - only run once
 
     const handleNavClick = i => setActiveIndex(i);
     const handleCollapsedStoryClick = () => setIsScrolled(true);
