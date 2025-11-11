@@ -54,18 +54,27 @@
     .messages-icon { position:absolute; left:20px; width:24px; height:24px; top:50%; transform:translateY(-45%); fill:#749cbf; }
     .add-button { position:absolute; right:20px; cursor:pointer; }
     .add-button i { color:#666; font-size:20px; }
-    .top-navbar h1 { font-size:18px; font-weight:500; color:#333; opacity:0; transition:opacity .3s; position:absolute; }
-    .top-navbar h1.visible { opacity:1; }
+    
+    /* "Messages" Title CSS: Initially hidden, visible only with .visible class */
+    .top-navbar h1 { 
+      font-size:18px; 
+      font-weight:500; 
+      color:#333; 
+      opacity:0; /* Hidden by default */
+      transition:opacity .3s; 
+      position:absolute; 
+    }
+    .top-navbar h1.visible { 
+      opacity:1; /* Visible when scrolled down */
+    }
 
     /* ---------- Collapsed Stories (FIXED) ---------- */
     .stories-collapsed {
       position:absolute; left:50%; transform:translateX(-50%) translateY(6px);
       display:inline-flex; align-items:center; gap:0; transition:all .2s ease;
-      /* Initial state: Hidden (opacity 0, pointer-events none) */
       opacity:0; pointer-events:none; z-index:5; cursor:pointer;
     }
     .stories-collapsed.moved { 
-      /* New state: Visible when scrolled (opacity 1, pointer-events auto) */
       opacity:1; pointer-events:auto; 
     }
     .story-item-collapsed { min-width:40px; margin:0 -4px; position:relative; }
@@ -251,9 +260,9 @@
         
         // This logic determines the header's collapse/expand state
         if (cur > lastScrollY && cur > 5) {
-          setIsScrolled(true); // Scrolled down/away from top -> COLLAPSED state
+          setIsScrolled(true); // Scrolled down/away from top -> COLLAPSED state (Title visible)
         } else if (cur < lastScrollY && cur < 5) {
-          setIsScrolled(false); // Scrolled up to top edge -> EXPANDED state
+          setIsScrolled(false); // Scrolled up to top edge -> EXPANDED state (Title hidden)
         }
         
         lastScrollY = cur;
@@ -325,9 +334,11 @@
         <div className="header-container">
           <div className="top-navbar">
             <svg className="messages-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="#749cbf"/></svg>
+            
+            {/* Title visibility controlled by isScrolled state */}
             <h1 className={isScrolled ? 'visible' : ''}>Messages</h1>
 
-            {/* Collapsed Stories – Visibility FIX: Show when isScrolled is TRUE */}
+            {/* Collapsed Stories – Visible when isScrolled is TRUE */}
             <div className={`stories-collapsed ${isScrolled ? 'moved' : ''}`} onClick={handleCollapsedStoryClick}>
               <div className="story-item-collapsed">
                 <div className="story-ring-collapsed">
@@ -348,7 +359,7 @@
             <div className="add-button"><i className="fas fa-search"></i></div>
           </div>
 
-          {/* Expanded Stories – Visibility FIX: Show when isScrolled is FALSE */}
+          {/* Expanded Stories – Visible when isScrolled is FALSE */}
           <div className={`stories-expanded ${!isScrolled ? 'visible' : ''}`}>
             <div className="stories-wrapper">
               <div 
