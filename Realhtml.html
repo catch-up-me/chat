@@ -136,16 +136,16 @@
     .nav-item:hover i { color:#333; }
     .nav-item.active i { color:#749cbf; }
     
-    /* FIX: Added margin-bottom to ensure the first message is not overlapped */
+    /* Using margin-bottom to create visual separation */
     .bottom-border { height:3px; background:#e0e0e0; position:relative; margin-bottom: 2px; }
     .active-indicator { position:absolute; height:100%; width:33.333%; background:#749cbf;
       transition:left .3s; left:0; }
 
     /* The Spacer holds the place of the fixed header in the scrolling content */
-    /* Spacer height adjustments for the new margin-bottom */
+    /* FINAL FIX: Increased spacer height for clearance */
     .content-spacer { transition:height .2s; }
-    .content-spacer.collapsed { height:82px; /* 80px + 2px margin */ }
-    .content-spacer.expanded { height:182px; /* 180px + 2px margin */ }
+    .content-spacer.collapsed { height:105px; } /* Increased from 82px to 105px */
+    .content-spacer.expanded { height:185px; }  /* Increased from 182px to 185px */
 
     .message-item { display:flex; align-items:center; padding:10px 16px; background:#fff;
       border-bottom:1px solid #f0f0f0; cursor:pointer; }
@@ -246,7 +246,7 @@
     const currentYRef = useRef(0);
     const hasMoved = useRef(false);
 
-    /* ---------- Scroll handling (The logic for setting isScrolled remains the same) ---------- */
+    /* ---------- Scroll handling (The core logic remains the same) ---------- */
     useEffect(() => {
       const rootElement = document.getElementById('root');
       let lastScrollY = 0;
@@ -391,7 +391,7 @@
           </div>
         </div>
 
-        {/* ---------- SPACER (Height adjusted to account for the new 2px margin) ---------- */}
+        {/* ---------- SPACER (Height is now 105px/185px for guaranteed clearance) ---------- */}
         <div className={`content-spacer ${isScrolled?'collapsed':'expanded'}`}></div>
 
         {/* ---------- SCROLLABLE MESSAGE LIST (The main content that scrolls) ---------- */}
