@@ -142,10 +142,10 @@
       transition:left .3s; left:0; }
 
     /* The Spacer holds the place of the fixed header in the scrolling content */
-    /* FINAL FIX: Increased spacer height for clearance */
+    /* CORRECTED: Proper spacing to prevent content from hiding under header */
     .content-spacer { transition:height .2s; }
-    .content-spacer.collapsed { height:105px; } /* Increased from 82px to 105px */
-    .content-spacer.expanded { height:185px; }  /* Increased from 182px to 185px */
+    .content-spacer.collapsed { height:120px; } /* top-navbar(~59px) + nav(~58px) + border(5px) */
+    .content-spacer.expanded { height:235px; }  /* top-navbar(~59px) + stories(~118px) + nav(~58px) + border(5px) */
 
     .message-item { display:flex; align-items:center; padding:10px 16px; background:#fff;
       border-bottom:1px solid #f0f0f0; cursor:pointer; }
@@ -199,7 +199,6 @@
   const MessageData = [
     { name: "Daddy Steve", initial: "DS", date: "Oct 27", preview: "How are you doing", image: null },
     { name: "VaVia", initial: "V", date: "Oct 25", preview: "See you tomorrow!", image: "https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" },
-    // --- More Conversation List Added Here ---
     { name: "Alice", initial: "A", date: "Oct 24", preview: "Check out this link I found...", image: null },
     { name: "Bob's Diner", initial: "B", date: "Oct 23", preview: "Your reservation is confirmed.", image: null },
     { name: "Charlie", initial: "C", date: "Oct 22", preview: "Got the new project specs.", image: null },
@@ -246,7 +245,6 @@
     const currentYRef = useRef(0);
     const hasMoved = useRef(false);
 
-    /* ---------- Scroll handling (The core logic remains the same) ---------- */
     useEffect(() => {
       const rootElement = document.getElementById('root');
       let lastScrollY = 0;
@@ -254,11 +252,10 @@
       const onScroll = () => {
         const cur = rootElement.scrollTop;
         
-        // This logic determines the header's collapse/expand state
         if (cur > lastScrollY && cur > 5) {
-          setIsScrolled(true); // Scrolled down/away from top -> COLLAPSED state
+          setIsScrolled(true);
         } else if (cur < lastScrollY && cur < 5) {
-          setIsScrolled(false); // Scrolled up to top edge -> EXPANDED state
+          setIsScrolled(false);
         }
         
         lastScrollY = cur;
@@ -269,13 +266,8 @@
     }, []); 
 
     const handleNavClick = i => setActiveIndex(i);
-    
-    // Story Click Logic - Toggles to the collapsed state
     const handleCollapsedStoryClick = () => setIsScrolled(true);
-
-    const openStory = () => {
-      setShowStoryViewer(true);
-    };
+    const openStory = () => setShowStoryViewer(true);
 
     const storyTouchStart = e => {
       startYRef.current = e.touches[0].clientY;
@@ -283,7 +275,6 @@
     };
 
     const storyTouchEnd = e => {
-      // Only open if there was no significant movement (it was a tap, not a swipe)
       if (!hasMoved.current) {
         openStory();
       }
@@ -305,13 +296,12 @@
     };
 
     const viewerTouchMove = e => {
-      e.preventDefault(); // Always prevent default to stop pull-to-refresh
+      e.preventDefault();
       e.stopPropagation();
       
       currentYRef.current = e.touches[0].clientY;
       const diff = currentYRef.current - startYRef.current;
       
-      // Dismiss instantly when dragged down just 80px
       if (diff > 80) {
         setShowStoryViewer(false);
         startYRef.current = 0;
@@ -326,15 +316,12 @@
 
     return (
       <div className="page-wrapper">
-        {/* ---------- FIXED Header ---------- */}
         <div className="header-container">
           <div className="top-navbar">
             <svg className="messages-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="#749cbf"/></svg>
             
-            {/* Messages Title - Visible when NOT scrolled (!isScrolled) */}
             <h1 className={!isScrolled ? 'visible' : ''}>Messages</h1>
 
-            {/* Collapsed Stories – Visible when isScrolled is TRUE */}
             <div className={`stories-collapsed ${isScrolled ? 'moved' : ''}`} onClick={handleCollapsedStoryClick}>
               <div className="story-item-collapsed">
                 <div className="story-ring-collapsed">
@@ -355,7 +342,6 @@
             <div className="add-button"><i className="fas fa-search"></i></div>
           </div>
 
-          {/* Expanded Stories – Visible when isScrolled is FALSE */}
           <div className={`stories-expanded ${!isScrolled ? 'visible' : ''}`}>
             <div className="stories-wrapper">
               <div 
@@ -379,29 +365,24 @@
             </div>
           </div>
 
-          {/* Nav Bar (Sticky to the bottom of the fixed header) */}
           <div className="nav-container">
             <div className="nav-bar">
               <div className={`nav-item ${activeIndex===0?'active':''}`} onClick={()=>handleNavClick(0)}><i className="far fa-clock"></i></div>
               <div className={`nav-item ${activeIndex===1?'active':''}`} onClick={()=>handleNavClick(1)}><i className="fas fa-user-friends"></i></div>
               <div className={`nav-item ${activeIndex===2?'active':''}`} onClick={()=>handleNavClick(2)}><i className="fas fa-list"></i></div>
             </div>
-            {/* The bottom border now includes margin-bottom of 2px for separation */}
             <div className="bottom-border"><div className="active-indicator" style={{left:`${activeIndex*33.333}%`}}></div></div>
           </div>
         </div>
 
-        {/* ---------- SPACER (Height is now 105px/185px for guaranteed clearance) ---------- */}
         <div className={`content-spacer ${isScrolled?'collapsed':'expanded'}`}></div>
 
-        {/* ---------- SCROLLABLE MESSAGE LIST (The main content that scrolls) ---------- */}
         <div className="message-list-scroll-container">
           {MessageData.map((data, index) => (
             <MessageItem key={index} {...data} />
           ))}
         </div>
 
-        {/* ---------- Blank Pop-up Screen (FIXED – NO VISUAL DRAG) ---------- */}
         {showStoryViewer && (
           <div 
             className="story-viewer-overlay"
@@ -413,7 +394,6 @@
           </div>
         )}
 
-        {/* ---------- Static Reply Bar – Instagram DM Style (FIXED) ---------- */}
         <div className={`story-reply-bar ${showStoryViewer?'':'hidden'}`}>
           <div className="story-reply-box">Reply privately...</div>
         </div>
@@ -426,4 +406,3 @@
 </script>
 </body>
 </html>
-
