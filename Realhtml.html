@@ -5,12 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Instagram Messages – Fixed Stories & Static Reply</title>
 
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-  <!-- React + Babel (no build tools) -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
@@ -197,13 +194,16 @@
     const currentYRef = useRef(0);
     const hasMoved = useRef(false);
 
-    /* ---------- Scroll handling WITHOUT limit ---------- */
+    /* ---------- Scroll handling (FIXED: Scroll limit removed) ---------- */
     useEffect(() => {
       const rootElement = document.getElementById('root');
       let lastScrollY = 0;
       
       const onScroll = () => {
         const cur = rootElement.scrollTop;
+        
+        // --- SCROLL LIMIT REMOVED ---
+        // The previous code block that snapped cur > 120 back to 120 is gone.
         
         // Normal scroll behavior for expanding/collapsing
         if (cur > lastScrollY && cur > 5) {
@@ -220,6 +220,7 @@
     }, []); 
 
     const handleNavClick = i => setActiveIndex(i);
+    // Note: The logic for handleCollapsedStoryClick remains the same as per constraints.
     const handleCollapsedStoryClick = () => setIsScrolled(true);
 
     const openStory = () => {
@@ -375,3 +376,4 @@
 </script>
 </body>
 </html>
+
