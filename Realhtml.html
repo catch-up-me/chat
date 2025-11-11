@@ -74,8 +74,8 @@
     .story-item-collapsed:last-child  { margin-right:0; }
 
     .story-ring-collapsed {
-      width:40px; height:40px; border-radius:50%; padding:1.5px;
-      background:linear-gradient(45deg,rgb(240,148,51),rgb(230,104,60),rgb(220,39,67),rgb(204,35,102),rgb(188,24,136));
+      width:40px; height:40px; border-radius:50%; padding:2px;
+      background:#fff;
       display:flex; align-items:center; justify-content:center; position:relative;
     }
     .story-ring-collapsed::after {
@@ -84,7 +84,7 @@
     }
     .story-item-collapsed:not(:last-child) .story-ring-collapsed::after { display:block; }
 
-    .story-ring-inner-collapsed { width:100%; height:100%; border-radius:50%; background:#749cbf; padding:1.5px;
+    .story-ring-inner-collapsed { width:100%; height:100%; border-radius:50%; background:#749cbf; padding:2px;
       display:flex; align-items:center; justify-content:center; z-index:2; }
     .story-avatar-collapsed { width:100%; height:100%; border-radius:50%; object-fit:cover; }
     .story-avatar-text-collapsed { width:100%; height:100%; border-radius:50%; background:#ff8c42;
@@ -109,16 +109,13 @@
     .stories-expanded.visible { max-height:150px; opacity:1; transform:scale(1); }
     .stories-wrapper { display:flex; gap:16px; padding:0 16px; }
     .story-item { display:flex; flex-direction:column; align-items:center; cursor:pointer; min-width:64px; }
-    .story-ring { width:64px; height:64px; border-radius:50%; padding:1.5px;
-      background:linear-gradient(45deg,rgb(240,148,51),rgb(230,104,60),rgb(220,39,67),rgb(204,35,102),rgb(188,24,136));
+    .story-ring { width:64px; height:64px; border-radius:50%; padding:2.5px;
+      background:#fff;
       display:flex; align-items:center; justify-content:center; }
     .story-ring.multi-story {
-      background:conic-gradient(from 0deg,rgb(240,148,51) 0deg,rgb(230,104,60) 45deg,rgb(220,39,67) 90deg,
-        rgb(204,35,102) 135deg,rgb(188,24,136) 175deg,#dbdbdb 177deg,#dbdbdb 183deg,
-        rgb(240,148,51) 185deg,rgb(230,104,60) 230deg,rgb(220,39,67) 270deg,
-        rgb(204,35,102) 315deg,rgb(188,24,136) 355deg,#dbdbdb 357deg,#dbdbdb 360deg);
+      background:#fff;
     }
-    .story-ring-inner { width:100%; height:100%; border-radius:50%; background:#749cbf; padding:1.5px;
+    .story-ring-inner { width:100%; height:100%; border-radius:50%; background:#749cbf; padding:2.5px;
       display:flex; align-items:center; justify-content:center; }
     .story-avatar { width:100%; height:100%; border-radius:50%; object-fit:cover; }
     .story-avatar-text { width:100%; height:100%; border-radius:50%; background:#ff8c42;
