@@ -61,9 +61,13 @@
     .stories-collapsed {
       position:absolute; left:50%; transform:translateX(-50%) translateY(6px);
       display:inline-flex; align-items:center; gap:0; transition:all .2s ease;
-      opacity:1; pointer-events:auto; z-index:5; cursor:pointer;
+      /* Initial state: Hidden (opacity 0, pointer-events none) */
+      opacity:0; pointer-events:none; z-index:5; cursor:pointer;
     }
-    .stories-collapsed.moved { opacity:0; pointer-events:none; }
+    .stories-collapsed.moved { 
+      /* New state: Visible when scrolled (opacity 1, pointer-events auto) */
+      opacity:1; pointer-events:auto; 
+    }
     .story-item-collapsed { min-width:40px; margin:0 -4px; position:relative; }
     .story-item-collapsed:first-child { margin-left:0; }
     .story-item-collapsed:last-child  { margin-right:0; }
@@ -237,7 +241,7 @@
     const currentYRef = useRef(0);
     const hasMoved = useRef(false);
 
-    /* ---------- Scroll handling (Restored to original intent) ---------- */
+    /* ---------- Scroll handling (The logic for setting isScrolled remains the same) ---------- */
     useEffect(() => {
       const rootElement = document.getElementById('root');
       let lastScrollY = 0;
@@ -246,11 +250,10 @@
         const cur = rootElement.scrollTop;
         
         // This logic determines the header's collapse/expand state
-        // (If scrolling down and past 5px, collapse; if scrolling up and near top, expand)
         if (cur > lastScrollY && cur > 5) {
-          setIsScrolled(true);
+          setIsScrolled(true); // Scrolled down/away from top -> COLLAPSED state
         } else if (cur < lastScrollY && cur < 5) {
-          setIsScrolled(false);
+          setIsScrolled(false); // Scrolled up to top edge -> EXPANDED state
         }
         
         lastScrollY = cur;
@@ -262,7 +265,7 @@
 
     const handleNavClick = i => setActiveIndex(i);
     
-    // Original Story Click Logic Restored (Only sets header to collapsed state)
+    // Story Click Logic - Toggles to the collapsed state
     const handleCollapsedStoryClick = () => setIsScrolled(true);
 
     const openStory = () => {
@@ -324,7 +327,7 @@
             <svg className="messages-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="#749cbf"/></svg>
             <h1 className={isScrolled ? 'visible' : ''}>Messages</h1>
 
-            {/* Collapsed Stories – centered & fixed */}
+            {/* Collapsed Stories – Visibility FIX: Show when isScrolled is TRUE */}
             <div className={`stories-collapsed ${isScrolled ? 'moved' : ''}`} onClick={handleCollapsedStoryClick}>
               <div className="story-item-collapsed">
                 <div className="story-ring-collapsed">
@@ -345,7 +348,7 @@
             <div className="add-button"><i className="fas fa-search"></i></div>
           </div>
 
-          {/* Expanded Stories */}
+          {/* Expanded Stories – Visibility FIX: Show when isScrolled is FALSE */}
           <div className={`stories-expanded ${!isScrolled ? 'visible' : ''}`}>
             <div className="stories-wrapper">
               <div 
