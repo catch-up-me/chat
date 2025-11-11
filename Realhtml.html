@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Instagram Messages – Fixed Stories & Static Reply</title>
 
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
+  <!-- React + Babel (no build tools) -->
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -100,7 +102,6 @@
     .stories-expanded::-webkit-scrollbar {
       display: none;
     }
-    /* This class makes the expanded stories visible when UNCOLLAPSED */
     .stories-expanded.visible { max-height:150px; opacity:1; transform:scale(1); }
     .stories-wrapper { display:flex; gap:16px; padding:0 16px; }
     .story-item { display:flex; flex-direction:column; align-items:center; cursor:pointer; min-width:64px; }
@@ -148,11 +149,6 @@
     .message-name { font-size:17px; font-weight:500; color:#262626; }
     .message-date { font-size:14px; color:#8e8e8e; }
     .message-preview { font-size:16px; color:#8e8e8e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    
-    /* ADD MORE MESSAGES TO MAKE PAGE SCROLLABLE */
-    .message-item:nth-child(even) .message-avatar { background: #749cbf; }
-    .message-item:nth-child(odd) .message-avatar { background: #333; }
-    .message-item:nth-child(3n) .message-avatar { background: #e0a54d; }
 
     /* ---------- Blank Pop-up Screen (FIXED POSITION – NO DRAG MOVEMENT) ---------- */
     .story-viewer-overlay {
@@ -193,25 +189,6 @@
 <script type="text/babel">
   const { useState, useEffect, useRef } = React;
 
-  function MessageItem({ name, date, preview, avatarSrc, avatarText }) {
-    const avatarContent = avatarSrc 
-      ? <img src={avatarSrc} alt={name} style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}}/>
-      : avatarText;
-
-    return (
-      <div className="message-item">
-        <div className="message-avatar">{avatarContent}</div>
-        <div className="message-content">
-          <div className="message-header">
-            <div className="message-name">{name}</div>
-            <div className="message-date">{date}</div>
-          </div>
-          <div className="message-preview">{preview}</div>
-        </div>
-      </div>
-    );
-  }
-
   function NavigationBar() {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isScrolled, setIsScrolled] = useState(false);
@@ -220,7 +197,7 @@
     const currentYRef = useRef(0);
     const hasMoved = useRef(false);
 
-    /* ---------- Scroll handling (FIXED) ---------- */
+    /* ---------- Scroll handling WITHOUT limit ---------- */
     useEffect(() => {
       const rootElement = document.getElementById('root');
       let lastScrollY = 0;
@@ -228,12 +205,10 @@
       const onScroll = () => {
         const cur = rootElement.scrollTop;
         
-        // Normal scroll behavior for expanding/collapsing. 
-        const collapseThreshold = 50; 
-
-        if (cur > lastScrollY && cur > collapseThreshold) {
+        // Normal scroll behavior for expanding/collapsing
+        if (cur > lastScrollY && cur > 5) {
           setIsScrolled(true);
-        } else if (cur < lastScrollY && cur < collapseThreshold) {
+        } else if (cur < lastScrollY && cur < 5) {
           setIsScrolled(false);
         }
         
@@ -245,47 +220,47 @@
     }, []); 
 
     const handleNavClick = i => setActiveIndex(i);
-    // Clicking the collapsed stories triggers the collapse/scrolled state
-    const handleCollapsedStoryClick = () => {
-      setIsScrolled(true);
-      document.getElementById('root').scrollTo({ top: 120, behavior: 'smooth' });
-    };
+    const handleCollapsedStoryClick = () => setIsScrolled(true);
 
     const openStory = () => {
       setShowStoryViewer(true);
     };
 
-    // --- Story Item Touch Handlers (To differentiate tap from scroll) ---
     const storyTouchStart = e => {
       startYRef.current = e.touches[0].clientY;
       hasMoved.current = false;
     };
 
     const storyTouchEnd = e => {
-      const diff = Math.abs(e.changedTouches[0].clientY - startYRef.current);
       // Only open if there was no significant movement (it was a tap, not a swipe)
-      if (diff < 10) { 
+      if (!hasMoved.current) {
         openStory();
       }
       startYRef.current = 0;
+      currentYRef.current = 0;
       hasMoved.current = false;
     };
 
-    // --- Story Viewer Touch Handlers (For pull-down dismissal) ---
+    const storyTouchMove = e => {
+      const diff = Math.abs(e.touches[0].clientY - startYRef.current);
+      if (diff > 10) {
+        hasMoved.current = true;
+      }
+    };
+
     const viewerTouchStart = e => {
       startYRef.current = e.touches[0].clientY;
       currentYRef.current = e.touches[0].clientY;
     };
 
     const viewerTouchMove = e => {
-      // Prevents the background content from scrolling/pulling down
-      e.preventDefault(); 
+      e.preventDefault(); // Always prevent default to stop pull-to-refresh
       e.stopPropagation();
       
       currentYRef.current = e.touches[0].clientY;
       const diff = currentYRef.current - startYRef.current;
       
-      // Dismiss instantly when dragged down just 80px
+      // Dismiss instantly when dragged down just 80px (reduced from 150px)
       if (diff > 80) {
         setShowStoryViewer(false);
         startYRef.current = 0;
@@ -298,16 +273,17 @@
       currentYRef.current = 0;
     };
 
+    const closeStory = () => setShowStoryViewer(false);
+
     return (
       <div className="page-wrapper">
-        {/* ---------- Header (Fixed) ---------- */}
+        {/* ---------- Header ---------- */}
         <div className="header-container">
           <div className="top-navbar">
             <svg className="messages-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="#749cbf"/></svg>
-            {/* Top title is visible when COLLAPSED */}
-            <h1 className={isScrolled ? 'visible' : ''}>Messages</h1> 
+            <h1 className={isScrolled ? 'visible' : ''}>Messages</h1>
 
-            {/* Collapsed Stories – centered & fixed. Moved (hidden) when COLLAPSED */}
+            {/* Collapsed Stories – centered & fixed */}
             <div className={`stories-collapsed ${isScrolled ? 'moved' : ''}`} onClick={handleCollapsedStoryClick}>
               <div className="story-item-collapsed">
                 <div className="story-ring-collapsed">
@@ -328,12 +304,13 @@
             <div className="add-button"><i className="fas fa-search"></i></div>
           </div>
 
-          {/* Expanded Stories (FIXED: Visible when NOT scrolled) */}
-          <div className={`stories-expanded ${!isScrolled ? 'visible' : ''}`}>
+          {/* Expanded Stories */}
+          <div className={`stories-expanded ${isScrolled ? 'visible' : ''}`}>
             <div className="stories-wrapper">
               <div 
                 className="story-item" 
                 onTouchStart={storyTouchStart}
+                onTouchMove={storyTouchMove}
                 onTouchEnd={storyTouchEnd}
               >
                 <div className="story-ring"><div className="story-ring-inner"><div className="story-avatar-text">M</div></div></div>
@@ -342,6 +319,7 @@
               <div 
                 className="story-item" 
                 onTouchStart={storyTouchStart}
+                onTouchMove={storyTouchMove}
                 onTouchEnd={storyTouchEnd}
               >
                 <div className="story-ring multi-story"><div className="story-ring-inner"><img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" className="story-avatar"/></div></div>
@@ -350,7 +328,7 @@
             </div>
           </div>
 
-          {/* Nav + Message Headers */}
+          {/* Nav + Messages */}
           <div className="nav-container">
             <div className="nav-bar">
               <div className={`nav-item ${activeIndex===0?'active':''}`} onClick={()=>handleNavClick(0)}><i className="far fa-clock"></i></div>
@@ -358,45 +336,19 @@
               <div className={`nav-item ${activeIndex===2?'active':''}`} onClick={()=>handleNavClick(2)}><i className="fas fa-list"></i></div>
             </div>
             <div className="bottom-border"><div className="active-indicator" style={{left:`${activeIndex*33.333}%`}}></div></div>
+
+            <div className="message-item">
+              <div className="message-avatar">DS</div>
+              <div className="message-content"><div className="message-header"><div className="message-name">Daddy Steve</div><div className="message-date">Oct 27</div></div><div className="message-preview">How are you doing</div></div>
+            </div>
+            <div className="message-item">
+              <div className="message-avatar"><img src="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg" alt="VaVia" style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}}/></div>
+              <div className="message-content"><div className="message-header"><div className="message-name">VaVia</div><div className="message-date">Oct 25</div></div><div className="message-preview">See you tomorrow!</div></div>
+            </div>
           </div>
         </div>
 
-        {/* ---------- Content Spacer (Push content down) ---------- */}
-        {/* Expanded when NOT scrolled, collapsed when scrolled */}
-        <div className={`content-spacer ${isScrolled?'collapsed':'expanded'}`}></div>
-
-        {/* ---------- Message List (Scrollable Content) ---------- */}
-        <div style={{ paddingBottom: '20px' }}>
-          <MessageItem 
-            name="Daddy Steve" 
-            date="Oct 27" 
-            preview="How are you doing" 
-            avatarText="DS"
-          />
-          <MessageItem 
-            name="VaVia" 
-            date="Oct 25" 
-            preview="See you tomorrow!" 
-            avatarSrc="https://i.ibb.co/C5b875C6/Screenshot-20250904-050841.jpg"
-          />
-          {/* Added more messages to enable scrolling */}
-          <MessageItem name="Alexa" date="2:30 PM" preview="The weather looks great!" avatarText="A"/>
-          <MessageItem name="Ben" date="1:15 PM" preview="Don't forget the meeting details." avatarText="B"/>
-          <MessageItem name="Cathy" date="11:45 AM" preview="That's a fantastic idea, let's do it." avatarText="C"/>
-          <MessageItem name="David" date="Yesterday" preview="Can you send over the final report?" avatarText="D"/>
-          <MessageItem name="Eve" date="Sun" preview="Looking forward to the weekend trip!" avatarText="E"/>
-          <MessageItem name="Frank" date="10/20" preview="I'll check the inventory." avatarText="F"/>
-          <MessageItem name="Gina" date="10/18" preview="Thanks for the update." avatarText="G"/>
-          <MessageItem name="Harry" date="10/15" preview="Call me later." avatarText="H"/>
-          <MessageItem name="Ivy" date="10/12" preview="I've attached the document." avatarText="I"/>
-          <MessageItem name="Jack" date="10/10" preview="Great job on the presentation." avatarText="J"/>
-          <MessageItem name="Kelly" date="10/08" preview="See you soon!" avatarText="K"/>
-          <MessageItem name="Liam" date="10/05" preview="Let's grab lunch next week." avatarText="L"/>
-          <MessageItem name="Mia" date="10/01" preview="Project is on track." avatarText="M"/>
-          <MessageItem name="Noah" date="9/28" preview="The new design looks slick." avatarText="N"/>
-          <MessageItem name="Olivia" date="9/25" preview="Confirmed everything." avatarText="O"/>
-        </div>
-
+        <div className={`content-spacer ${isScrolled?'expanded':'collapsed'}`}></div>
 
         {/* ---------- Blank Pop-up Screen (FIXED – NO VISUAL DRAG) ---------- */}
         {showStoryViewer && (
@@ -423,4 +375,3 @@
 </script>
 </body>
 </html>
-
