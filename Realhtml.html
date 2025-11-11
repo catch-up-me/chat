@@ -204,6 +204,7 @@
       
       const onScroll = () => {
         const cur = rootElement.scrollTop;
+        const last = lastScrollYRef.current;
         
         // Set max scroll limit (stop after VaVia message is visible)
         const maxScroll = 120;
@@ -216,9 +217,9 @@
         }
         
         // Normal scroll behavior for expanding/collapsing
-        if (cur > lastScrollYRef.current && cur > 5) {
+        if (cur > last && cur > 5) {
           setIsScrolled(true);
-        } else if (cur < lastScrollYRef.current && cur < 5) {
+        } else if (cur < last && cur < 5) {
           setIsScrolled(false);
         }
         
@@ -227,7 +228,7 @@
       
       rootElement.addEventListener('scroll', onScroll);
       return () => rootElement.removeEventListener('scroll', onScroll);
-    }, []); // Empty dependency array - only run once
+    }, []); // Empty dependency array
 
     const handleNavClick = i => setActiveIndex(i);
     const handleCollapsedStoryClick = () => setIsScrolled(true);
